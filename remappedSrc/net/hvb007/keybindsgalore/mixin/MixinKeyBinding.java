@@ -18,11 +18,6 @@ public abstract class MixinKeyBinding {
     @Inject(method = "setKeyPressed", at = @At("HEAD"), cancellable = true)
     private static void setKeyPressed(InputUtil.Key key, boolean pressed, CallbackInfo ci) throws Exception {
         if (pressed) {
-            // Skip conflict handling for mouse buttons
-            if (key.getCategory() == InputUtil.Type.MOUSE) {
-                return;
-            }
-
             boolean conflicting = KeybindsManager.handleConflict(key);
             if (conflicting) {
                 ci.cancel();
@@ -32,11 +27,6 @@ public abstract class MixinKeyBinding {
 
     @Inject(method = "onKeyPressed", at = @At("HEAD"), cancellable = true)
     private static void onKeyPressed(InputUtil.Key key, CallbackInfo ci) {
-        // Skip conflict handling for mouse buttons
-        if (key.getCategory() == InputUtil.Type.MOUSE) {
-            return;
-        }
-
         if (KeybindsManager.isConflicting(key)) {
             ci.cancel();
             KeybindsManager.openConflictMenu(key);
@@ -45,14 +35,8 @@ public abstract class MixinKeyBinding {
 
     @Inject(method = "setPressed", at = @At("HEAD"), cancellable = true)
     private void setPressed(boolean pressed, CallbackInfo ci) {
-        // Skip conflict handling for mouse buttons
-        if (this.boundKey.getCategory() == InputUtil.Type.MOUSE) {
-            return;
-        }
-
         if (KeybindsManager.isConflicting(this.boundKey)) {
             ci.cancel();
         }
     }
-
 }
