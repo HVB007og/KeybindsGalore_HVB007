@@ -63,7 +63,7 @@ public class KeybindsManager {
             return !keyInArray;
 
         } else {
-            KeybindsManager.conflictingKeys.remove(key);
+            KeybindsManager.conflictingKeys.remove(key, matches);
             return false;
         }
     }
@@ -75,16 +75,13 @@ public class KeybindsManager {
 
     //Initializes and opens the Circle selector thingy
     public static void openConflictMenu(InputUtil.Key key) {
-//        if () {
-//            break;
-//        } else {
         KeybindsScreen screen = new KeybindsScreen();
         screen.setConflictedKey(key);
         MinecraftClient.getInstance().setScreen(screen);
     }
 
 
-    // IDK, maby a shortcut method
+    // A shortcut method to return the list of maps that the key is bound to.
     public static List<KeyBinding> getConflicting(InputUtil.Key key) {
         return conflictingKeys.get(key);
     }
