@@ -1,0 +1,15 @@
+{
+    "required": true,
+    "package": "me.av306.keybindsgaloreplus.mixin",
+    "compatibilityLevel": "JAVA_17",
+    "mixins": [],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "client": [
+        "KeyBindingAccessor",
+        "KeyBindingMixin",
+        "KeybindsScreenMixin",
+        "MinecraftClientAccessor"
+    ]
+}
