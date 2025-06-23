@@ -125,8 +125,7 @@ public class KeybindsGalorePlus implements ClientModInitializer
 
     public static Text createHyperlinkText( String url )
     {
-        return Text.literal( url )
-                .formatted( Formatting.YELLOW )
-                .styled( style -> style.withClickEvent( new ClickEvent( ClickEvent.Action.OPEN_URL, url ) ) );
+//        return;
+        return null;
     }
 }

@@ -17,10 +17,23 @@ import static me.av306.keybindsgaloreplus.KeybindsGalorePlus.customDataManager;
 import me.av306.keybindsgaloreplus.mixin.KeyBindingAccessor;
 import me.av306.keybindsgaloreplus.mixin.MinecraftClientAccessor;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
+//import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
+//import net.minecraft.client.render.BufferRenderer;
+//import net.minecraft.client.render.VertexFormat;
+//import net.minecraft.client.render.GameRenderer;
+//import net.minecraft.client.util.math.MatrixStack;
+//import com.mojang.blaze3d.systems.RenderSystem;
+//// Core rendering imports
+//import net.minecraft.client.render.BufferBuilder;
+//import net.minecraft.client.render.Tessellator;
+//import net.minecraft.client.render.VertexFormats;
+//import net.minecraft.client.render.GameRenderer;
+//import net.minecraft.client.gui.DrawContext;
+//import com.mojang.blaze3d.systems.RenderSystem;
+// Alternative rendering approach (if BufferRenderer import fails)
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.NarratorManager;
@@ -28,9 +41,13 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
+import org.joml.Matrix4f;
+
 
 import java.util.ArrayList;
 import java.util.Objects;
+// Updated VertexFormat import - moved to blaze3d package
+import com.mojang.blaze3d.vertex.VertexFormat;
 
 public class KeybindSelectorScreen extends Screen
 {
@@ -134,69 +151,57 @@ public class KeybindSelectorScreen extends Screen
 
     // ==================== Rendering methods ====================
 
-    private void renderPieMenu( DrawContext context, float delta, int numberOfSectors, float sectorAngle )
-    {
-        // Setup rendering stuff
+
+    private void renderPieMenu(DrawContext context, float delta, int numberOfSectors, float sectorAngle) {
+        // 1. Initialize buffer for triangles
         Tessellator tess = Tessellator.getInstance();
-    
-        RenderSystem.disableCull();
-        // We may not save on the state change itself, but I suppose being able to disable blend might help Sinytra users' performance
-        // https://stackoverflow.com/questions/7505018/repeated-state-changes-in-opengl
-        if ( Configurations.PIE_MENU_BLEND ) RenderSystem.enableBlend();
+        BufferBuilder buf = tess.begin(RenderLayer.getGui().getDrawMode(),
+                VertexFormats.POSITION_COLOR);
 
-        // ===== Version dependent =====
-        //RenderSystem.setShader( GameRenderer::getPositionColorProgram ); //* <1.21.2
-        RenderSystem.setShader( ShaderProgramKeys.POSITION_COLOR ); //* >=1.21.2
+        // 2. Obtain transformation matrix from DrawContext
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
 
-        BufferBuilder buf = tess.begin( VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR ); //* >1.21
-        //BufferBuilder buf = tess.getBuffer(); //* <1.21
-        //buf.begin( VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR ); //* <1.21
+        // 3. Compute per-sector vertex count
+        float startAngle = 0f;
+        int vertices = Math.max(1, Configurations.CIRCLE_VERTICES / numberOfSectors);
 
-        float startAngle = 0;
-        int vertices = Configurations.CIRCLE_VERTICES / numberOfSectors; // FP truncation here
-        if ( vertices < 1 ) vertices = 1; // Make sure there's always at least 2 vertices for a visible trapezium
-        for ( var sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++ )
-        {
-            float outerRadius = calculateRadius( delta, numberOfSectors, sectorIndex );
-            float innerRadius = this.cancelZoneRadius;
-            int innerColor = Configurations.PIE_MENU_COLOR;
-            int outerColor = Configurations.PIE_MENU_COLOR;
+        // 4. Build each sector
+        for (int i = 0; i < numberOfSectors; i++) {
+            float innerR = this.cancelZoneRadius;
+            float outerR = calculateRadius(delta, numberOfSectors, i);
+            int baseColor = Configurations.PIE_MENU_COLOR;
+            int innerColor = baseColor, outerColor = baseColor;
 
-            if ( customDataManager.hasCustomData )
-            {
-                try
-                {
-                    outerColor = customDataManager.customData.get( this.conflicts.get( sectorIndex ).getTranslationKey() ).sectorColor;
-                }
-                catch ( NullPointerException ignored )
-                {
-                    //KeybindsGalorePlus.debugLog( "No custom sector colour for {}", this.conflicts.get( sectorIndex ).getTranslationKey() );
-                }
+            // 4.a Custom color override
+            if (customDataManager.hasCustomData) {
+                try {
+                    outerColor = customDataManager.customData
+                            .get(conflicts.get(i).getTranslationKey()).sectorColor;
+                } catch (Exception ignored) {}
             }
 
-            // Lighten every other sector
-            // Hardcoding lightening the inner color for a distinct visual identity or something
-            if ( sectorIndex % 2 == 0 ) innerColor = outerColor += Configurations.PIE_MENU_COLOR_LIGHTEN_FACTOR;
-
-            if ( this.selectedSectorIndex == sectorIndex )
-            {
-                innerRadius *= Configurations.EXPANSION_FACTOR_WHEN_SELECTED;
-                outerColor = this.mouseDown ? Configurations.PIE_MENU_HIGHLIGHT_COLOR : Configurations.PIE_MENU_SELECT_COLOR;
+            // 4.b Alternate shading & selection
+            if (i % 2 == 0) innerColor = outerColor + Configurations.PIE_MENU_COLOR_LIGHTEN_FACTOR;
+            if (selectedSectorIndex == i) {
+                innerR *= Configurations.EXPANSION_FACTOR_WHEN_SELECTED;
+                outerColor = mouseDown
+                        ? Configurations.PIE_MENU_HIGHLIGHT_COLOR
+                        : Configurations.PIE_MENU_SELECT_COLOR;
             }
+            if (!Configurations.SECTOR_GRADATION) innerColor = outerColor;
 
-            if ( !Configurations.SECTOR_GRADATION ) innerColor = outerColor;
-
-            this.drawSector( buf, startAngle, sectorAngle, vertices, innerRadius, outerRadius, innerColor, outerColor );
-
+            // 4.c Draw the sector
+            drawSector(buf, startAngle, sectorAngle, vertices, innerR, outerR, innerColor, outerColor);
             startAngle += sectorAngle;
         }
 
-        // ===== Version dependent =====
-        BufferRenderer.drawWithGlobalProgram( buf.end() ); //* >=1.21
-        //tess.draw(); //* <1.21
-        RenderSystem.enableCull();
-        if ( Configurations.PIE_MENU_BLEND ) RenderSystem.disableBlend();
+        // 5. Finalize and render
+        BuiltBuffer built = buf.end();
+        RenderLayer.getGui().draw(built);
     }
+
+
+
 
     private void drawSector( BufferBuilder buf, float startAngle, float sectorAngle, int vertices, float innerRadius, float outerRadius,
                              int innerColor, int outerColor )
@@ -210,12 +215,10 @@ public class KeybindSelectorScreen extends Screen
             // FIXME: is the compiler smart enough to optimise the trigo?
             buf.vertex( this.centreX + MathHelper.cos( angle ) * innerRadius, this.centreY + MathHelper.sin( angle ) * innerRadius, 0 );
             buf.color( innerColor >> 16 & 0xFF, innerColor >> 8 & 0xFF, innerColor & 0xFF, Configurations.PIE_MENU_ALPHA );
-            //buf.next(); //* <1.21
 
             // Outer vertex
             buf.vertex( this.centreX + MathHelper.cos( angle ) * outerRadius, this.centreY + MathHelper.sin( angle ) * outerRadius, 0 );
             buf.color( outerColor >> 16 & 0xFF, outerColor >> 8 & 0xFF, outerColor & 0xFF, Configurations.PIE_MENU_ALPHA );
-            //buf.next(); //* <1.21
         }
     }
 
