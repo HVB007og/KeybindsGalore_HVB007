@@ -33,7 +33,7 @@ public class Configurations
     public static int PIE_MENU_SELECT_COLOR = 0x00FFFFFF;
     public static int PIE_MENU_HIGHLIGHT_COLOR = 0x00EED202;
     public static int PIE_MENU_COLOR_LIGHTEN_FACTOR = 0x191919;
-    public static short PIE_MENU_ALPHA = 0x60;
+    public static short PIE_MENU_ALPHA = 0x40;
     public static boolean SECTOR_GRADATION = true;
     public static int LABEL_TEXT_INSET = 6;
     public static boolean ANIMATE_PIE_MENU = true;

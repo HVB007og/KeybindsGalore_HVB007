@@ -1,6 +1,6 @@
 /*
  * Modified from the PSI mod by Vazkii (https://github.com/Vazkii/Psi)
- * Updated for KeybindsGalorePlus 1.20.x
+ * Updated for KeybindsGalorePlus 1.21.x
  */
 package me.av306.keybindsgaloreplus;
 
@@ -142,8 +142,8 @@ public class KeybindSelectorScreen extends Screen {
         }
         int alpha = (Configurations.PIE_MENU_ALPHA << 24) | (bg & 0x00FFFFFF);
         ctx.fill(x, y, x + w, y + h, alpha);
-        int border    = selectedIndex == idx ? 0xFFFFFF00 : 0xFFFFFFFF;
-        int thickness = selectedIndex == idx ? 2 : 1;
+        int border    = selectedIndex == idx ? 0x80FFFF00 : 0x80FFFFFF;
+        int thickness = 1;
         for (int i = 0; i < thickness; i++) {
             ctx.fill(x - i, y - i, x + w + i, y - i + 1, border);
             ctx.fill(x - i, y + h + i - 1, x + w + i, y + h + i, border);
