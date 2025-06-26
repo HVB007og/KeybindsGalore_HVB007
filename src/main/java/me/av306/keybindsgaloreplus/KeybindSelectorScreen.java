@@ -24,8 +24,8 @@ import java.util.Objects;
 
 public class KeybindSelectorScreen extends Screen {
     // === Configurable Layout Constants ===
-    private static final int BOX_HORIZONTAL_PADDING = 2;  // px on each side of text
-    private static final int BOX_VERTICAL_PADDING   = 2;   // px above/below text
+    private static final int BOX_HORIZONTAL_PADDING = 3;  // px on each side of text
+    private static final int BOX_VERTICAL_PADDING   = 3;   // px above/below text
     private static final int BOX_SPACING            = 3;   // px between boxes
     private static final int SCREEN_MARGIN          = 50;  // px margin from screen edges
 

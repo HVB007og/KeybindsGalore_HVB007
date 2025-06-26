@@ -84,4 +84,4 @@ tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
 }
 
-println("Mapping version: " + project.yarn_mappings)
+//println("Mapping version: " + project.yarn_mappings)
