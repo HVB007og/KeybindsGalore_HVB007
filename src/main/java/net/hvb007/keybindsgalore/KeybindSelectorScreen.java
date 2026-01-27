@@ -1,13 +1,10 @@
 /*
- * Modified from the PSI mod by Vazkii (https://github.com/Vazkii/Psi)
+ * Modified from the PSI mod by Vazkii
  * Updated for KeybindsGalore 1.21.11
  */
 package net.hvb007.keybindsgalore;
 
-// FIXED: Point to the new main class
 import static net.hvb007.keybindsgalore.KeybindsGalore.customDataManager;
-
-// FIXED: Point to the new mixin package
 import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftClientAccessor;
 
@@ -26,30 +23,26 @@ import java.util.List;
 import java.util.Objects;
 
 public class KeybindSelectorScreen extends Screen {
-    // === Configurable Layout Constants ===
-    private static final int BOX_HORIZONTAL_PADDING = 3;  // px on each side of text
-    private static final int BOX_VERTICAL_PADDING   = 3;   // px above/below text
-    private static final int BOX_SPACING            = 3;   // px between boxes
-    private static final int SCREEN_MARGIN          = 50;  // px margin from screen edges
+    private static final int BOX_HORIZONTAL_PADDING = 3;
+    private static final int BOX_VERTICAL_PADDING   = 3;
+    private static final int BOX_SPACING            = 3;
+    private static final int SCREEN_MARGIN          = 50;
 
-    // === Instance Fields ===
-    private final MinecraftClient mc;
     private final InputUtil.Key conflictedKey;
-    private final List<KeyBinding> conflicts     = new ArrayList<>();
+    private final List<KeyBinding> conflicts = new ArrayList<>();
     private final List<BoxDimensions> cachedBoxes = new ArrayList<>();
 
-    private int     widthCenter, heightCenter;
+    private int widthCenter, heightCenter;
     private boolean firstFrame = true;
-    private int     selectedIndex = -1;
-    private boolean mouseDown     = false;
+    private int selectedIndex = -1;
+    private boolean wasMouseDown = false;
+    private boolean wasKeyDown = true;
 
-    // Split-column fields
     private List<KeyBinding> topList, bottomList;
     private int halfCount, topStartY, bottomStartY;
 
     public KeybindSelectorScreen(InputUtil.Key key) {
         super(NarratorManager.EMPTY);
-        this.mc = MinecraftClient.getInstance();
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
     }
@@ -63,9 +56,48 @@ public class KeybindSelectorScreen extends Screen {
             calculateLayout();
             firstFrame = false;
         }
+
+        // pollInput(); // REMOVED: We now handle input via event callbacks in KeybindManager
+
         updateSelection(mouseX, mouseY);
         renderMenu(ctx);
         renderLabels(ctx);
+    }
+
+    // New method called by KeybindManager when the conflict key is released
+    public void onKeyRelease() {
+        KeybindsGalore.debugLog("Key RELEASE detected via Event Callback");
+        handleSelectionFinish();
+    }
+
+    private void pollInput() {
+        // Legacy polling removed to prevent race conditions
+    }
+
+    private void handleSelectionFinish() {
+        if (selectedIndex != -1) {
+            KeyBinding kb = conflicts.get(selectedIndex);
+            String name = KeybindManager.safeGetTranslationKey(kb);
+
+            KeybindsGalore.debugLog("Selection Finished. Target: " + name);
+
+            // 1. Manually press it NOW (Instant response)
+            ((KeyBindingAccessor) kb).setPressed(true);
+            ((KeyBindingAccessor) kb).setTimesPressed(1);
+
+            // 2. Activate Nuclear Protection for 5 ticks
+            KeybindsGalore.activePulseTarget = kb;
+            KeybindsGalore.pulseTimer = 5;
+
+            if (kb.equals(MinecraftClient.getInstance().options.attackKey) && Configurations.ENABLE_ATTACK_WORKAROUND) {
+                ((MinecraftClientAccessor) MinecraftClient.getInstance()).setAttackCooldown(0);
+            }
+        } else {
+            KeybindsGalore.debugLog("Selection Finished. Nothing selected.");
+            KeybindManager.clickHoldKeys.put(conflictedKey.getCode(), null);
+        }
+
+        closeMenu();
     }
 
     private void calculateLayout() {
@@ -86,12 +118,9 @@ public class KeybindSelectorScreen extends Screen {
             cachedBoxes.add(dim);
         }
         maxWidth = Math.min(maxWidth, width - 2 * SCREEN_MARGIN);
-        for (BoxDimensions d : cachedBoxes) {
-            d.finalWidth = maxWidth;
-        }
+        for (BoxDimensions d : cachedBoxes) d.finalWidth = maxWidth;
 
-        int topHeight = topList.size()    * boxHeight + (topList.size()    - 1) * BOX_SPACING;
-        // int botHeight = bottomList.size() * boxHeight + (bottomList.size() - 1) * BOX_SPACING;
+        int topHeight = topList.size() * boxHeight + (topList.size() - 1) * BOX_SPACING;
         topStartY     = heightCenter - BOX_SPACING/2 - topHeight;
         bottomStartY  = heightCenter + BOX_SPACING/2;
     }
@@ -114,9 +143,9 @@ public class KeybindSelectorScreen extends Screen {
     private void renderLabels(DrawContext ctx) {
         for (int i = 0; i < conflicts.size(); i++) {
             BoxDimensions dim = cachedBoxes.get(i);
-            int baseY = (i < halfCount
+            int baseY = (i < halfCount)
                     ? topStartY + i * (dim.height + BOX_SPACING)
-                    : bottomStartY + (i - halfCount) * (dim.height + BOX_SPACING));
+                    : bottomStartY + (i - halfCount) * (dim.height + BOX_SPACING);
             int x = widthCenter - (dim.finalWidth / 2);
             int y = baseY;
             if (selectedIndex == i) { x -= 2; y -= 1; }
@@ -134,25 +163,16 @@ public class KeybindSelectorScreen extends Screen {
         int bg = Configurations.PIE_MENU_COLOR;
         if (customDataManager.hasCustomData) {
             try {
-                bg = customDataManager.customData
-                        .get(conflicts.get(idx).getTranslationKey()).sectorColor;
+                String key = KeybindManager.safeGetTranslationKey(conflicts.get(idx));
+                bg = customDataManager.customData.get(key).sectorColor;
             } catch (Exception ignored) {}
         }
         if (selectedIndex == idx) {
-            bg = mouseDown ? Configurations.PIE_MENU_HIGHLIGHT_COLOR
-                    : Configurations.PIE_MENU_SELECT_COLOR;
+            bg = wasMouseDown ? Configurations.PIE_MENU_HIGHLIGHT_COLOR : Configurations.PIE_MENU_SELECT_COLOR;
             x -= 2; y -= 1; w += 4; h += 2;
         }
         int alpha = (Configurations.PIE_MENU_ALPHA << 24) | (bg & 0x00FFFFFF);
         ctx.fill(x, y, x + w, y + h, alpha);
-        int border    = selectedIndex == idx ? 0x80FFFF00 : 0x80FFFFFF;
-        int thickness = 1;
-        for (int i = 0; i < thickness; i++) {
-            ctx.fill(x - i, y - i, x + w + i, y - i + 1, border);
-            ctx.fill(x - i, y + h + i - 1, x + w + i, y + h + i, border);
-            ctx.fill(x - i, y - i, x - i + 1, y + h + i, border);
-            ctx.fill(x + w + i - 1, y - i, x + w + i, y + h + i, border);
-        }
     }
 
     private void updateSelection(int mx, int my) {
@@ -163,8 +183,7 @@ public class KeybindSelectorScreen extends Screen {
                     ? topStartY + i * (dim.height + BOX_SPACING)
                     : bottomStartY + (i - halfCount) * (dim.height + BOX_SPACING);
             int x0 = widthCenter - (dim.finalWidth / 2);
-            if (mx >= x0 && mx <= x0 + dim.finalWidth &&
-                    my >= y0 && my <= y0 + dim.height) {
+            if (mx >= x0 && mx <= x0 + dim.finalWidth && my >= y0 && my <= y0 + dim.height) {
                 selectedIndex = i;
                 break;
             }
@@ -172,9 +191,9 @@ public class KeybindSelectorScreen extends Screen {
     }
 
     private String formatName(KeyBinding kb) {
-        String id   = kb.getTranslationKey();
-        String name = Text.translatable(kb.getCategory()).getString()
-                + ": " + Text.translatable(id).getString();
+        String id   = KeybindManager.safeGetTranslationKey(kb);
+        String cat  = KeybindManager.safeGetCategory(kb);
+        String name = Text.translatable(cat).getString() + ": " + Text.translatable(id).getString();
         if (customDataManager.hasCustomData) {
             try {
                 if (customDataManager.customData.get(id).hideCategory)
@@ -185,59 +204,14 @@ public class KeybindSelectorScreen extends Screen {
         return name;
     }
 
-    @Override
-    public boolean mouseClicked(double x, double y, int btn) {
-        mouseDown = true;
-        return super.mouseClicked(x, y, btn);
-    }
-
-    @Override
-    public boolean mouseReleased(double x, double y, int btn) {
-        if (btn == conflictedKey.getCode()) {
-            closeMenu();
-        } else {
-            mc.setScreen(null);
-            KeyBinding.unpressAll();
-            if (selectedIndex != -1) {
-                KeyBinding kb = conflicts.get(selectedIndex);
-                KeybindManager.clickHoldKeys.put(conflictedKey.getCode(), kb);
-                if (conflictedKey.getCode() <= GLFW.GLFW_MOUSE_BUTTON_LAST)
-                    kb.setPressed(true);
-            } else {
-                KeybindManager.clickHoldKeys.put(conflictedKey.getCode(), null);
-            }
-        }
-        return super.mouseReleased(x, y, btn);
-    }
-
-    @Override
-    public boolean keyReleased(int key, int scan, int mod) {
-        if (key == conflictedKey.getCode()) closeMenu();
-        return super.keyReleased(key, scan, mod);
-    }
-
     private void closeMenu() {
-        mc.setScreen(null);
-        if (selectedIndex != -1) {
-            KeyBinding kb = conflicts.get(selectedIndex);
-            ((KeyBindingAccessor) kb).setPressed(true);
-            ((KeyBindingAccessor) kb).setTimesPressed(1);
-            if (kb.equals(mc.options.attackKey) && Configurations.ENABLE_ATTACK_WORKAROUND) {
-                ((MinecraftClientAccessor) mc).setAttackCooldown(0);
-            }
-        }
+        MinecraftClient.getInstance().setScreen(null);
     }
 
     @Override public boolean shouldPause() { return false; }
-
-    @Override
-    public void renderBackground(DrawContext ctx, int mx, int my, float d) {
-        if (Configurations.DARKENED_BACKGROUND) {
-            ctx.fill(0, 0, width, height, 0x60000000);
-        }
+    @Override public void renderBackground(DrawContext ctx, int mx, int my, float d) {
+        if (Configurations.DARKENED_BACKGROUND) ctx.fill(0, 0, width, height, 0x60000000);
     }
 
-    private static class BoxDimensions {
-        int finalWidth, height;
-    }
+    private static class BoxDimensions { int finalWidth, height; }
 }

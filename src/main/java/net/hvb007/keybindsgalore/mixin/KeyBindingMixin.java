@@ -1,61 +1,82 @@
 package net.hvb007.keybindsgalore.mixin;
 
-import static net.hvb007.keybindsgalore.Configurations.DEBUG;
-
-import net.hvb007.keybindsgalore.KeybindsGalore;
 import net.hvb007.keybindsgalore.KeybindManager;
-
+import net.hvb007.keybindsgalore.KeybindsGalore;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import java.util.List;
 
-@Mixin(value = KeyBinding.class)
+@Mixin(KeyBinding.class)
 public abstract class KeyBindingMixin
 {
-    @Shadow
-    private InputUtil.Key boundKey;
-
-    @Shadow @Final
-    private String translationKey;
-
+    @Shadow private InputUtil.Key boundKey;
     @Shadow private boolean pressed;
+    @Shadow private int timesPressed;
 
-
-    // Intercepts the raw input signal from the keyboard before it reaches any specific binding
-    @Inject(method = "setKeyPressed", at = @At("HEAD"), cancellable = true)
+    // Intercept the PRESS event to open the menu
+    @Inject(at = @At("HEAD"), method = "setKeyPressed", cancellable = true)
     private static void setKeyPressed(InputUtil.Key key, boolean pressed, CallbackInfo ci)
     {
-        KeybindsGalore.debugLog("setKeyPressed({}, {}) called", key.getTranslationKey(), pressed);
-
-        // This is the gatekeeper. If the key is conflicted, we cancel the event here
-        // so vanilla Minecraft never knows the key was pressed.
         KeybindManager.handleKeyPress(key, pressed, ci);
     }
 
-    // Normally this handles incrementing times pressed; only called when key first goes down
-    // "times pressed" is used for sub-tick input accumulation
-    @Inject(method = "onKeyPressed", at = @At("HEAD"), cancellable = true)
-    private static void onKeyPressed(InputUtil.Key key, CallbackInfo ci)
+    // Enforce Nuclear Pulse Logic AFTER vanilla has processed the key update
+    @Inject(at = @At("RETURN"), method = "setKeyPressed")
+    private static void setKeyPressedTail(InputUtil.Key key, boolean pressed, CallbackInfo ci)
     {
-        KeybindsGalore.debugLog("onKeyPressed({}) called", key.getTranslationKey());
+        // Only run if Pulse Mode is active
+        if (KeybindsGalore.pulseTimer > 0 && KeybindsGalore.activePulseTarget != null) {
+            
+            // Check if the key being updated is the one we are protecting
+            InputUtil.Key targetKey = ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).getBoundKey();
+            
+            if (key.equals(targetKey)) {
+                KeybindsGalore.LOGGER.info("Mixin setKeyPressed (TAIL): Enforcing Nuclear State for {}", key);
 
-        if (KeybindManager.hasConflicts(key))
-        {
-            KeybindsGalore.debugLog("\tCancelling sub-tick accumulation");
-            ci.cancel(); // Cancel, because we've manually handled the press in KeybindManager
+                KeyBinding target = KeybindsGalore.activePulseTarget;
+                
+                // 1. Force the Target KeyBinding to be PRESSED
+                ((KeyBindingAccessor)target).setPressed(true);
+                
+                // 2. Force all other conflicting bindings to be RELEASED
+                List<KeyBinding> conflicts = KeybindManager.getConflicts(key);
+                if (conflicts != null) {
+                    for (KeyBinding kb : conflicts) {
+                        if (kb != target) {
+                            ((KeyBindingAccessor)kb).setPressed(false);
+                            ((KeyBindingAccessor)kb).setTimesPressed(0);
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // Checks internal state updates.
-    // NOTE: This injection is less critical for functionality but good for debugging state desyncs.
-    @Inject(method = "setPressed", at = @At("HEAD"), cancellable = true)
-    private void setPressed(boolean pressed, CallbackInfo ci)
+    @Inject(at = @At("HEAD"), method = "onKeyPressed")
+    private static void onKeyPressed(InputUtil.Key key, CallbackInfo ci) { }
+
+    // Kept as a fallback/utility, but the main logic is now in setKeyPressedTail
+    @Inject(at = @At("HEAD"), method = "setPressed", cancellable = true)
+    public void setPressed(boolean pressed, CallbackInfo ci)
     {
-        KeybindsGalore.debugLog("setPressed({}) called for keybind {} on physical key {}", pressed, this.translationKey, this.boundKey.getTranslationKey());
+        if (KeybindsGalore.pulseTimer > 0 && KeybindsGalore.activePulseTarget != null) {
+            KeyBinding self = (KeyBinding)(Object)this;
+            if (self == KeybindsGalore.activePulseTarget) {
+                this.pressed = true;
+                ci.cancel();
+            } else {
+                InputUtil.Key targetKey = ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).getBoundKey();
+                if (this.boundKey.equals(targetKey)) {
+                    this.pressed = false;
+                    this.timesPressed = 0;
+                    ci.cancel();
+                }
+            }
+        }
     }
 }

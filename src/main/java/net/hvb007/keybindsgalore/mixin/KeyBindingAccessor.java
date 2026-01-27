@@ -9,15 +9,13 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(KeyBinding.class)
 public interface KeyBindingAccessor
 {
-    // Accessing 'timesPressed' allows us to register a "click" without holding the key down
     @Accessor void setTimesPressed(int timesPressed);
-
-    // Accessing the field 'pressed' directly is CRITICAL.
-    // It allows us to set the key state without triggering the 'setKeyPressed' mixin method above.
-    // This prevents the Stack Overflow crash.
     @Accessor("pressed") void setPressed(boolean pressed);
 
     @Accessor InputUtil.Key getBoundKey();
+
+    // ❌ REMOVED BROKEN STRING ACCESSORS to prevent startup crash
+    // We will handle these via Reflection in KeybindManager instead.
 
     @Invoker("reset") void invokeReset();
 }

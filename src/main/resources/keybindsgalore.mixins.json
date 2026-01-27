@@ -1,10 +1,14 @@
 {
 	"required": true,
 	"package": "net.hvb007.keybindsgalore.mixin",
-	"compatibilityLevel": "JAVA_17",
+	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"MixinKeyBinding",
-		"AccessorKeyBinding"
+		"KeyBindingMixin",
+		"KeyBindingAccessor",
+		"KeybindsScreenMixin",
+		"MinecraftClientAccessor",
+		"MinecraftClientMixin",
+		"PlayerListHudMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -1,9 +1,9 @@
 package net.hvb007.keybindsgalore;
 
-// FIXED: Point to the new mixin package
 import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 
@@ -14,171 +14,120 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 public class KeybindManager
 {
-    // To HVB007og:
-    // I can't thank you enough for all the comments in the code,
-    // I was worried I'd have to actually understand every line in every file
-    // to do anything!
-    // I hope you have fun on your modding/programming travels! :D
-    // - Blender (AV306)
-
-    /**
-     * Maps physical keys to a list of bindings they can trigger.
-     * Only contains keys bound to more than one binding.
-     * <br>
-     * Compatibility mods may add other bindings (e.g. from another mod's keybind manager) here,
-     * but must not make changes to existing values.
-     */
     public static final Hashtable<InputUtil.Key, List<KeyBinding>> conflictTable = new Hashtable<>();
-
     public static final HashMap<Integer, KeyBinding> clickHoldKeys = new HashMap<>();
 
-    /**
-     * Find all conflicts on all keys known to the vanilla keybind manager
-     */
-    public static void findAllConflicts()
-    {
-        // FIXED: Updated class reference
-        KeybindsGalore.LOGGER.info( "Performing lazy conflict check" );
+    public static String safeGetTranslationKey(KeyBinding binding) {
+        return binding.getId();
+    }
 
+    public static String safeGetCategory(KeyBinding binding) {
+        return binding.getCategory().getLabel().getString();
+    }
+
+    public static void findAllConflicts() {
+        KeybindsGalore.LOGGER.info("Performing lazy conflict check");
         MinecraftClient client = MinecraftClient.getInstance();
-
-        // Clear map
         conflictTable.clear();
-
-        // Iterate over all bindings, adding them to the list under its assigned physical key
-        for ( KeyBinding keybinding : client.options.allKeys )
-        {
+        for (KeyBinding keybinding : client.options.allKeys) {
             InputUtil.Key physicalKey = ((KeyBindingAccessor) keybinding).getBoundKey();
+            if (physicalKey.getCode() == GLFW.GLFW_KEY_UNKNOWN) continue;
+            conflictTable.computeIfAbsent(physicalKey, key -> new ArrayList<>());
+            conflictTable.get(physicalKey).add(keybinding);
+        }
+        new HashSet<>(conflictTable.keySet()).forEach(key -> {
+            if (conflictTable.get(key).size() < 2) conflictTable.remove(key);
+        });
+    }
 
-            // Skip unbound keys — keys are usually only bound to KEY_UNKNOWN when they are "unbound"
-            if ( physicalKey.getCode() == GLFW.GLFW_KEY_UNKNOWN ) continue;
+    public static boolean isIgnoredKey(InputUtil.Key key) {
+        return Configurations.IGNORED_KEYS.contains(key.getCode()) ^ Configurations.INVERT_IGNORED_KEYS_LIST;
+    }
 
-            // Create a new list if the key doesn't have one
-            conflictTable.computeIfAbsent( physicalKey, key -> new ArrayList<>() );
+    public static boolean isClickHoldKey(InputUtil.Key key) {
+        return clickHoldKeys.containsKey(key.getCode());
+    }
 
-            // Add the binding to the list held by the physical key
-            conflictTable.get( physicalKey ).add( keybinding );
+    public static boolean hasConflicts(InputUtil.Key key) {
+        return conflictTable.containsKey(key);
+    }
+
+    public static void openConflictMenu(InputUtil.Key key) {
+        KeybindSelectorScreen screen = new KeybindSelectorScreen(key);
+        MinecraftClient.getInstance().setScreen(screen);
+    }
+
+    public static List<KeyBinding> getConflicts(InputUtil.Key key) {
+        return conflictTable.get(key);
+    }
+
+    public static void handleKeyPress(InputUtil.Key key, boolean pressed, CallbackInfo ci) {
+        
+        // 1. Check if the Selector Screen is open and needs to handle the release
+        if (!pressed) {
+            Screen currentScreen = MinecraftClient.getInstance().currentScreen;
+            if (currentScreen instanceof KeybindSelectorScreen) {
+                KeybindsGalore.LOGGER.info("handleKeyPress: Delegating RELEASE to KeybindSelectorScreen");
+                ((KeybindSelectorScreen) currentScreen).onKeyRelease();
+                // After this call, pulseTimer should be set if a selection was made.
+            }
         }
 
-        // Prune the hashtable, copying its keys before pruning
-        new HashSet<>( conflictTable.keySet() ).forEach( key ->
-        {
-            // Remove all entries for physical keys with less than 2 bindings (they don't have conflicts)
-            if ( conflictTable.get( key ).size() < 2 )
-                conflictTable.remove( key );
-        } );
-
-        // Debug -- prints the resulting hashtable
-        if ( Configurations.DEBUG )
-        {
-            KeybindsGalore.LOGGER.info( "Dumping key conflict table" );
-            conflictTable.values().forEach( list -> list.forEach( binding -> KeybindsGalore.LOGGER.info( "\t{} bound to physical key {}", binding.getTranslationKey(), ((KeyBindingAccessor) binding).getBoundKey() ) ) );
-        }
-    }
-
-    /**
-     * Does a given key NOT open a pie menu?
-     */
-    public static boolean isIgnoredKey( InputUtil.Key key )
-    {
-        return Configurations.IGNORED_KEYS.contains( key.getCode() ) ^ Configurations.INVERT_IGNORED_KEYS_LIST;
-    }
-
-    public static boolean isClickHoldKey( InputUtil.Key key )
-    {
-        return clickHoldKeys.containsKey( key.getCode() );
-    }
-
-    /**
-     * Checks if there is a binding conflict on this key
-     * @param key: The key to check
-     */
-    public static boolean hasConflicts( InputUtil.Key key )
-    {
-        return conflictTable.containsKey( key );
-    }
-
-    /**
-     * Initializes and open the pie menu for the given conflicted key
-     */
-    public static void openConflictMenu( InputUtil.Key key )
-    {
-        KeybindSelectorScreen screen = new KeybindSelectorScreen( key );
-        MinecraftClient.getInstance().setScreen( screen );
-    }
-
-    /**
-     * Shortcut method to get conflicts on a key
-     */
-    public static List<KeyBinding> getConflicts( InputUtil.Key key )
-    {
-        return conflictTable.get( key );
-    }
-
-    /**
-     * Handle mixin method cancellation and related logic when a conflicted key is presed
-     * @param key: the physical key that was pressed
-     * @param pressed: the pressed state of the conflicted key
-     * @param ci: CallbackInfo for the mixin
-     */
-    public static void handleKeyPress( InputUtil.Key key, boolean pressed, CallbackInfo ci )
-    {
-        if ( hasConflicts( key ) )
-        {
-            if ( isClickHoldKey( key ) )
-            {
-                ci.cancel();
-
-                KeyBinding clickHoldBinding = clickHoldKeys.get( key.getCode() );
-
-                if ( clickHoldBinding != null )
-                {
-                    KeybindsGalore.debugLog( "Activating {} (click-hold)", clickHoldBinding.getTranslationKey() );
-                    ((KeyBindingAccessor) clickHoldBinding).setPressed( pressed );
-                    ((KeyBindingAccessor) clickHoldBinding).setTimesPressed( pressed ? 1 : 0 );
-                }
-
-                if ( !pressed )
-                {
-                    KeybindsGalore.debugLog( "Deactivating key {} (click-hold)", key.getTranslationKey() );
-                    clickHoldKeys.remove( key.getCode() );
-                }
-            }
-            else if ( !isIgnoredKey( key ) )
-            {
-                // Key has conflicts, and shouldn't be ignored
-
-                ci.cancel();
-
-                if ( pressed )
-                {
-                    // Conflicts to handle, and was pressed -- open pie menu
-                    KeybindsGalore.debugLog( "\tOpening pie menu" );
-
-                    openConflictMenu( key );
-                }
-                // Conflicts to handle, but key was released -- do nothing
-            }
-            else if ( Configurations.USE_KEYBIND_FIX )
-            {
-                // Key conflicts ignored, and should use fixed behaviour
-                ci.cancel();
-
-                // Transfer key state to all bindings on the key
-                getConflicts( key ).forEach( binding ->
-                {
-                    KeybindsGalore.debugLog( "\tVanilla fix, {} key {}", pressed ? "enabling" : "disabling", binding.getTranslationKey() );
-
-                    if ( pressed )
-                    {
-                        ((KeyBindingAccessor) binding).setPressed( true );
-                        ((KeyBindingAccessor) binding).setTimesPressed( 1 );
+        // 2. Nuclear Pulse Protection
+        if (!pressed && KeybindsGalore.pulseTimer > 0 && KeybindsGalore.activePulseTarget != null) {
+            InputUtil.Key targetKey = ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).getBoundKey();
+            if (key.equals(targetKey)) {
+                KeybindsGalore.LOGGER.info("handleKeyPress: Intercepting RELEASE for Nuclear Pulse. Key={}", key);
+                
+                ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).setPressed(true);
+                
+                List<KeyBinding> conflicts = getConflicts(key);
+                if (conflicts != null) {
+                    for (KeyBinding kb : conflicts) {
+                        if (kb != KeybindsGalore.activePulseTarget) {
+                            ((KeyBindingAccessor)kb).setPressed(false);
+                            ((KeyBindingAccessor)kb).setTimesPressed(0);
+                        }
                     }
-                    // We can't simply pass "false" to the previous branch, becuase wasPressed() will return true
-                    // as long as timesPressed > 0, even if pressed == false.
-                    else ((KeyBindingAccessor) binding).invokeReset();
+                }
+                
+                ci.cancel();
+                return;
+            }
+        }
 
-                } );
+        if (hasConflicts(key)) {
+            if (isClickHoldKey(key)) {
+                KeyBinding clickHoldBinding = clickHoldKeys.get(key.getCode());
+                if (clickHoldBinding == null) {
+                    if (!pressed) clickHoldKeys.remove(key.getCode());
+                    ci.cancel();
+                    return;
+                }
+                ci.cancel();
+                if (pressed) {
+                    ((KeyBindingAccessor) clickHoldBinding).setPressed(true);
+                    ((KeyBindingAccessor) clickHoldBinding).setTimesPressed(1);
+                } else {
+                    ((KeyBindingAccessor) clickHoldBinding).setPressed(false);
+                    clickHoldKeys.remove(key.getCode());
+                }
+            } else if (!isIgnoredKey(key)) {
+                if (pressed) {
+                    KeybindsGalore.LOGGER.info("Cancelling PRESS event for conflict menu");
+                    ci.cancel();
+                    openConflictMenu(key);
+                } else {
+                    KeybindsGalore.LOGGER.info("Allowing normal RELEASE event to propagate");
+                }
+            } else if (Configurations.USE_KEYBIND_FIX) {
+                ci.cancel();
+                getConflicts(key).forEach(binding -> {
+                    if (pressed) {
+                        ((KeyBindingAccessor) binding).setPressed(true);
+                        ((KeyBindingAccessor) binding).setTimesPressed(1);
+                    } else ((KeyBindingAccessor) binding).invokeReset();
+                });
             }
         }
     }
