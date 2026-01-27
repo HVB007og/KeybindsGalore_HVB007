@@ -1,4 +1,4 @@
-package me.av306.keybindsgaloreplus;
+package net.hvb007.keybindsgalore;
 
 import java.util.ArrayList;
 

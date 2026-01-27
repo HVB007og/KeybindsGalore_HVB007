@@ -1,6 +1,8 @@
-package me.av306.keybindsgaloreplus;
+package net.hvb007.keybindsgalore;
 
-import me.av306.keybindsgaloreplus.mixin.KeyBindingAccessor;
+// FIXED: Point to the new mixin package
+import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -10,16 +12,14 @@ import java.util.*;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-
 public class KeybindManager
 {
-    // To HBV007og:
+    // To HVB007og:
     // I can't thank you enough for all the comments in the code,
     // I was worried I'd have to actually understand every line in every file
     // to do anything!
     // I hope you have fun on your modding/programming travels! :D
     // - Blender (AV306)
-
 
     /**
      * Maps physical keys to a list of bindings they can trigger.
@@ -33,11 +33,12 @@ public class KeybindManager
     public static final HashMap<Integer, KeyBinding> clickHoldKeys = new HashMap<>();
 
     /**
-     * FInd all conflicts on all keys known to the vanilla keybind manager
+     * Find all conflicts on all keys known to the vanilla keybind manager
      */
     public static void findAllConflicts()
     {
-        KeybindsGalorePlus.LOGGER.info( "Performing lazy conflict check" );
+        // FIXED: Updated class reference
+        KeybindsGalore.LOGGER.info( "Performing lazy conflict check" );
 
         MinecraftClient client = MinecraftClient.getInstance();
 
@@ -51,8 +52,6 @@ public class KeybindManager
 
             // Skip unbound keys — keys are usually only bound to KEY_UNKNOWN when they are "unbound"
             if ( physicalKey.getCode() == GLFW.GLFW_KEY_UNKNOWN ) continue;
-
-            //KeybindsGalorePlus.LOGGER.info( "Adding {} to list for physical key {}", keybinding.getTranslationKey(), physicalKey.getTranslationKey() );
 
             // Create a new list if the key doesn't have one
             conflictTable.computeIfAbsent( physicalKey, key -> new ArrayList<>() );
@@ -72,13 +71,13 @@ public class KeybindManager
         // Debug -- prints the resulting hashtable
         if ( Configurations.DEBUG )
         {
-            KeybindsGalorePlus.LOGGER.info( "Dumping key conflict table" );
-            conflictTable.values().forEach( list -> list.forEach( binding -> KeybindsGalorePlus.LOGGER.info( "\t{} bound to physical key {}", binding.getTranslationKey(), ((KeyBindingAccessor) binding).getBoundKey() ) ) );
+            KeybindsGalore.LOGGER.info( "Dumping key conflict table" );
+            conflictTable.values().forEach( list -> list.forEach( binding -> KeybindsGalore.LOGGER.info( "\t{} bound to physical key {}", binding.getTranslationKey(), ((KeyBindingAccessor) binding).getBoundKey() ) ) );
         }
     }
 
     /**
-     * Does a given key NOT open a pie menu? (
+     * Does a given key NOT open a pie menu?
      */
     public static boolean isIgnoredKey( InputUtil.Key key )
     {
@@ -104,7 +103,7 @@ public class KeybindManager
      */
     public static void openConflictMenu( InputUtil.Key key )
     {
-        KeybindSelectorScreen screen = new KeybindSelectorScreen( key );   
+        KeybindSelectorScreen screen = new KeybindSelectorScreen( key );
         MinecraftClient.getInstance().setScreen( screen );
     }
 
@@ -134,14 +133,14 @@ public class KeybindManager
 
                 if ( clickHoldBinding != null )
                 {
-                    KeybindsGalorePlus.debugLog( "Activating {} (click-hold)", clickHoldBinding.getTranslationKey() );
+                    KeybindsGalore.debugLog( "Activating {} (click-hold)", clickHoldBinding.getTranslationKey() );
                     ((KeyBindingAccessor) clickHoldBinding).setPressed( pressed );
                     ((KeyBindingAccessor) clickHoldBinding).setTimesPressed( pressed ? 1 : 0 );
                 }
 
                 if ( !pressed )
                 {
-                    KeybindsGalorePlus.debugLog( "Deactivating key {} (click-hold)", key.getTranslationKey() );
+                    KeybindsGalore.debugLog( "Deactivating key {} (click-hold)", key.getTranslationKey() );
                     clickHoldKeys.remove( key.getCode() );
                 }
             }
@@ -154,10 +153,7 @@ public class KeybindManager
                 if ( pressed )
                 {
                     // Conflicts to handle, and was pressed -- open pie menu
-
-                    // Changing Screens (which this method does) resets all bindings to "unpressed",
-                    // so zoom mods should work absolutely fine with us :)
-                    KeybindsGalorePlus.debugLog( "\tOpening pie menu" );
+                    KeybindsGalore.debugLog( "\tOpening pie menu" );
 
                     openConflictMenu( key );
                 }
@@ -171,7 +167,7 @@ public class KeybindManager
                 // Transfer key state to all bindings on the key
                 getConflicts( key ).forEach( binding ->
                 {
-                    KeybindsGalorePlus.debugLog( "\tVanilla fix, {} key {}", pressed ? "enabling" : "disabling", binding.getTranslationKey() );
+                    KeybindsGalore.debugLog( "\tVanilla fix, {} key {}", pressed ? "enabling" : "disabling", binding.getTranslationKey() );
 
                     if ( pressed )
                     {
@@ -184,10 +180,6 @@ public class KeybindManager
 
                 } );
             }
-            //else {}
-            // Conflicts ignored, and vanilla behaviour is ok -- proceed as per vanilla
         }
-        // else {}
-        // No conflicts -- proceed as per vanilla
     }
 }

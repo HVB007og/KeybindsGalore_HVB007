@@ -1,6 +1,7 @@
-package me.av306.keybindsgaloreplus.mixin;
+package net.hvb007.keybindsgalore.mixin;
 
-import me.av306.keybindsgaloreplus.KeybindManager;
+import net.hvb007.keybindsgalore.KeybindManager;
+
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.GameOptionsScreen;
 import net.minecraft.client.gui.screen.option.KeybindsScreen;
@@ -8,12 +9,12 @@ import net.minecraft.client.option.GameOptions;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin( KeybindsScreen.class )
+@Mixin(KeybindsScreen.class)
 public abstract class KeybindsScreenMixin extends GameOptionsScreen
 {
-    public KeybindsScreenMixin( Screen parent, GameOptions gameOptions, Text title )
+    public KeybindsScreenMixin(Screen parent, GameOptions gameOptions, Text title)
     {
-        super( parent, gameOptions, title );
+        super(parent, gameOptions, title);
     }
 
     @Override
@@ -21,7 +22,7 @@ public abstract class KeybindsScreenMixin extends GameOptionsScreen
     {
         super.close();
 
-        // Check for conflicting keybinds on screen close
+        // Check for conflicting keybinds whenever the user closes the controls menu
         KeybindManager.findAllConflicts();
     }
 }

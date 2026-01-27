@@ -1,13 +1,16 @@
 /*
  * Modified from the PSI mod by Vazkii (https://github.com/Vazkii/Psi)
- * Updated for KeybindsGalorePlus 1.21.x
+ * Updated for KeybindsGalore 1.21.11
  */
-package me.av306.keybindsgaloreplus;
+package net.hvb007.keybindsgalore;
 
-import static me.av306.keybindsgaloreplus.KeybindsGalorePlus.customDataManager;
+// FIXED: Point to the new main class
+import static net.hvb007.keybindsgalore.KeybindsGalore.customDataManager;
 
-import me.av306.keybindsgaloreplus.mixin.KeyBindingAccessor;
-import me.av306.keybindsgaloreplus.mixin.MinecraftClientAccessor;
+// FIXED: Point to the new mixin package
+import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
+import net.hvb007.keybindsgalore.mixin.MinecraftClientAccessor;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -88,7 +91,7 @@ public class KeybindSelectorScreen extends Screen {
         }
 
         int topHeight = topList.size()    * boxHeight + (topList.size()    - 1) * BOX_SPACING;
-//        int botHeight = bottomList.size() * boxHeight + (bottomList.size() - 1) * BOX_SPACING;
+        // int botHeight = bottomList.size() * boxHeight + (bottomList.size() - 1) * BOX_SPACING;
         topStartY     = heightCenter - BOX_SPACING/2 - topHeight;
         bottomStartY  = heightCenter + BOX_SPACING/2;
     }

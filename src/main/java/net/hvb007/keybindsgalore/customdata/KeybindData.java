@@ -1,4 +1,4 @@
-package me.av306.keybindsgaloreplus.customdata;
+package net.hvb007.keybindsgalore.customdata;
 
 public class KeybindData
 {
