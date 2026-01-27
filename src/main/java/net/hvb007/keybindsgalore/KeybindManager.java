@@ -87,7 +87,7 @@ public class KeybindManager
             InputUtil.Key targetKey = ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).getBoundKey();
             if (key.equals(targetKey)) {
                 KeybindsGalore.LOGGER.info("handleKeyPress: Intercepting RELEASE for Nuclear Pulse. Key={}", key);
-                
+
                 ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).setPressed(true);
                 
                 List<KeyBinding> conflicts = getConflicts(key);
