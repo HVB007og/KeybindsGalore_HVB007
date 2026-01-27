@@ -30,6 +30,15 @@ public class KeybindManager
         MinecraftClient client = MinecraftClient.getInstance();
         conflictTable.clear();
         for (KeyBinding keybinding : client.options.allKeys) {
+            // Filter out debug keys to prevent them from cluttering the menu
+            // We use safeGetCategory because getCategory() returns a Category object, not a String.
+            String categoryName = safeGetCategory(keybinding);
+            String id = keybinding.getId();
+            
+            if (categoryName.toLowerCase().contains("debug") || id.toLowerCase().contains("debug")) {
+                continue;
+            }
+
             InputUtil.Key physicalKey = ((KeyBindingAccessor) keybinding).getBoundKey();
             if (physicalKey.getCode() == GLFW.GLFW_KEY_UNKNOWN) continue;
             conflictTable.computeIfAbsent(physicalKey, key -> new ArrayList<>());
