@@ -20,31 +20,31 @@ import net.hvb007.keybindsgalore.configmanager.ConfigManager;
 import net.hvb007.keybindsgalore.customdata.DataManager;
 import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
 
-public class KeybindsGalore implements ClientModInitializer
-{
+public class KeybindsGalore implements ClientModInitializer {
     public static ConfigManager configManager;
     public static DataManager customDataManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("keybindsgalore");
-    private static KeyBinding configreloadKeybind;
+    private static KeyBinding configReloadKeybind;
 
-    // --- NUCLEAR PULSE STATE ---
-    // The keybind we want to FORCE ON
+    // The keybinding we want to force-press after a menu selection.
     public static KeyBinding activePulseTarget = null;
-    // How long (in ticks) to hold the state
+    // Ticks remaining to hold the activePulseTarget as pressed.
     public static int pulseTimer = 0;
 
     @Override
-    public void onInitializeClient()
-    {
+    public void onInitializeClient() {
         LOGGER.info("KeybindsGalore initialising...");
 
         try {
             configManager = new ConfigManager("KeybindsGalore", FabricLoader.getInstance().getConfigDir(), "keybindsgalore.properties", Configurations.class, null);
-            if (Configurations.DEBUG) this.configManager.printAllConfigs();
+            if (Configurations.DEBUG) {
+                configManager.printAllConfigs();
+            }
 
             customDataManager = new DataManager(FabricLoader.getInstance().getConfigDir(), "keybindsgalore_customdata.data");
 
-            // Reflection for Reload Keybind
+            // Register a keybind to reload the config file in-game.
+            // Uses reflection to support multiple Minecraft versions.
             try {
                 Constructor<?> constructor = KeyBinding.class.getConstructors()[0];
                 Object categoryArg = "key.categories.misc";
@@ -55,32 +55,34 @@ public class KeybindsGalore implements ClientModInitializer
                 }
 
                 if (paramTypes.length > 1 && paramTypes[1].equals(InputUtil.Type.class)) {
-                    configreloadKeybind = (KeyBinding) constructor.newInstance("key.keybindsgalore.reloadconfigs", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, categoryArg);
+                    configReloadKeybind = (KeyBinding) constructor.newInstance("key.keybindsgalore.reloadconfigs", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, categoryArg);
                 } else {
-                    configreloadKeybind = (KeyBinding) constructor.newInstance("key.keybindsgalore.reloadconfigs", GLFW.GLFW_KEY_UNKNOWN, categoryArg);
+                    configReloadKeybind = (KeyBinding) constructor.newInstance("key.keybindsgalore.reloadconfigs", GLFW.GLFW_KEY_UNKNOWN, categoryArg);
                 }
-                KeyBindingHelper.registerKeyBinding(configreloadKeybind);
-            } catch (Exception e) { LOGGER.error("Failed to register keybind!", e); }
+                KeyBindingHelper.registerKeyBinding(configReloadKeybind);
+            } catch (Exception e) {
+                LOGGER.error("Failed to register config reload keybind!", e);
+            }
 
-            // --- TICK LOGIC ---
-            ClientTickEvents.END_CLIENT_TICK.register(client ->
-            {
-                // Manage the Nuclear Pulse Timer
+            // Register a client tick event to manage the pulse timer.
+            ClientTickEvents.END_CLIENT_TICK.register(client -> {
+                // Decrement the pulse timer each tick.
                 if (pulseTimer > 0) {
                     pulseTimer--;
-                    // When timer expires, release the lock on the target
+                    // When the timer expires, release the key and clear the target.
                     if (pulseTimer == 0 && activePulseTarget != null) {
                         ((KeyBindingAccessor) activePulseTarget).setPressed(false);
                         activePulseTarget = null;
                     }
                 }
 
-                if (configreloadKeybind != null && configreloadKeybind.wasPressed()) {
+                // Handle the config reload keybind press.
+                if (configReloadKeybind != null && configReloadKeybind.wasPressed()) {
                     try {
                         configManager.readConfigFile();
                         customDataManager.readDataFile();
-                    } catch (IOException firstIoe) {
-                        if (client.player != null) client.player.sendMessage(Text.translatable("text.keybindsgalore.configreloadfail", firstIoe.getMessage()), false);
+                    } catch (IOException ex) {
+                        if (client.player != null) client.player.sendMessage(Text.translatable("text.keybindsgalore.configreloadfail", ex.getMessage()), false);
                         return;
                     }
 
@@ -92,18 +94,19 @@ public class KeybindsGalore implements ClientModInitializer
                 }
             });
         } catch (IOException ioe) {
-            LOGGER.error("(KBG) IOException while reading config file on init!");
-            ioe.printStackTrace();
+            LOGGER.error("Failed to read config file on init!", ioe);
         }
 
+        // Find all conflicting keybinds when the player joins a world.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> KeybindManager.findAllConflicts());
     }
 
-    public static void debugLog(String message) {
-        if (Configurations.DEBUG) LOGGER.info("(KBG DEBUG) " + message);
-    }
-
-    public static void debugLog(String message, Object... objects) {
-        if (Configurations.DEBUG) LOGGER.info("(KBG DEBUG) " + message, objects);
+    /**
+     * Logs a message if debug mode is enabled in the config.
+     */
+    public static void debugLog(String message, Object... args) {
+        if (Configurations.DEBUG) {
+            LOGGER.info("(KBG DEBUG) " + message, args);
+        }
     }
 }

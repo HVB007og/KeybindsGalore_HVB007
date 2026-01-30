@@ -1,116 +1,81 @@
 package net.hvb007.keybindsgalore.customdata;
 
-import net.hvb007.keybindsgalore.Configurations;
 import net.hvb007.keybindsgalore.KeybindsGalore;
 
-import static net.hvb007.keybindsgalore.KeybindsGalore.LOGGER;
-
-import java.io.*;
-import java.lang.reflect.Field;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Hashtable;
 
-public class DataManager
-{
+/**
+ * Manages loading custom data for keybindings, such as custom names or colors.
+ * This data is read from a separate file in a YAML-like format.
+ */
+public class DataManager {
     private final File dataFile;
-
     public final Hashtable<String, KeybindData> customData = new Hashtable<>();
-
-    /**
-     * True if the data file is present AND was read successfully
-     */
     public boolean hasCustomData = true;
 
-    public DataManager( Path dataFilePath, String dataFileName )
-    {
-        this.dataFile = dataFilePath.resolve( dataFileName ).toFile();
+    public DataManager(Path dataFilePath, String dataFileName) {
+        this.dataFile = dataFilePath.resolve(dataFileName).toFile();
 
-        if ( !this.dataFile.exists() )
-        {
+        if (!this.dataFile.exists()) {
             this.hasCustomData = false;
-            LOGGER.warn( "(KBG Custom Data Manager) No custom keybind data file found!" );
+            KeybindsGalore.LOGGER.warn("No custom keybind data file found!");
             return;
         }
 
         this.readDataFile();
     }
 
-    public void readDataFile()
-    {
+    /**
+     * Reads the custom data file and populates the customData map.
+     * The file format is expected to be:
+     * "key.id.string":
+     *     property_name = "value"
+     */
+    public void readDataFile() {
         this.hasCustomData = true;
-        try ( BufferedReader fileReader = new BufferedReader( new FileReader( this.dataFile ) ); )
-        {
+        try (BufferedReader fileReader = new BufferedReader(new FileReader(this.dataFile))) {
             String line;
             String currentKeybind = null;
-            while ( true )
-            {
-                line = fileReader.readLine();
-
-                if ( line == null ) break;
-                // Skip blank lines
-                if ( line.isBlank() ) continue;
-
-                // Indented line -- is property
-                // Python moment
-                if ( !line.endsWith( ":" ) )
-                {
-                    String[] lines = line.trim().split( "=" );
-                    try
-                    {
-                        lines[1] = lines[1].replaceAll( "\"", "" );
-
-                        switch ( lines[0] )
-                        {
-                            case "display_name" -> this.customData.get( currentKeybind ).displayName = lines[1];
-                            case "sector_color" -> this.customData.get( currentKeybind ).sectorColor = Integer.parseInt( lines[1].replace( "0x", "" ), 16 );
-                            case "hide_category" -> this.customData.get( currentKeybind ).hideCategory = Boolean.parseBoolean( lines[1] );
-                            default -> LOGGER.info( "(KBG Custom Data Manager) Unknown custom data field: {}", lines[0] );
-                        }
-                    }
-                    catch ( ArrayIndexOutOfBoundsException oobe )
-                    {
-                        LOGGER.warn( "(KBG Custom Data Manager) Skipped invalid data line: {}", line );
-                    }
+            while ((line = fileReader.readLine()) != null) {
+                if (line.isBlank()) {
+                    continue;
                 }
-                else
-                {
-                    // Non-indented line -- is header
-                    currentKeybind = line.replaceAll( "[\":]+", "" ).trim();
-                    this.customData.put( currentKeybind, new KeybindData() );
-                    LOGGER.info( "(KBG Custom Data Manager) Reading custom data for keybind: {}", currentKeybind );
+
+                // Lines ending with a colon are treated as headers (keybind IDs).
+                if (line.trim().endsWith(":")) {
+                    currentKeybind = line.replaceAll("[\":]+", "").trim();
+                    this.customData.put(currentKeybind, new KeybindData());
+                }
+                // Other lines are treated as properties for the current keybind.
+                else if (currentKeybind != null) {
+                    String[] parts = line.trim().split("=", 2);
+                    if (parts.length < 2) {
+                        continue;
+                    }
+
+                    String key = parts[0].trim();
+                    String value = parts[1].trim().replaceAll("\"", "");
+
+                    KeybindData data = this.customData.get(currentKeybind);
+                    if (data == null) continue;
+
+                    switch (key) {
+                        case "display_name" -> data.displayName = value;
+                        case "sector_color" -> data.sectorColor = Integer.parseInt(value.replace("0x", ""), 16);
+                        case "hide_category" -> data.hideCategory = Boolean.parseBoolean(value);
+                        default -> KeybindsGalore.LOGGER.warn("Unknown custom data field: {}", key);
+                    }
                 }
             }
-
-            // Finished reading file
-            LOGGER.info( "(KBG Custom Data Manager) Custom keybind data file read successfully!" );
-        }
-        catch ( IOException ioe )
-        {
-            // IOE -- usually file not found
+            KeybindsGalore.LOGGER.info("Custom keybind data file read successfully!");
+        } catch (IOException e) {
             this.hasCustomData = false;
-
-            LOGGER.warn( "(KBG Custom Data Manager) IOException while reading custom data: {}", ioe.getMessage() );
-        }
-
-        if ( Configurations.DEBUG )
-        {
-            // Dump data table
-            LOGGER.info( "(KBG Custom Data Manager) Custom data present: {}", this.hasCustomData );
-
-            this.customData.forEach( (keyId, data) ->
-            {
-                for ( Field f : data.getClass().getDeclaredFields() )
-                {
-                    try
-                    {
-                        LOGGER.info( "\t[{} -> {}]: {}", keyId, f.getName(), f.get( data ) );
-                    }
-                    catch ( IllegalAccessException e )
-                    {
-                        e.printStackTrace();
-                    }
-                }
-            } );
+            KeybindsGalore.LOGGER.warn("IOException while reading custom data file: {}", e.getMessage());
         }
     }
 }

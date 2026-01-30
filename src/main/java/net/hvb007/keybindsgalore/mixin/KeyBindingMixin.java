@@ -10,48 +10,47 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin to intercept vanilla keybinding logic.
+ */
 @Mixin(KeyBinding.class)
-public abstract class KeyBindingMixin
-{
-    @Shadow private InputUtil.Key boundKey;
-    @Shadow private boolean pressed;
-    @Shadow public abstract String getId();
+public abstract class KeyBindingMixin {
+    @Shadow
+    private InputUtil.Key boundKey;
 
+    /**
+     * Intercepts the moment a key's state is set from a physical input event.
+     * This is the primary entry point for all our conflict detection logic.
+     */
     @Inject(at = @At("HEAD"), method = "setKeyPressed", cancellable = true)
-    private static void setKeyPressed(InputUtil.Key key, boolean pressed, CallbackInfo ci)
-    {
-        KeybindsGalore.debugLog("Mixin setKeyPressed: Key={} Pressed={}", key, pressed);
+    private static void setKeyPressed(InputUtil.Key key, boolean pressed, CallbackInfo ci) {
         KeybindManager.handleKeyPress(key, pressed, ci);
     }
 
+    /**
+     * Intercepts the "click" event for a key.
+     * We cancel this for conflicting keys to prevent vanilla actions from firing.
+     */
     @Inject(at = @At("HEAD"), method = "onKeyPressed", cancellable = true)
-    private static void onKeyPressed(InputUtil.Key key, CallbackInfo ci) 
-    {
-        KeybindsGalore.debugLog("Mixin onKeyPressed: Key={}", key);
+    private static void onKeyPressed(InputUtil.Key key, CallbackInfo ci) {
         KeybindManager.handleOnKeyPressed(key, ci);
     }
 
+    /**
+     * Intercepts any attempt to change the `pressed` state of a keybinding.
+     * This acts as a "gatekeeper" to block vanilla's polling-based updates
+     * from overriding our logic for conflicting keys.
+     */
     @Inject(at = @At("HEAD"), method = "setPressed", cancellable = true)
-    public void setPressed(boolean pressed, CallbackInfo ci)
-    {
-        String id = this.getId();
+    public void setPressed(boolean pressed, CallbackInfo ci) {
+        KeyBinding self = (KeyBinding) (Object) this;
 
-        // --- THE GATEKEEPER (with an exception) ---
-        // Block conflicting keys, but specifically ALLOW key.toggleGui to pass through.
+        // Block any attempt to press a conflicting key unless it's our chosen target
+        // or the special-cased 'toggleGui' key.
         if (pressed && KeybindManager.hasConflicts(this.boundKey)) {
-            if (!id.equals("key.toggleGui")) { // The exception for the special key
-                KeyBinding self = (KeyBinding)(Object)this;
-                if (self != KeybindsGalore.activePulseTarget) {
-                    KeybindsGalore.debugLog("GATEKEEPER: BLOCKED press for {} due to conflict.", id);
-                    ci.cancel();
-                    return;
-                }
+            if (self != KeybindsGalore.activePulseTarget && !self.getId().equals("key.toggleGui")) {
+                ci.cancel();
             }
-        }
-
-        // --- LOGGING ---
-        if (this.pressed != pressed) {
-            KeybindsGalore.debugLog("STATE CHANGE: {} -> {}", id, pressed ? "PRESSED" : "RELEASED");
         }
     }
 }

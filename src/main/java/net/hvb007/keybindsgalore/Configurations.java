@@ -2,35 +2,34 @@ package net.hvb007.keybindsgalore;
 
 import java.util.ArrayList;
 
-public class Configurations
-{
+/**
+ * Holds all the configuration fields for the mod.
+ * These fields are populated by the ConfigManager from the .properties file.
+ */
+public class Configurations {
+    // --- General ---
     public static boolean DEBUG = false;
 
-    // Performance
-
+    // --- Performance ---
     public static boolean LAZY_CONFLICT_CHECK = true;
     public static int CIRCLE_VERTICES = 120;
     public static boolean PIE_MENU_BLEND = false;
     public static boolean DARKENED_BACKGROUND = true;
     public static boolean LABEL_TEXT_SHADOW = false;
 
-    // Behaviour
+    // --- Behaviour ---
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
-    public static boolean FILTER_DEBUG_KEYS = true; // New config option
-
-    // Impl as list of ints to make config easier
+    public static boolean FILTER_DEBUG_KEYS = true;
     public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>();
     public static boolean INVERT_IGNORED_KEYS_LIST = false;
     public static boolean USE_KEYBIND_FIX = true;
 
-
-    // Pie menu customisation
-
+    // --- Pie Menu Customisation ---
     public static float EXPANSION_FACTOR_WHEN_SELECTED = 0;
     public static int PIE_MENU_MARGIN = 0;
     public static float PIE_MENU_SCALE = 0.6f;
     public static float CANCEL_ZONE_SCALE = 0.25f;
-    public static int PIE_MENU_COLOR = 0x00404040; // ARGB
+    public static int PIE_MENU_COLOR = 0x00404040;
     public static int PIE_MENU_SELECT_COLOR = 0x00FFFFFF;
     public static int PIE_MENU_HIGHLIGHT_COLOR = 0x00EED202;
     public static int PIE_MENU_COLOR_LIGHTEN_FACTOR = 0x191919;
