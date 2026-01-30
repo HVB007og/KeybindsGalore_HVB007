@@ -16,6 +16,7 @@ public class Configurations
 
     // Behaviour
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
+    public static boolean FILTER_DEBUG_KEYS = true; // New config option
 
     // Impl as list of ints to make config easier
     public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>();

@@ -5,6 +5,7 @@ import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.option.KeyBinding.Category; // Import KeyBinding.Category
 import net.minecraft.client.util.InputUtil;
 
 import java.util.*;
@@ -30,13 +31,14 @@ public class KeybindManager
         MinecraftClient client = MinecraftClient.getInstance();
         conflictTable.clear();
         for (KeyBinding keybinding : client.options.allKeys) {
-            // Filter out debug keys to prevent them from cluttering the menu
-            // We use safeGetCategory because getCategory() returns a Category object, not a String.
-            String categoryName = safeGetCategory(keybinding);
             String id = keybinding.getId();
-            
-            if (categoryName.toLowerCase().contains("debug") || id.toLowerCase().contains("debug")) {
-                continue;
+
+            // Filter out debug keys to prevent them from cluttering the menu
+            if (Configurations.FILTER_DEBUG_KEYS) {
+                String categoryName = safeGetCategory(keybinding);
+                if (categoryName.toLowerCase().contains("debug") || id.toLowerCase().contains("debug")) {
+                    continue;
+                }
             }
 
             InputUtil.Key physicalKey = ((KeyBindingAccessor) keybinding).getBoundKey();
@@ -62,6 +64,7 @@ public class KeybindManager
     }
 
     public static void openConflictMenu(InputUtil.Key key) {
+        KeybindsGalore.debugLog("Opening conflict menu for key: {}", key);
         KeybindSelectorScreen screen = new KeybindSelectorScreen(key);
         MinecraftClient.getInstance().setScreen(screen);
     }
@@ -70,73 +73,98 @@ public class KeybindManager
         return conflictTable.get(key);
     }
 
+    public static void handleOnKeyPressed(InputUtil.Key key, CallbackInfo ci) {
+        if (hasConflicts(key) && !isIgnoredKey(key) && !isClickHoldKey(key)) {
+            // We cancel onKeyPressed here to prevent timesPressed from incrementing for any conflicting key.
+            // This is crucial for both menu opening and priority key execution.
+            KeybindsGalore.debugLog("handleOnKeyPressed: Cancelling vanilla timesPressed increment for conflict key: {}", key);
+            ci.cancel();
+        }
+    }
+
     public static void handleKeyPress(InputUtil.Key key, boolean pressed, CallbackInfo ci) {
         
-        // 1. Check if the Selector Screen is open and needs to handle the release
-        if (!pressed) {
-            Screen currentScreen = MinecraftClient.getInstance().currentScreen;
-            if (currentScreen instanceof KeybindSelectorScreen) {
-                KeybindsGalore.LOGGER.info("handleKeyPress: Delegating RELEASE to KeybindSelectorScreen");
-                ((KeybindSelectorScreen) currentScreen).onKeyRelease();
-                // After this call, pulseTimer should be set if a selection was made.
-            }
-        }
+        boolean wasSelectorScreenOpen = MinecraftClient.getInstance().currentScreen instanceof KeybindSelectorScreen;
 
-        // 2. Nuclear Pulse Protection
-        if (!pressed && KeybindsGalore.pulseTimer > 0 && KeybindsGalore.activePulseTarget != null) {
-            InputUtil.Key targetKey = ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).getBoundKey();
-            if (key.equals(targetKey)) {
-                KeybindsGalore.LOGGER.info("handleKeyPress: Intercepting RELEASE for Nuclear Pulse. Key={}", key);
+        // --- PRESS LOGIC ---
+        if (pressed && hasConflicts(key) && !isIgnoredKey(key) && !isClickHoldKey(key)) {
+            List<KeyBinding> conflicts = getConflicts(key);
+            KeyBinding priorityKey = null;
 
-                ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).setPressed(true);
-                
-                List<KeyBinding> conflicts = getConflicts(key);
-                if (conflicts != null) {
-                    for (KeyBinding kb : conflicts) {
-                        if (kb != KeybindsGalore.activePulseTarget) {
-                            ((KeyBindingAccessor)kb).setPressed(false);
-                            ((KeyBindingAccessor)kb).setTimesPressed(0);
-                        }
+            // Check for priority keys (e.g., Movement category)
+            if (conflicts != null) {
+                for (KeyBinding kb : conflicts) {
+                    if (kb.getCategory() == Category.MOVEMENT) { // Check if it's a Movement key
+                        priorityKey = kb;
+                        break;
                     }
                 }
-                
-                ci.cancel();
+            }
+
+            if (priorityKey != null) {
+                // --- PRIORITY KEY DETECTED ---
+                KeybindsGalore.debugLog("handleKeyPress (PRESS): Priority key '{}' detected for key: {}. Executing priority action.", priorityKey.getId(), key);
+                ci.cancel(); // Cancel the vanilla event to prevent other conflicts from firing
+
+                // Manually "press" the priority key
+                ((KeyBindingAccessor) priorityKey).setPressed(true);
+                ((KeyBindingAccessor) priorityKey).setTimesPressed(1);
+
+                // Activate Nuclear Pulse protection for the priority key
+                KeybindsGalore.activePulseTarget = priorityKey;
+                KeybindsGalore.pulseTimer = 5;
+
+                return; // Do NOT open the conflict menu
+            } else {
+                // --- NO PRIORITY KEY, OPEN MENU ---
+                KeybindsGalore.debugLog("handleKeyPress (PRESS): Detected conflict for key: {}. Opening menu.", key);
+                ci.cancel(); // Cancel the vanilla event
+                openConflictMenu(key); // Open our menu
                 return;
             }
         }
 
-        if (hasConflicts(key)) {
-            if (isClickHoldKey(key)) {
-                KeyBinding clickHoldBinding = clickHoldKeys.get(key.getCode());
-                if (clickHoldBinding == null) {
-                    if (!pressed) clickHoldKeys.remove(key.getCode());
+        // --- RELEASE LOGIC ---
+        if (!pressed) {
+            if (wasSelectorScreenOpen) {
+                KeybindsGalore.debugLog("handleKeyPress (RELEASE): Detected release while selector screen was open.");
+                Screen currentScreen = MinecraftClient.getInstance().currentScreen;
+                if (currentScreen instanceof KeybindSelectorScreen) {
+                     ((KeybindSelectorScreen) currentScreen).onKeyRelease();
+                }
+            }
+
+            if (KeybindsGalore.pulseTimer > 0 && KeybindsGalore.activePulseTarget != null) {
+                InputUtil.Key targetKey = ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).getBoundKey();
+                if (key.equals(targetKey)) {
+                    KeybindsGalore.debugLog("handleKeyPress (RELEASE): Intercepting for Nuclear Pulse (Selection Made).");
+                    ((KeyBindingAccessor)KeybindsGalore.activePulseTarget).setPressed(true);
+                    
+                    List<KeyBinding> conflicts = getConflicts(key);
+                    if (conflicts != null) {
+                        for (KeyBinding kb : conflicts) {
+                            if (kb != KeybindsGalore.activePulseTarget) {
+                                ((KeyBindingAccessor)kb).setPressed(false);
+                                ((KeyBindingAccessor)kb).setTimesPressed(0);
+                            }
+                        }
+                    }
                     ci.cancel();
                     return;
                 }
-                ci.cancel();
-                if (pressed) {
-                    ((KeyBindingAccessor) clickHoldBinding).setPressed(true);
-                    ((KeyBindingAccessor) clickHoldBinding).setTimesPressed(1);
-                } else {
-                    ((KeyBindingAccessor) clickHoldBinding).setPressed(false);
-                    clickHoldKeys.remove(key.getCode());
-                }
-            } else if (!isIgnoredKey(key)) {
-                if (pressed) {
-                    KeybindsGalore.LOGGER.info("Cancelling PRESS event for conflict menu");
-                    ci.cancel();
-                    openConflictMenu(key);
-                } else {
-                    KeybindsGalore.LOGGER.info("Allowing normal RELEASE event to propagate");
-                }
-            } else if (Configurations.USE_KEYBIND_FIX) {
-                ci.cancel();
-                getConflicts(key).forEach(binding -> {
-                    if (pressed) {
-                        ((KeyBindingAccessor) binding).setPressed(true);
-                        ((KeyBindingAccessor) binding).setTimesPressed(1);
-                    } else ((KeyBindingAccessor) binding).invokeReset();
-                });
+            }
+            
+            if (wasSelectorScreenOpen && KeybindsGalore.pulseTimer == 0) {
+                 KeybindsGalore.debugLog("handleKeyPress (RELEASE): Intercepting for Explicit Cancel (No Selection).");
+                 List<KeyBinding> conflicts = getConflicts(key);
+                 if (conflicts != null) {
+                     for (KeyBinding kb : conflicts) {
+                         ((KeyBindingAccessor)kb).setPressed(false);
+                         ((KeyBindingAccessor)kb).setTimesPressed(0);
+                     }
+                 }
+                 ci.cancel();
+                 return;
             }
         }
     }

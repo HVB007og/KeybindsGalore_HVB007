@@ -57,21 +57,15 @@ public class KeybindSelectorScreen extends Screen {
             firstFrame = false;
         }
 
-        // pollInput(); // REMOVED: We now handle input via event callbacks in KeybindManager
-
         updateSelection(mouseX, mouseY);
         renderMenu(ctx);
         renderLabels(ctx);
     }
 
-    // New method called by KeybindManager when the conflict key is released
+    // Part 4, Step 2: This is called by the KeybindManager's handleKeyPress method.
     public void onKeyRelease() {
-        KeybindsGalore.debugLog("Key RELEASE detected via Event Callback");
+        KeybindsGalore.debugLog("KeybindSelectorScreen.onKeyRelease: Method called.");
         handleSelectionFinish();
-    }
-
-    private void pollInput() {
-        // Legacy polling removed to prevent race conditions
     }
 
     private void handleSelectionFinish() {
@@ -79,22 +73,23 @@ public class KeybindSelectorScreen extends Screen {
             KeyBinding kb = conflicts.get(selectedIndex);
             String name = KeybindManager.safeGetTranslationKey(kb);
 
-            KeybindsGalore.debugLog("Selection Finished. Target: " + name);
+            KeybindsGalore.debugLog("handleSelectionFinish: A selection was made. Target: {}", name);
 
-            // 1. Manually press it NOW (Instant response)
-            ((KeyBindingAccessor) kb).setPressed(true);
-            ((KeyBindingAccessor) kb).setTimesPressed(1);
-
-            // 2. Activate Nuclear Protection for 5 ticks
+            // 1. Activate Protection FIRST (so the mixin allows the press)
             KeybindsGalore.activePulseTarget = kb;
             KeybindsGalore.pulseTimer = 5;
+            KeybindsGalore.debugLog("handleSelectionFinish: pulseTimer set to 5, activePulseTarget set to {}", name);
+
+            // 2. Manually press it NOW (Instant response)
+            ((KeyBindingAccessor) kb).setPressed(true);
+            ((KeyBindingAccessor) kb).setTimesPressed(1);
 
             if (kb.equals(MinecraftClient.getInstance().options.attackKey) && Configurations.ENABLE_ATTACK_WORKAROUND) {
                 ((MinecraftClientAccessor) MinecraftClient.getInstance()).setAttackCooldown(0);
             }
         } else {
-            KeybindsGalore.debugLog("Selection Finished. Nothing selected.");
-            KeybindManager.clickHoldKeys.put(conflictedKey.getCode(), null);
+            // Part 4, Step 2 (continued): No selection was made.
+            KeybindsGalore.debugLog("handleSelectionFinish: No selection was made (selectedIndex is -1). pulseTimer will not be set.");
         }
 
         closeMenu();
@@ -205,6 +200,7 @@ public class KeybindSelectorScreen extends Screen {
     }
 
     private void closeMenu() {
+        KeybindsGalore.debugLog("Closing menu screen.");
         MinecraftClient.getInstance().setScreen(null);
     }
 

@@ -15,33 +15,43 @@ public abstract class KeyBindingMixin
 {
     @Shadow private InputUtil.Key boundKey;
     @Shadow private boolean pressed;
-    @Shadow private int timesPressed;
-
     @Shadow public abstract String getId();
 
     @Inject(at = @At("HEAD"), method = "setKeyPressed", cancellable = true)
     private static void setKeyPressed(InputUtil.Key key, boolean pressed, CallbackInfo ci)
     {
-        // This delegates to KeybindManager, which now handles the "Nuclear Pulse" logic on release.
+        KeybindsGalore.debugLog("Mixin setKeyPressed: Key={} Pressed={}", key, pressed);
         KeybindManager.handleKeyPress(key, pressed, ci);
     }
 
-    @Inject(at = @At("HEAD"), method = "onKeyPressed")
-    private static void onKeyPressed(InputUtil.Key key, CallbackInfo ci) { }
+    @Inject(at = @At("HEAD"), method = "onKeyPressed", cancellable = true)
+    private static void onKeyPressed(InputUtil.Key key, CallbackInfo ci) 
+    {
+        KeybindsGalore.debugLog("Mixin onKeyPressed: Key={}", key);
+        KeybindManager.handleOnKeyPressed(key, ci);
+    }
 
-    // --- VERIFICATION LOGGER ---
-    // This logs whenever a keybinding's state actually changes.
-    // Use this to prove that "Hotbar 9" never turns ON during the selection.
-    @Inject(at = @At("HEAD"), method = "setPressed")
+    @Inject(at = @At("HEAD"), method = "setPressed", cancellable = true)
     public void setPressed(boolean pressed, CallbackInfo ci)
     {
-        // Only log if the state is actually changing to avoid spam
-        if (this.pressed != pressed) {
-            String id = this.getId();
-            // Filter for hotbar keys or relevant keys to keep logs readable
-            if (id.contains("hotbar") || id.contains("keybindsgalore")) {
-                KeybindsGalore.LOGGER.info("STATE CHANGE: {} -> {}", id, pressed ? "PRESSED" : "RELEASED");
+        String id = this.getId();
+
+        // --- THE GATEKEEPER (with an exception) ---
+        // Block conflicting keys, but specifically ALLOW key.toggleGui to pass through.
+        if (pressed && KeybindManager.hasConflicts(this.boundKey)) {
+            if (!id.equals("key.toggleGui")) { // The exception for the special key
+                KeyBinding self = (KeyBinding)(Object)this;
+                if (self != KeybindsGalore.activePulseTarget) {
+                    KeybindsGalore.debugLog("GATEKEEPER: BLOCKED press for {} due to conflict.", id);
+                    ci.cancel();
+                    return;
+                }
             }
+        }
+
+        // --- LOGGING ---
+        if (this.pressed != pressed) {
+            KeybindsGalore.debugLog("STATE CHANGE: {} -> {}", id, pressed ? "PRESSED" : "RELEASED");
         }
     }
 }
