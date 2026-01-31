@@ -95,7 +95,12 @@ public class KeybindManager {
      * Opens the conflict resolution screen (the selection menu).
      */
     public static void openConflictMenu(InputUtil.Key key) {
-        KeybindSelectorScreen screen = new KeybindSelectorScreen(key);
+        Screen screen;
+        if (Configurations.USE_CIRCULAR_MENU) {
+            screen = new KeybindCircularScreen(key);
+        } else {
+            screen = new KeybindSelectorScreen(key);
+        }
         MinecraftClient.getInstance().setScreen(screen);
     }
 
@@ -121,7 +126,7 @@ public class KeybindManager {
      * This method decides whether to execute a priority action, open the conflict menu, or do nothing.
      */
     public static void handleKeyPress(InputUtil.Key key, boolean pressed, CallbackInfo ci) {
-        boolean wasSelectorScreenOpen = MinecraftClient.getInstance().currentScreen instanceof KeybindSelectorScreen;
+        boolean wasSelectorScreenOpen = MinecraftClient.getInstance().currentScreen instanceof KeybindSelectorScreen || MinecraftClient.getInstance().currentScreen instanceof KeybindCircularScreen;
 
         // --- PRESS LOGIC ---
         if (pressed && hasConflicts(key) && !isIgnoredKey(key) && !isClickHoldKey(key)) {
@@ -160,6 +165,8 @@ public class KeybindManager {
                 Screen currentScreen = MinecraftClient.getInstance().currentScreen;
                 if (currentScreen instanceof KeybindSelectorScreen) {
                     ((KeybindSelectorScreen) currentScreen).onKeyRelease();
+                } else if (currentScreen instanceof KeybindCircularScreen) {
+                    ((KeybindCircularScreen) currentScreen).onKeyRelease();
                 }
             }
 

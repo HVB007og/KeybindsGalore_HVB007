@@ -18,6 +18,7 @@ public class Configurations {
     public static boolean LABEL_TEXT_SHADOW = false;
 
     // --- Behaviour ---
+    public static boolean USE_CIRCULAR_MENU = false;
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static boolean FILTER_DEBUG_KEYS = true;
     public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>();

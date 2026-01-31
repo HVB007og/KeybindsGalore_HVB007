@@ -38,3 +38,4 @@ replay_*.log
 # media
 *.mp4
 *.lnk
+/fabric-docs1.21.11-main/
