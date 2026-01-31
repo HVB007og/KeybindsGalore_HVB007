@@ -3,14 +3,17 @@ package net.hvb007.keybindsgalore;
 import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftClientAccessor;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.NarratorManager;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,119 +25,144 @@ public class KeybindCircularScreen extends Screen {
 
     private final InputUtil.Key conflictedKey;
     private final List<KeyBinding> conflicts = new ArrayList<>();
-    private int selectedIndex = -1;
+    private int selectedSectorIndex = -1;
+    private int ticksInScreen = 0;
+    private boolean mouseDown = false;
 
-    private long animationStartTime;
-    private static final long ANIMATION_DURATION_MS = 200;
+    private int centreX = 0, centreY = 0;
+    private float maxRadius = 0;
+    private float maxExpandedRadius = 0;
+    private float cancelZoneRadius = 0;
+    private boolean isFirstFrame = true;
 
     public KeybindCircularScreen(InputUtil.Key key) {
         super(NarratorManager.EMPTY);
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
-        if (Configurations.ANIMATE_PIE_MENU) {
-            this.animationStartTime = Util.getMeasuringTimeMs();
-        } else {
-            this.animationStartTime = -1;
-        }
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    protected void init() {
+        super.init();
+        this.centreX = this.width / 2;
+        this.centreY = this.height / 2;
+        this.maxRadius = Math.min((this.centreX * Configurations.PIE_MENU_SCALE) - Configurations.PIE_MENU_MARGIN, (this.centreY * Configurations.PIE_MENU_SCALE) - Configurations.PIE_MENU_MARGIN);
+        this.maxExpandedRadius = this.maxRadius * Configurations.EXPANSION_FACTOR_WHEN_SELECTED;
+        this.cancelZoneRadius = maxRadius * Configurations.CANCEL_ZONE_SCALE;
+        this.isFirstFrame = false;
+    }
+
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         // Manually draw darkened background to avoid "Can only blur once per frame" crash
         if (Configurations.DARKENED_BACKGROUND) {
-            ctx.fill(0, 0, this.width, this.height, 0x60000000);
+            context.fill(0, 0, this.width, this.height, 0x60000000);
         }
 
-        int centerX = width / 2;
-        int centerY = height / 2;
-        int numConflicts = conflicts.size();
-
-        // Logic adapted from provided snippet
-        double mouseAngle = mouseAngle(centerX, centerY, mouseX, mouseY);
-        float anglePerSlice = (float) (Math.PI * 2 / numConflicts); // Radians
-
-        float baseRadius = Configurations.PIE_MENU_SCALE * Math.min(width, height) / 2f;
-        float currentRadius = baseRadius;
-
-        if (Configurations.ANIMATE_PIE_MENU && animationStartTime != -1) {
-            long elapsedTime = Util.getMeasuringTimeMs() - animationStartTime;
-            float progress = (float) elapsedTime / ANIMATION_DURATION_MS;
-            progress = MathHelper.clamp(progress, 0.0f, 1.0f);
-            currentRadius = baseRadius * progress;
-            if (progress >= 1.0f) {
-                animationStartTime = -1;
-            }
+        // Ensure dimensions are set if init wasn't called for some reason (though it should be)
+        if (this.isFirstFrame) {
+            this.init();
         }
 
-        double dist = Math.sqrt(Math.pow(mouseX - centerX, 2) + Math.pow(mouseY - centerY, 2));
+        double mouseAngle = mouseAngle(this.centreX, this.centreY, mouseX, mouseY);
+        float mouseDistanceFromCentre = MathHelper.sqrt((float) ((mouseX - this.centreX) * (mouseX - this.centreX) + (mouseY - this.centreY) * (mouseY - this.centreY)));
 
-        selectedIndex = -1;
-        if (currentRadius > 0 && dist > currentRadius * Configurations.CANCEL_ZONE_SCALE) {
-            // Calculate selected index based on angle
-            // Angle is 0 to 2PI, starting at Right (3 o'clock)
-            int seg = (int) (mouseAngle / anglePerSlice);
-            if (seg >= 0 && seg < numConflicts) {
-                selectedIndex = seg;
-            }
+        int numberOfSectors = this.conflicts.size();
+        if (numberOfSectors == 0) return; // Prevent division by zero
+
+        float sectorAngle = (float) (MathHelper.TAU / numberOfSectors);
+
+        this.selectedSectorIndex = (int) (mouseAngle / sectorAngle);
+        // Clamp index just in case
+        if (this.selectedSectorIndex >= numberOfSectors) this.selectedSectorIndex = numberOfSectors - 1;
+        if (this.selectedSectorIndex < 0) this.selectedSectorIndex = 0;
+
+        if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
+            this.selectedSectorIndex = -1;
         }
 
-        // TODO: Implement proper pie slice rendering when BufferRenderer/BufferUploader API is clarified.
-        // For now, we just draw the text and a highlight box.
+        // Removed inefficient pie rendering (renderBackgroundPie, renderSelectionIndicator)
+        // Only rendering text and highlight box now.
 
-        if (currentRadius > baseRadius * 0.5f) {
-            for (int i = 0; i < numConflicts; i++) {
-                Text name = formatName(conflicts.get(i));
+        renderLabelTexts(context, delta, numberOfSectors, sectorAngle);
+    }
 
-                // Calculate position using radians as per snippet logic
-                float rad = (i + 0.5f) * anglePerSlice;
+    private void renderLabelTexts(DrawContext context, float delta, int numberOfSectors, float sectorAngle) {
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        
+        for (int sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++) {
+            // Simplified radius calculation to ensure visibility
+            float radius = this.maxRadius;
+            
+            // Use a slightly larger radius for text to push it outside
+            float textRadius = radius * 1.4f; 
+            
+            float angle = (sectorIndex + 0.5f) * sectorAngle;
 
-                // Use a slightly larger radius for text to push it outside
-                float textRadius = currentRadius * 1.1f;
-                float xp = centerX + (float) Math.cos(rad) * textRadius;
-                float yp = centerY + (float) Math.sin(rad) * textRadius;
+            float xPos = this.centreX + MathHelper.cos(angle) * textRadius;
+            float yPos = this.centreY + MathHelper.sin(angle) * textRadius;
 
-                // Dynamic text alignment logic from snippet
-                int textWidth = textRenderer.getWidth(name);
-                int textHeight = textRenderer.fontHeight;
+            KeyBinding action = this.conflicts.get(sectorIndex);
+            String actionName = formatName(action).getString();
 
-                // If left of center, shift left. If right, shift slightly left (padding).
-                float textX = xp - (xp < centerX ? textWidth - 8 : 4);
-                // If above center, shift up.
-                float textY = yp - (yp < centerY ? 9 : 0);
+            int textWidth = textRenderer.getWidth(actionName);
+            int textHeight = textRenderer.fontHeight;
 
-                int color = 0xFFFFFFFF;
-                if (i == selectedIndex) {
-                    color = 0xFFFFFF00; // Yellow highlight
-                    // Draw a small background box for the selected item
-                    // Adjusted to match the dynamic text position
-                    ctx.fill((int)textX - 2, (int)textY - 2, (int)textX + textWidth + 2, (int)textY + textHeight + 2, 0x80000000);
-                }
-
-                ctx.drawTextWithShadow(textRenderer, name, (int)textX, (int)textY, color);
+            // Dynamic text alignment logic
+            if (xPos > this.centreX) { // Right side
+                xPos -= Configurations.LABEL_TEXT_INSET;
+                if (this.width - xPos < textWidth)
+                    xPos -= textWidth - this.width + xPos;
+            } else { // Left side
+                xPos -= textWidth - Configurations.LABEL_TEXT_INSET;
+                if (xPos < 0) xPos = Configurations.LABEL_TEXT_INSET;
             }
+            yPos -= Configurations.LABEL_TEXT_INSET;
+
+            // Highlight if selected
+            if (this.selectedSectorIndex == sectorIndex) {
+                actionName = Formatting.UNDERLINE + actionName;
+                // Draw highlight box BEHIND text - Yellow with 50% opacity
+                context.fill((int)xPos - 2, (int)yPos - 2, (int)xPos + textWidth + 2, (int)yPos + textHeight + 2, 0x80FFFF00);
+            }
+
+            // Draw text ON TOP
+            context.drawText(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
         }
     }
 
     private static double mouseAngle(int x, int y, int mx, int my) {
-        return (Math.atan2(my - y, mx - x) + Math.PI * 2) % (Math.PI * 2);
+        return (MathHelper.atan2(my - y, mx - x) + Math.PI * 2) % (Math.PI * 2);
     }
 
+    // Restored method called by KeybindManager
     public void onKeyRelease() {
-        handleSelectionFinish();
+        closePieMenu();
     }
 
-    private void handleSelectionFinish() {
-        if (selectedIndex != -1) {
-            KeyBinding kb = conflicts.get(selectedIndex);
-            KeybindsGalore.activePulseTarget = kb;
+    private void closePieMenu() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        client.setScreen(null);
+
+        if (this.selectedSectorIndex != -1 && this.selectedSectorIndex < this.conflicts.size()) {
+            KeyBinding selectedKeyBinding = this.conflicts.get(this.selectedSectorIndex);
+            
+            // Set the chosen key as the "pulse target" to keep it pressed.
+            KeybindsGalore.activePulseTarget = selectedKeyBinding;
             KeybindsGalore.pulseTimer = 5;
-            ((KeyBindingAccessor) kb).setPressed(true);
-            ((KeyBindingAccessor) kb).setTimesPressed(1);
-            if (kb.equals(MinecraftClient.getInstance().options.attackKey) && Configurations.ENABLE_ATTACK_WORKAROUND) {
-                ((MinecraftClientAccessor) MinecraftClient.getInstance()).setAttackCooldown(0);
+
+            ((KeyBindingAccessor) selectedKeyBinding).setPressed(true);
+            ((KeyBindingAccessor) selectedKeyBinding).setTimesPressed(1);
+
+            if (selectedKeyBinding.equals(client.options.attackKey) && Configurations.ENABLE_ATTACK_WORKAROUND) {
+                ((MinecraftClientAccessor) client).setAttackCooldown(0);
             }
         }
-        closeMenu();
+    }
+
+    @Override
+    public void tick() {
+        this.ticksInScreen++;
     }
 
     private Text formatName(KeyBinding kb) {
@@ -150,10 +178,6 @@ public class KeybindCircularScreen extends Screen {
             }
         }
         return Text.literal(nameStr);
-    }
-
-    private void closeMenu() {
-        MinecraftClient.getInstance().setScreen(null);
     }
 
     @Override
