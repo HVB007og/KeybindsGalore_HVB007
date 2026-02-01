@@ -6,6 +6,7 @@ package net.hvb007.keybindsgalore;
 import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftClientAccessor;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;

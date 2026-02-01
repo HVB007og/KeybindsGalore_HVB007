@@ -18,7 +18,7 @@ import java.util.HashSet;
 /**
  * Manages the detection and resolution of conflicting keybinds.
  */
-public class KeybindManager {
+public class KeybindsManager {
     // Maps a physical key to a list of all KeyBinding objects bound to it.
     public static final Hashtable<InputUtil.Key, List<KeyBinding>> conflictTable = new Hashtable<>();
     // Tracks keys that are in "click and hold" mode.
@@ -47,7 +47,7 @@ public class KeybindManager {
         MinecraftClient client = MinecraftClient.getInstance();
         conflictTable.clear();
 
-        for (KeyBinding keybinding : client.options.allKeys) { // Use client.options.allKeys for Yarn
+        for (KeyBinding keybinding : client.options.allKeys) {
             String id = keybinding.getId();
 
             // Optionally filter out keybinds from the "debug" category.
