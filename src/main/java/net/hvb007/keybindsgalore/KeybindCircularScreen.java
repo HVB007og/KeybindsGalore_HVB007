@@ -78,118 +78,61 @@ public class KeybindCircularScreen extends Screen {
             this.selectedSectorIndex = -1;
         }
 
-        // Render background sectors
-        renderBackgroundPie(context, numberOfSectors, sectorAngle);
+        final int colorEven = 0x80606060;
+        final int colorOdd = 0x80808080;
+        final int colorSelected = 0xFFE0E0E0;
+        final int colorLastOddFix = 0x80A0A0A0; // A third color for the odd-sector case
 
-        // Render selected sector
-        renderSelectionIndicator(context, numberOfSectors, sectorAngle);
-
-        renderLabelTexts(context, delta, numberOfSectors, sectorAngle);
-    }
-
-    private void renderBackgroundPie(DrawContext context, int numberOfSectors, float sectorAngle) {
+        // Render sectors
         for (int i = 0; i < numberOfSectors; i++) {
-            if (i == this.selectedSectorIndex) continue;
-
             float startAngle = i * sectorAngle;
             float endAngle = (i + 1) * sectorAngle;
-            
-            // Alternating colors: Brighter Grey vs Even Brighter Grey
-            int fillColor = (i % 2 == 0) ? 0x80606060 : 0x80808080;
-            int outlineColor = 0xFF000000; // Black outline for boundaries
-            
-            drawSectorWireframe(context, startAngle, endAngle, this.cancelZoneRadius, this.maxRadius, fillColor, outlineColor);
+
+            float outerX1 = this.centreX + (float) Math.cos(startAngle) * this.maxRadius;
+            float outerY1 = this.centreY + (float) Math.sin(startAngle) * this.maxRadius;
+            float outerX2 = this.centreX + (float) Math.cos(endAngle) * this.maxRadius;
+            float outerY2 = this.centreY + (float) Math.sin(endAngle) * this.maxRadius;
+
+            int color;
+            if (i == this.selectedSectorIndex) {
+                color = colorSelected;
+            } else {
+                if (numberOfSectors % 2 != 0 && i == numberOfSectors - 1) {
+                    color = colorLastOddFix;
+                } else {
+                    color = (i % 2 == 0) ? colorEven : colorOdd;
+                }
+            }
+
+            // We need to draw two triangles to form a sector of the pie
+            TriangleStripRenderer.fillTriangle(context, this.centreX, this.centreY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, color);
         }
+
+        // Render cancel zone
+        // This is a bit of a hack, we draw a black circle by drawing a lot of triangles
+        for (int i = 0; i < 360; i++) {
+            float startAngle = (float) Math.toRadians(i);
+            float endAngle = (float) Math.toRadians(i + 1);
+
+            float outerX1 = this.centreX + (float) Math.cos(startAngle) * this.cancelZoneRadius;
+            float outerY1 = this.centreY + (float) Math.sin(startAngle) * this.cancelZoneRadius;
+            float outerX2 = this.centreX + (float) Math.cos(endAngle) * this.cancelZoneRadius;
+            float outerY2 = this.centreY + (float) Math.sin(endAngle) * this.cancelZoneRadius;
+
+            TriangleStripRenderer.fillTriangle(context, this.centreX, this.centreY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, 0xFF000000);
+        }
+
+
+        renderLabelTexts(context, delta, numberOfSectors);
     }
 
-    private void renderSelectionIndicator(DrawContext context, int numberOfSectors, float sectorAngle) {
-        if (this.selectedSectorIndex == -1) return;
+    private void renderLabelTexts(DrawContext context, float delta, int numberOfSectors) {
+        if (numberOfSectors == 0) return;
 
-        float startAngle = this.selectedSectorIndex * sectorAngle;
-        float endAngle = (this.selectedSectorIndex + 1) * sectorAngle;
-        
-        // Light Grey for selection fill lines
-        int fillColor = 0xFFE0E0E0; 
-        int outlineColor = 0xFF000000; // Black outline for boundaries
-        
-        drawSectorWireframe(context, startAngle, endAngle, this.cancelZoneRadius, this.maxRadius, fillColor, outlineColor);
-    }
-
-    private void drawSectorWireframe(DrawContext context, float startAngle, float endAngle, float innerRadius, float outerRadius, int fillColor, int outlineColor) {
-        // Draw sparse lines to indicate the sector
-        int lines = 5;
-        float step = (endAngle - startAngle) / (lines - 1);
-
-        // Draw radial lines
-        for (int i = 0; i < lines; i++) {
-            float angle = startAngle + i * step;
-            
-            float x1 = this.centreX + (float) Math.cos(angle) * innerRadius;
-            float y1 = this.centreY + (float) Math.sin(angle) * innerRadius;
-            
-            float x2 = this.centreX + (float) Math.cos(angle) * outerRadius;
-            float y2 = this.centreY + (float) Math.sin(angle) * outerRadius;
-            
-            // Use outlineColor for first and last line, fillColor for internal lines
-            int color = (i == 0 || i == lines - 1) ? outlineColor : fillColor;
-            
-            drawLine(context, (int)x1, (int)y1, (int)x2, (int)y2, color);
-        }
-
-        // Draw outer arc (using outlineColor)
-        for (int i = 0; i < lines - 1; i++) {
-            float angle1 = startAngle + i * step;
-            float angle2 = startAngle + (i + 1) * step;
-
-            float x1 = this.centreX + (float) Math.cos(angle1) * outerRadius;
-            float y1 = this.centreY + (float) Math.sin(angle1) * outerRadius;
-
-            float x2 = this.centreX + (float) Math.cos(angle2) * outerRadius;
-            float y2 = this.centreY + (float) Math.sin(angle2) * outerRadius;
-
-            drawLine(context, (int)x1, (int)y1, (int)x2, (int)y2, outlineColor);
-        }
-        
-        // Draw inner arc (using outlineColor)
-        for (int i = 0; i < lines - 1; i++) {
-            float angle1 = startAngle + i * step;
-            float angle2 = startAngle + (i + 1) * step;
-
-            float x1 = this.centreX + (float) Math.cos(angle1) * innerRadius;
-            float y1 = this.centreY + (float) Math.sin(angle1) * innerRadius;
-
-            float x2 = this.centreX + (float) Math.cos(angle2) * innerRadius;
-            float y2 = this.centreY + (float) Math.sin(angle2) * innerRadius;
-
-            drawLine(context, (int)x1, (int)y1, (int)x2, (int)y2, outlineColor);
-        }
-    }
-
-    private void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
-        float dx = x2 - x1;
-        float dy = y2 - y1;
-        float distance = (float) Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance == 0) return;
-        
-        float stepX = dx / distance;
-        float stepY = dy / distance;
-        
-        float curX = x1;
-        float curY = y1;
-        
-        // Draw points with larger size (4x4) and adjusted step (3.0f) for thicker lines
-        for (float i = 0; i < distance; i += 3.0f) {
-            context.fill((int)curX, (int)curY, (int)curX + 4, (int)curY + 4, color);
-            curX += stepX * 3.0f;
-            curY += stepY * 3.0f;
-        }
-    }
-
-    private void renderLabelTexts(DrawContext context, float delta, int numberOfSectors, float sectorAngle) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        
+
         for (int sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++) {
+            float sectorAngle = (float) (MathHelper.TAU / numberOfSectors);
             float radius = this.maxRadius;
             float textRadius = radius * 1.1f;
             float angle = (sectorIndex + 0.5f) * sectorAngle;
