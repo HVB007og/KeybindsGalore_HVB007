@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.HashSet;
 
 /**
@@ -20,7 +20,7 @@ import java.util.HashSet;
  */
 public class KeybindManager {
     // Maps a physical key to a list of all KeyBinding objects bound to it.
-    public static final Hashtable<InputConstants.Key, List<KeyMapping>> conflictTable = new Hashtable<>();
+    public static final Map<InputConstants.Key, List<KeyMapping>> conflictTable = new HashMap<>();
     // Tracks keys that are in "click and hold" mode.
     public static final HashMap<Integer, KeyMapping> clickHoldKeys = new HashMap<>();
 
