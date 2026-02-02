@@ -3,17 +3,17 @@
  */
 package net.hvb007.keybindsgalore;
 
-import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
-import net.hvb007.keybindsgalore.mixin.MinecraftClientAccessor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.NarratorManager;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
+import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.GameNarrator;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,25 +31,25 @@ public class KeybindSelectorScreen extends Screen {
     private static final int BOX_SPACING = 3;
     private static final int SCREEN_MARGIN = 50;
 
-    private final InputUtil.Key conflictedKey;
-    private final List<KeyBinding> conflicts = new ArrayList<>();
+    private final InputConstants.Key conflictedKey;
+    private final List<KeyMapping> conflicts = new ArrayList<>();
     private final List<BoxDimensions> cachedBoxes = new ArrayList<>();
 
     private int widthCenter, heightCenter;
     private boolean firstFrame = true;
     private int selectedIndex = -1;
 
-    private List<KeyBinding> topList, bottomList;
+    private List<KeyMapping> topList, bottomList;
     private int halfCount, topStartY, bottomStartY;
 
-    public KeybindSelectorScreen(InputUtil.Key key) {
-        super(NarratorManager.EMPTY);
+    public KeybindSelectorScreen(InputConstants.Key key) {
+        super(GameNarrator.NO_TITLE);
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         renderBackground(ctx, mouseX, mouseY, delta);
         if (firstFrame) {
             widthCenter = width / 2;
@@ -77,19 +77,19 @@ public class KeybindSelectorScreen extends Screen {
      */
     private void handleSelectionFinish() {
         if (selectedIndex != -1) {
-            KeyBinding kb = conflicts.get(selectedIndex);
+            KeyMapping kb = conflicts.get(selectedIndex);
 
             // Set the chosen key as the "pulse target" to keep it pressed.
             KeybindsGalore.activePulseTarget = kb;
             KeybindsGalore.pulseTimer = 5;
 
             // Manually press the keybind to ensure it activates.
-            ((KeyBindingAccessor) kb).setPressed(true);
-            ((KeyBindingAccessor) kb).setTimesPressed(1);
+            ((KeyMappingAccessor) kb).setIsDown(true);
+            ((KeyMappingAccessor) kb).setClickCount(1);
 
             // Apply a workaround for the attack key if needed.
-            if (kb.equals(MinecraftClient.getInstance().options.attackKey) && Configurations.ENABLE_ATTACK_WORKAROUND) {
-                ((MinecraftClientAccessor) MinecraftClient.getInstance()).setAttackCooldown(0);
+            if (kb.same(Minecraft.getInstance().options.keyAttack) && Configurations.ENABLE_ATTACK_WORKAROUND) {
+                ((MinecraftAccessor) Minecraft.getInstance()).setMissTime(0);
             }
         }
         // If no key was selected, we do nothing and let the KeybindManager handle the reset.
@@ -106,11 +106,11 @@ public class KeybindSelectorScreen extends Screen {
         topList = conflicts.subList(0, halfCount);
         bottomList = conflicts.subList(halfCount, conflicts.size());
 
-        int boxHeight = textRenderer.fontHeight + 2 * BOX_VERTICAL_PADDING;
+        int boxHeight = font.lineHeight + 2 * BOX_VERTICAL_PADDING;
         int maxWidth = 0;
-        for (KeyBinding kb : conflicts) {
+        for (KeyMapping kb : conflicts) {
             String name = formatName(kb);
-            int textW = textRenderer.getWidth(name);
+            int textW = font.width(name);
             int totalW = textW + 2 * BOX_HORIZONTAL_PADDING;
             maxWidth = Math.max(maxWidth, totalW);
             BoxDimensions dim = new BoxDimensions();
@@ -128,7 +128,7 @@ public class KeybindSelectorScreen extends Screen {
     /**
      * Renders the background boxes for each keybinding in the list.
      */
-    private void renderMenu(DrawContext ctx) {
+    private void renderMenu(GuiGraphics ctx) {
         for (int i = 0; i < topList.size(); i++) {
             BoxDimensions dim = cachedBoxes.get(i);
             int x = widthCenter - (dim.finalWidth / 2);
@@ -146,7 +146,7 @@ public class KeybindSelectorScreen extends Screen {
     /**
      * Renders the text labels for each keybinding.
      */
-    private void renderLabels(DrawContext ctx) {
+    private void renderLabels(GuiGraphics ctx) {
         for (int i = 0; i < conflicts.size(); i++) {
             BoxDimensions dim = cachedBoxes.get(i);
             int baseY = (i < halfCount)
@@ -160,17 +160,17 @@ public class KeybindSelectorScreen extends Screen {
             }
             String name = formatName(conflicts.get(i));
             if (selectedIndex == i) {
-                name = Formatting.UNDERLINE + name;
+                name = ChatFormatting.UNDERLINE + name;
             }
-            int tw = textRenderer.getWidth(name);
-            ctx.drawText(textRenderer, name,
+            int tw = font.width(name);
+            ctx.drawString(font, name,
                     x + (dim.finalWidth - tw) / 2,
-                    y + (dim.height - textRenderer.fontHeight) / 2,
+                    y + (dim.height - font.lineHeight) / 2,
                     0xFFFFFFFF, true);
         }
     }
 
-    private void drawBox(DrawContext ctx, int x, int y, int w, int h, int idx) {
+    private void drawBox(GuiGraphics ctx, int x, int y, int w, int h, int idx) {
         int bg = Configurations.PIE_MENU_COLOR;
         if (customDataManager.hasCustomData) {
             try {
@@ -211,14 +211,14 @@ public class KeybindSelectorScreen extends Screen {
     /**
      * Formats the name of a keybinding for display, including its category.
      */
-    private String formatName(KeyBinding kb) {
+    private String formatName(KeyMapping kb) {
         String id = KeybindManager.safeGetTranslationKey(kb);
         String cat = KeybindManager.safeGetCategory(kb);
-        String name = Text.translatable(cat).getString() + ": " + Text.translatable(id).getString();
+        String name = Component.translatable(cat).getString() + ": " + Component.translatable(id).getString();
         if (customDataManager.hasCustomData) {
             try {
                 if (customDataManager.customData.get(id).hideCategory)
-                    name = Text.translatable(id).getString();
+                    name = Component.translatable(id).getString();
                 name = Objects.requireNonNull(customDataManager.customData.get(id).displayName);
             } catch (Exception ignored) {
             }
@@ -227,16 +227,16 @@ public class KeybindSelectorScreen extends Screen {
     }
 
     private void closeMenu() {
-        MinecraftClient.getInstance().setScreen(null);
+        Minecraft.getInstance().setScreen(null);
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
     @Override
-    public void renderBackground(DrawContext ctx, int mx, int my, float d) {
+    public void renderBackground(GuiGraphics ctx, int mx, int my, float d) {
         if (Configurations.DARKENED_BACKGROUND) {
             ctx.fill(0, 0, width, height, 0x60000000);
         }

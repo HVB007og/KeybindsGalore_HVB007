@@ -1,7 +1,7 @@
 package net.hvb007.keybindsgalore;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.*;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 
 /**
  * This class provides utility methods for rendering triangles and other shapes
@@ -22,7 +22,7 @@ public class TriangleStripRenderer {
      * @param y3 Y coordinate of the third vertex
      * @param color The ARGB color value
      */
-    public static void fillTriangle(DrawContext drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
+    public static void fillTriangle(GuiGraphics drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
         // Sort vertices by y coordinate
         if (y1 > y2) {
             int tx = x1; x1 = x2; x2 = tx;
@@ -55,7 +55,7 @@ public class TriangleStripRenderer {
                 xRight = temp;
             }
 
-            drawContext.drawHorizontalLine((int)xLeft, (int)xRight, y, color);
+            drawContext.hLine((int)xLeft, (int)xRight, y, color);
         }
     }
 

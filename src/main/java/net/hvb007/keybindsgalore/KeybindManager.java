@@ -1,11 +1,11 @@
 package net.hvb007.keybindsgalore;
 
-import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.option.KeyBinding.Category;
-import net.minecraft.client.util.InputUtil;
+import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.KeyMapping.Category;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -20,22 +20,22 @@ import java.util.HashSet;
  */
 public class KeybindManager {
     // Maps a physical key to a list of all KeyBinding objects bound to it.
-    public static final Hashtable<InputUtil.Key, List<KeyBinding>> conflictTable = new Hashtable<>();
+    public static final Hashtable<InputConstants.Key, List<KeyMapping>> conflictTable = new Hashtable<>();
     // Tracks keys that are in "click and hold" mode.
-    public static final HashMap<Integer, KeyBinding> clickHoldKeys = new HashMap<>();
+    public static final HashMap<Integer, KeyMapping> clickHoldKeys = new HashMap<>();
 
     /**
      * Safely gets the translation key (ID) of a keybinding.
      */
-    public static String safeGetTranslationKey(KeyBinding binding) {
-        return binding.getId();
+    public static String safeGetTranslationKey(KeyMapping binding) {
+        return binding.getName();
     }
 
     /**
      * Safely gets the display name of a keybinding's category.
      */
-    public static String safeGetCategory(KeyBinding binding) {
-        return binding.getCategory().getLabel().getString();
+    public static String safeGetCategory(KeyMapping binding) {
+        return binding.getCategory().label().getString();
     }
 
     /**
@@ -44,11 +44,11 @@ public class KeybindManager {
      */
     public static void findAllConflicts() {
         KeybindsGalore.LOGGER.info("Scanning for conflicting keybinds...");
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         conflictTable.clear();
 
-        for (KeyBinding keybinding : client.options.allKeys) { // Use client.options.allKeys for Yarn
-            String id = keybinding.getId();
+        for (KeyMapping keybinding : client.options.keyMappings) { // Use client.options.allKeys for Yarn
+            String id = keybinding.getName();
 
             // Optionally filter out keybinds from the "debug" category.
             if (Configurations.FILTER_DEBUG_KEYS) {
@@ -58,8 +58,8 @@ public class KeybindManager {
                 }
             }
 
-            InputUtil.Key physicalKey = ((KeyBindingAccessor) keybinding).getBoundKey();
-            if (physicalKey.getCode() == GLFW.GLFW_KEY_UNKNOWN) {
+            InputConstants.Key physicalKey = ((KeyMappingAccessor) keybinding).getKey();
+            if (physicalKey.getValue() == GLFW.GLFW_KEY_UNKNOWN) {
                 continue; // Ignore unbound keys.
             }
 
@@ -73,41 +73,41 @@ public class KeybindManager {
     /**
      * Checks if a key is configured to be ignored by this mod.
      */
-    public static boolean isIgnoredKey(InputUtil.Key key) {
-        return Configurations.IGNORED_KEYS.contains(key.getCode()) ^ Configurations.INVERT_IGNORED_KEYS_LIST;
+    public static boolean isIgnoredKey(InputConstants.Key key) {
+        return Configurations.IGNORED_KEYS.contains(key.getValue()) ^ Configurations.INVERT_IGNORED_KEYS_LIST;
     }
 
     /**
      * Checks if a key is currently in "click and hold" mode.
      */
-    public static boolean isClickHoldKey(InputUtil.Key key) {
-        return clickHoldKeys.containsKey(key.getCode());
+    public static boolean isClickHoldKey(InputConstants.Key key) {
+        return clickHoldKeys.containsKey(key.getValue());
     }
 
     /**
      * Checks if a physical key has multiple keybindings assigned to it.
      */
-    public static boolean hasConflicts(InputUtil.Key key) {
+    public static boolean hasConflicts(InputConstants.Key key) {
         return conflictTable.containsKey(key);
     }
 
     /**
      * Opens the conflict resolution screen (the selection menu).
      */
-    public static void openConflictMenu(InputUtil.Key key) {
+    public static void openConflictMenu(InputConstants.Key key) {
         Screen screen;
         if (Configurations.USE_CIRCULAR_MENU) {
             screen = new KeybindCircularScreen(key);
         } else {
             screen = new KeybindSelectorScreen(key);
         }
-        MinecraftClient.getInstance().setScreen(screen);
+        Minecraft.getInstance().setScreen(screen);
     }
 
     /**
      * Returns the list of conflicting keybindings for a given physical key.
      */
-    public static List<KeyBinding> getConflicts(InputUtil.Key key) {
+    public static List<KeyMapping> getConflicts(InputConstants.Key key) {
         return conflictTable.get(key);
     }
 
@@ -115,7 +115,7 @@ public class KeybindManager {
      * Intercepts the onKeyPressed event to prevent `timesPressed` from incrementing on conflicting keys.
      * This stops the game from thinking a "click" happened when we are just opening the menu.
      */
-    public static void handleOnKeyPressed(InputUtil.Key key, CallbackInfo ci) {
+    public static void handleOnKeyPressed(InputConstants.Key key, CallbackInfo ci) {
         if (hasConflicts(key) && !isIgnoredKey(key) && !isClickHoldKey(key)) {
             ci.cancel();
         }
@@ -125,17 +125,17 @@ public class KeybindManager {
      * The main entry point for intercepting key presses.
      * This method decides whether to execute a priority action, open the conflict menu, or do nothing.
      */
-    public static void handleKeyPress(InputUtil.Key key, boolean pressed, CallbackInfo ci) {
-        boolean wasSelectorScreenOpen = MinecraftClient.getInstance().currentScreen instanceof KeybindSelectorScreen || MinecraftClient.getInstance().currentScreen instanceof KeybindCircularScreen;
+    public static void handleKeyPress(InputConstants.Key key, boolean pressed, CallbackInfo ci) {
+        boolean wasSelectorScreenOpen = Minecraft.getInstance().screen instanceof KeybindSelectorScreen || Minecraft.getInstance().screen instanceof KeybindCircularScreen;
 
         // --- PRESS LOGIC ---
         if (pressed && hasConflicts(key) && !isIgnoredKey(key) && !isClickHoldKey(key)) {
-            List<KeyBinding> conflicts = getConflicts(key);
-            KeyBinding priorityKey = null;
+            List<KeyMapping> conflicts = getConflicts(key);
+            KeyMapping priorityKey = null;
 
             // Check if any of the conflicting keys are priority keys (e.g., from the MOVEMENT category).
             if (conflicts != null) {
-                for (KeyBinding kb : conflicts) {
+                for (KeyMapping kb : conflicts) {
                     if (kb.getCategory() == Category.MOVEMENT) {
                         priorityKey = kb;
                         break;
@@ -146,8 +146,8 @@ public class KeybindManager {
             if (priorityKey != null) {
                 // A priority key was found. Execute its action immediately and skip the menu.
                 ci.cancel();
-                ((KeyBindingAccessor) priorityKey).setPressed(true);
-                ((KeyBindingAccessor) priorityKey).setTimesPressed(1);
+                ((KeyMappingAccessor) priorityKey).setIsDown(true);
+                ((KeyMappingAccessor) priorityKey).setClickCount(1);
                 KeybindsGalore.activePulseTarget = priorityKey;
                 KeybindsGalore.pulseTimer = 5; // Use pulse to ensure it stays pressed.
             } else {
@@ -162,7 +162,7 @@ public class KeybindManager {
         if (!pressed) {
             // If our menu was open, let it handle the release event first.
             if (wasSelectorScreenOpen) {
-                Screen currentScreen = MinecraftClient.getInstance().currentScreen;
+                Screen currentScreen = Minecraft.getInstance().screen;
                 if (currentScreen instanceof KeybindSelectorScreen) {
                     ((KeybindSelectorScreen) currentScreen).onKeyRelease();
                 } else if (currentScreen instanceof KeybindCircularScreen) {
@@ -172,21 +172,21 @@ public class KeybindManager {
 
             // If a selection was made from the menu, the pulse timer will be active.
             if (KeybindsGalore.pulseTimer > 0 && KeybindsGalore.activePulseTarget != null) {
-                InputUtil.Key targetKey = ((KeyBindingAccessor) KeybindsGalore.activePulseTarget).getBoundKey();
+                InputConstants.Key targetKey = ((KeyMappingAccessor) KeybindsGalore.activePulseTarget).getKey();
                 if (key.equals(targetKey)) {
                     // This is the release event for the key we just made a selection for.
                     // Keep the selected key pressed and cancel the vanilla release logic.
-                    ((KeyBindingAccessor) KeybindsGalore.activePulseTarget).setPressed(true);
+                    ((KeyMappingAccessor) KeybindsGalore.activePulseTarget).setIsDown(true);
                     ci.cancel();
                 }
             }
             // If the menu was closed without a selection, we need to explicitly reset all conflicting keys.
             else if (wasSelectorScreenOpen) {
-                List<KeyBinding> conflicts = getConflicts(key);
+                List<KeyMapping> conflicts = getConflicts(key);
                 if (conflicts != null) {
-                    for (KeyBinding kb : conflicts) {
-                        ((KeyBindingAccessor) kb).setPressed(false);
-                        ((KeyBindingAccessor) kb).setTimesPressed(0);
+                    for (KeyMapping kb : conflicts) {
+                        ((KeyMappingAccessor) kb).setIsDown(false);
+                        ((KeyMappingAccessor) kb).setClickCount(0);
                     }
                 }
                 ci.cancel();

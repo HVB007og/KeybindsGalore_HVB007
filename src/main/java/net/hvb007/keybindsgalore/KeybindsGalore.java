@@ -5,10 +5,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,16 +18,16 @@ import java.lang.reflect.Constructor;
 
 import net.hvb007.keybindsgalore.configmanager.ConfigManager;
 import net.hvb007.keybindsgalore.customdata.DataManager;
-import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
+import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 
 public class KeybindsGalore implements ClientModInitializer {
     public static ConfigManager configManager;
     public static DataManager customDataManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("keybindsgalore");
-    private static KeyBinding configReloadKeybind;
+    private static KeyMapping configReloadKeybind;
 
     // The keybinding we want to force-press after a menu selection.
-    public static KeyBinding activePulseTarget = null;
+    public static KeyMapping activePulseTarget = null;
     // Ticks remaining to hold the activePulseTarget as pressed.
     public static int pulseTimer = 0;
 
@@ -46,18 +46,18 @@ public class KeybindsGalore implements ClientModInitializer {
             // Register a keybind to reload the config file in-game.
             // Uses reflection to support multiple Minecraft versions.
             try {
-                Constructor<?> constructor = KeyBinding.class.getConstructors()[0];
+                Constructor<?> constructor = KeyMapping.class.getConstructors()[0];
                 Object categoryArg = "key.categories.misc";
                 Class<?>[] paramTypes = constructor.getParameterTypes();
                 if (paramTypes.length > 0 && !paramTypes[paramTypes.length - 1].equals(String.class)) {
-                    try { categoryArg = KeyBinding.class.getField("MISC").get(null); }
-                    catch (NoSuchFieldException e) { categoryArg = KeyBinding.class.getField("GAMEPLAY").get(null); }
+                    try { categoryArg = KeyMapping.class.getField("MISC").get(null); }
+                    catch (NoSuchFieldException e) { categoryArg = KeyMapping.class.getField("GAMEPLAY").get(null); }
                 }
 
-                if (paramTypes.length > 1 && paramTypes[1].equals(InputUtil.Type.class)) {
-                    configReloadKeybind = (KeyBinding) constructor.newInstance("key.keybindsgalore.reloadconfigs", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, categoryArg);
+                if (paramTypes.length > 1 && paramTypes[1].equals(InputConstants.Type.class)) {
+                    configReloadKeybind = (KeyMapping) constructor.newInstance("key.keybindsgalore.reloadconfigs", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, categoryArg);
                 } else {
-                    configReloadKeybind = (KeyBinding) constructor.newInstance("key.keybindsgalore.reloadconfigs", GLFW.GLFW_KEY_UNKNOWN, categoryArg);
+                    configReloadKeybind = (KeyMapping) constructor.newInstance("key.keybindsgalore.reloadconfigs", GLFW.GLFW_KEY_UNKNOWN, categoryArg);
                 }
                 KeyBindingHelper.registerKeyBinding(configReloadKeybind);
             } catch (Exception e) {
@@ -71,25 +71,25 @@ public class KeybindsGalore implements ClientModInitializer {
                     pulseTimer--;
                     // When the timer expires, release the key and clear the target.
                     if (pulseTimer == 0 && activePulseTarget != null) {
-                        ((KeyBindingAccessor) activePulseTarget).setPressed(false);
+                        ((KeyMappingAccessor) activePulseTarget).setIsDown(false);
                         activePulseTarget = null;
                     }
                 }
 
                 // Handle the config reload keybind press.
-                if (configReloadKeybind != null && configReloadKeybind.wasPressed()) {
+                if (configReloadKeybind != null && configReloadKeybind.consumeClick()) {
                     try {
                         configManager.readConfigFile();
                         customDataManager.readDataFile();
                     } catch (IOException ex) {
-                        if (client.player != null) client.player.sendMessage(Text.translatable("text.keybindsgalore.configreloadfail", ex.getMessage()), false);
+                        if (client.player != null) client.player.displayClientMessage(Component.translatable("text.keybindsgalore.configreloadfail", ex.getMessage()), false);
                         return;
                     }
 
                     if (client.player != null) {
-                        if (configManager.errorFlag) client.player.sendMessage(Text.translatable("text.keybindsgalore.configerrors").formatted(Formatting.RED), false);
-                        if (customDataManager.hasCustomData) client.player.sendMessage(Text.translatable("text.keybindsgalore.customdatafound"), false);
-                        client.player.sendMessage(Text.translatable("text.keybindsgalore.configreloaded"), false);
+                        if (configManager.errorFlag) client.player.displayClientMessage(Component.translatable("text.keybindsgalore.configerrors").withStyle(ChatFormatting.RED), false);
+                        if (customDataManager.hasCustomData) client.player.displayClientMessage(Component.translatable("text.keybindsgalore.customdatafound"), false);
+                        client.player.displayClientMessage(Component.translatable("text.keybindsgalore.configreloaded"), false);
                     }
                 }
             });

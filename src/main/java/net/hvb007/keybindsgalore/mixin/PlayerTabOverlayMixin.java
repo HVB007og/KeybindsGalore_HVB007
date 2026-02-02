@@ -1,6 +1,6 @@
 package net.hvb007.keybindsgalore.mixin;
 
-import net.minecraft.client.gui.hud.PlayerListHud;
+import net.minecraft.client.gui.components.PlayerTabOverlay;
 import org.spongepowered.asm.mixin.Mixin;
 
 /**
@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
  * Currently a placeholder, as the original logic was commented out.
  * This file is kept to prevent "Class Not Found" errors from the mixin config.
  */
-@Mixin(PlayerListHud.class)
-public class PlayerListHudMixin {
+@Mixin(PlayerTabOverlay.class)
+public class PlayerTabOverlayMixin {
     // No active logic.
 }

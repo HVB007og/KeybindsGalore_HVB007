@@ -1,18 +1,18 @@
 package net.hvb007.keybindsgalore;
 
-import net.hvb007.keybindsgalore.mixin.KeyBindingAccessor;
-import net.hvb007.keybindsgalore.mixin.MinecraftClientAccessor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.NarratorManager;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
+import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.GameNarrator;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -23,8 +23,8 @@ import static net.hvb007.keybindsgalore.KeybindsGalore.customDataManager;
 
 public class KeybindCircularScreen extends Screen {
 
-    private final InputUtil.Key conflictedKey;
-    private final List<KeyBinding> conflicts = new ArrayList<>();
+    private final InputConstants.Key conflictedKey;
+    private final List<KeyMapping> conflicts = new ArrayList<>();
     private int selectedSectorIndex = -1;
     private int ticksInScreen = 0;
     private boolean mouseDown = false;
@@ -35,8 +35,8 @@ public class KeybindCircularScreen extends Screen {
     private float cancelZoneRadius = 0;
     private boolean isFirstFrame = true;
 
-    public KeybindCircularScreen(InputUtil.Key key) {
-        super(NarratorManager.EMPTY);
+    public KeybindCircularScreen(InputConstants.Key key) {
+        super(GameNarrator.NO_TITLE);
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
     }
@@ -53,7 +53,7 @@ public class KeybindCircularScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         if (Configurations.DARKENED_BACKGROUND) {
             context.fill(0, 0, this.width, this.height, 0x60000000);
         }
@@ -63,12 +63,12 @@ public class KeybindCircularScreen extends Screen {
         }
 
         double mouseAngle = mouseAngle(this.centreX, this.centreY, mouseX, mouseY);
-        float mouseDistanceFromCentre = MathHelper.sqrt((float) ((mouseX - this.centreX) * (mouseX - this.centreX) + (mouseY - this.centreY) * (mouseY - this.centreY)));
+        float mouseDistanceFromCentre = Mth.sqrt((float) ((mouseX - this.centreX) * (mouseX - this.centreX) + (mouseY - this.centreY) * (mouseY - this.centreY)));
 
         int numberOfSectors = this.conflicts.size();
         if (numberOfSectors == 0) return;
 
-        float sectorAngle = (float) (MathHelper.TAU / numberOfSectors);
+        float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
 
         this.selectedSectorIndex = (int) (mouseAngle / sectorAngle);
         if (this.selectedSectorIndex >= numberOfSectors) this.selectedSectorIndex = numberOfSectors - 1;
@@ -126,25 +126,25 @@ public class KeybindCircularScreen extends Screen {
         renderLabelTexts(context, delta, numberOfSectors);
     }
 
-    private void renderLabelTexts(DrawContext context, float delta, int numberOfSectors) {
+    private void renderLabelTexts(GuiGraphics context, float delta, int numberOfSectors) {
         if (numberOfSectors == 0) return;
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        Font textRenderer = Minecraft.getInstance().font;
 
         for (int sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++) {
-            float sectorAngle = (float) (MathHelper.TAU / numberOfSectors);
+            float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
             float radius = this.maxRadius;
             float textRadius = radius * 1.1f;
             float angle = (sectorIndex + 0.5f) * sectorAngle;
 
-            float xPos = this.centreX + MathHelper.cos(angle) * textRadius;
-            float yPos = this.centreY + MathHelper.sin(angle) * textRadius;
+            float xPos = this.centreX + Mth.cos(angle) * textRadius;
+            float yPos = this.centreY + Mth.sin(angle) * textRadius;
 
-            KeyBinding action = this.conflicts.get(sectorIndex);
+            KeyMapping action = this.conflicts.get(sectorIndex);
             String actionName = formatName(action).getString();
 
-            int textWidth = textRenderer.getWidth(actionName);
-            int textHeight = textRenderer.fontHeight;
+            int textWidth = textRenderer.width(actionName);
+            int textHeight = textRenderer.lineHeight;
 
             if (xPos > this.centreX) {
                 xPos -= Configurations.LABEL_TEXT_INSET;
@@ -157,17 +157,17 @@ public class KeybindCircularScreen extends Screen {
             yPos -= Configurations.LABEL_TEXT_INSET;
 
             if (this.selectedSectorIndex == sectorIndex) {
-                actionName = Formatting.UNDERLINE + actionName;
+                actionName = ChatFormatting.UNDERLINE + actionName;
                 // Draw highlight box BEHIND text - Very Light Grey with 50% opacity
                 context.fill((int)xPos - 2, (int)yPos - 2, (int)xPos + textWidth + 2, (int)yPos + textHeight + 2, 0x80E0E0E0);
             }
 
-            context.drawText(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
+            context.drawString(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
         }
     }
 
     private static double mouseAngle(int x, int y, int mx, int my) {
-        return (MathHelper.atan2(my - y, mx - x) + Math.PI * 2) % (Math.PI * 2);
+        return (Mth.atan2(my - y, mx - x) + Math.PI * 2) % (Math.PI * 2);
     }
 
     public void onKeyRelease() {
@@ -175,18 +175,18 @@ public class KeybindCircularScreen extends Screen {
     }
 
     private void closePieMenu() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         client.setScreen(null);
 
         if (this.selectedSectorIndex != -1 && this.selectedSectorIndex < this.conflicts.size()) {
-            KeyBinding selectedKeyBinding = this.conflicts.get(this.selectedSectorIndex);
+            KeyMapping selectedKeyBinding = this.conflicts.get(this.selectedSectorIndex);
             KeybindsGalore.activePulseTarget = selectedKeyBinding;
             KeybindsGalore.pulseTimer = 5;
-            ((KeyBindingAccessor) selectedKeyBinding).setPressed(true);
-            ((KeyBindingAccessor) selectedKeyBinding).setTimesPressed(1);
+            ((KeyMappingAccessor) selectedKeyBinding).setIsDown(true);
+            ((KeyMappingAccessor) selectedKeyBinding).setClickCount(1);
 
-            if (selectedKeyBinding.equals(client.options.attackKey) && Configurations.ENABLE_ATTACK_WORKAROUND) {
-                ((MinecraftClientAccessor) client).setAttackCooldown(0);
+            if (selectedKeyBinding.same(client.options.keyAttack) && Configurations.ENABLE_ATTACK_WORKAROUND) {
+                ((MinecraftAccessor) client).setMissTime(0);
             }
         }
     }
@@ -196,23 +196,23 @@ public class KeybindCircularScreen extends Screen {
         this.ticksInScreen++;
     }
 
-    private Text formatName(KeyBinding kb) {
+    private Component formatName(KeyMapping kb) {
         String id = KeybindManager.safeGetTranslationKey(kb);
         String cat = KeybindManager.safeGetCategory(kb);
-        String nameStr = Text.translatable(cat).getString() + ": " + Text.translatable(id).getString();
+        String nameStr = Component.translatable(cat).getString() + ": " + Component.translatable(id).getString();
         if (customDataManager.hasCustomData) {
             try {
                 if (customDataManager.customData.get(id).hideCategory)
-                    nameStr = Text.translatable(id).getString();
+                    nameStr = Component.translatable(id).getString();
                 nameStr = Objects.requireNonNull(customDataManager.customData.get(id).displayName);
             } catch (Exception ignored) {
             }
         }
-        return Text.literal(nameStr);
+        return Component.literal(nameStr);
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 }
