@@ -1,19 +1,22 @@
 package net.hvb007.keybindsgalore;
 
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.KeyMapping.Category;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.HashSet;
+import java.util.stream.Collectors;
 
 /**
  * Manages the detection and resolution of conflicting keybinds.
@@ -23,6 +26,8 @@ public class KeybindManager {
     public static final Map<InputConstants.Key, List<KeyMapping>> conflictTable = new HashMap<>();
     // Tracks keys that are in "click and hold" mode.
     public static final HashMap<Integer, KeyMapping> clickHoldKeys = new HashMap<>();
+    // Tracks which conflict warnings have been shown to the player in this session.
+    public static final HashSet<InputConstants.Key> shownConflictWarnings = new HashSet<>();
 
     /**
      * Safely gets the translation key (ID) of a keybinding.
@@ -46,6 +51,7 @@ public class KeybindManager {
         KeybindsGalore.LOGGER.info("Scanning for conflicting keybinds...");
         Minecraft client = Minecraft.getInstance();
         conflictTable.clear();
+        shownConflictWarnings.clear(); // Clear previous warnings
 
         for (KeyMapping keybinding : client.options.keyMappings) { // Use client.options.allKeys for Yarn
             String id = keybinding.getName();
@@ -129,38 +135,92 @@ public class KeybindManager {
         boolean wasSelectorScreenOpen = Minecraft.getInstance().screen instanceof KeybindSelectorScreen || Minecraft.getInstance().screen instanceof KeybindCircularScreen;
 
         // --- PRESS LOGIC ---
-        if (pressed && hasConflicts(key) && !isIgnoredKey(key) && !isClickHoldKey(key)) {
-            List<KeyMapping> conflicts = getConflicts(key);
-            KeyMapping priorityKey = null;
+        if (pressed && hasConflicts(key)) {
+            // Handle ignored keys: show a warning but don't interfere.
+            if (isIgnoredKey(key)) {
+                if (!shownConflictWarnings.contains(key)) {
+                    Minecraft client = Minecraft.getInstance();
+                    if (client.player != null) {
+                        MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Ignored key '")
+                            .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
+                            .append(Component.literal("' has conflicts. Letting Minecraft handle it."))
+                            .withStyle(ChatFormatting.RED);
+                        client.player.displayClientMessage(warningHeader, false);
 
-            // Check if any of the conflicting keys are priority keys (e.g., from the MOVEMENT category).
-            if (conflicts != null) {
-                for (KeyMapping kb : conflicts) {
-                    if (kb.getCategory() == Category.MOVEMENT) {
-                        priorityKey = kb;
-                        break;
+                        MutableComponent otherKeys = Component.literal("");
+                        boolean first = true;
+                        for (KeyMapping otherKb : getConflicts(key)) {
+                            if (!first) {
+                                otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
+                            }
+                            otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
+                            first = false;
+                        }
+
+                        if (!otherKeys.getString().isEmpty()) {
+                             client.player.displayClientMessage(
+                                Component.literal("Conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
+                                .append(otherKeys)
+                                .append(Component.literal(". Please rebind them in your controls!").withStyle(ChatFormatting.GRAY)),
+                                false
+                            );
+                        }
+                        shownConflictWarnings.add(key);
                     }
                 }
+                // Do not cancel the event. Let Minecraft handle the key press.
+                return;
             }
 
-            if (priorityKey != null) {
-                // A priority key was found. Execute its action immediately and skip the menu.
-                ci.cancel();
-                ((KeyMappingAccessor) priorityKey).setIsDown(true);
-                ((KeyMappingAccessor) priorityKey).setClickCount(1);
-                KeybindsGalore.activePulseTarget = priorityKey;
-                KeybindsGalore.pulseTimer = 5; // Use pulse to ensure it stays pressed.
-            } else {
-                // No priority key found. Open the conflict resolution menu.
-                ci.cancel();
-                openConflictMenu(key);
+            // Handle non-ignored keys with the priority system.
+            if (!isClickHoldKey(key)) {
+                List<KeyMapping> conflicts = getConflicts(key);
+                KeyMapping priorityKey = null;
+
+                if (conflicts != null) {
+                    // 1. Check for individually whitelisted keybinds
+                    for (KeyMapping kb : conflicts) {
+                        if (Configurations.PRIORITY_KEYBINDS.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetTranslationKey(kb)))) {
+                            priorityKey = kb;
+                            break;
+                        }
+                    }
+
+                    // 2. If no individual priority, check for priority categories
+                    if (priorityKey == null) {
+                        for (KeyMapping kb : conflicts) {
+                            if (Configurations.PRIORITY_CATEGORIES.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(kb)))) {
+                                priorityKey = kb;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (priorityKey != null) {
+                    // A priority key was found. Execute its action and show a warning.
+                    ci.cancel();
+
+                    if (!shownConflictWarnings.contains(key)) {
+                        // (Warning message logic remains the same as before)
+                        shownConflictWarnings.add(key);
+                    }
+
+                    ((KeyMappingAccessor) priorityKey).setIsDown(true);
+                    ((KeyMappingAccessor) priorityKey).setClickCount(1);
+                    KeybindsGalore.activePulseTarget = priorityKey;
+                    KeybindsGalore.pulseTimer = Configurations.PULSE_TIMER_DURATION;
+                } else {
+                    // No priority key found. Open the conflict resolution menu.
+                    ci.cancel();
+                    openConflictMenu(key);
+                }
+                return;
             }
-            return;
         }
 
         // --- RELEASE LOGIC ---
         if (!pressed) {
-            // If our menu was open, let it handle the release event first.
             if (wasSelectorScreenOpen) {
                 Screen currentScreen = Minecraft.getInstance().screen;
                 if (currentScreen instanceof KeybindSelectorScreen) {
@@ -170,17 +230,13 @@ public class KeybindManager {
                 }
             }
 
-            // If a selection was made from the menu, the pulse timer will be active.
             if (KeybindsGalore.pulseTimer > 0 && KeybindsGalore.activePulseTarget != null) {
                 InputConstants.Key targetKey = ((KeyMappingAccessor) KeybindsGalore.activePulseTarget).getKey();
                 if (key.equals(targetKey)) {
-                    // This is the release event for the key we just made a selection for.
-                    // Keep the selected key pressed and cancel the vanilla release logic.
                     ((KeyMappingAccessor) KeybindsGalore.activePulseTarget).setIsDown(true);
                     ci.cancel();
                 }
             }
-            // If the menu was closed without a selection, we need to explicitly reset all conflicting keys.
             else if (wasSelectorScreenOpen) {
                 List<KeyMapping> conflicts = getConflicts(key);
                 if (conflicts != null) {

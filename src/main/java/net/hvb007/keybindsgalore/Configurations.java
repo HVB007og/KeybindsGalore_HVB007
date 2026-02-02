@@ -1,6 +1,7 @@
 package net.hvb007.keybindsgalore;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Holds all the configuration fields for the mod.
@@ -21,9 +22,12 @@ public class Configurations {
     public static boolean USE_CIRCULAR_MENU = false;
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static boolean FILTER_DEBUG_KEYS = true;
-    public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>();
+    public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>(Arrays.asList(340, 341, 87, 65, 83, 68, 32));
     public static boolean INVERT_IGNORED_KEYS_LIST = false;
     public static boolean USE_KEYBIND_FIX = true;
+    public static int PULSE_TIMER_DURATION = 5;
+    public static ArrayList<String> PRIORITY_CATEGORIES = new ArrayList<>(Arrays.asList("key.categories.movement"));
+    public static ArrayList<String> PRIORITY_KEYBINDS = new ArrayList<>(Arrays.asList("key.attack", "key.use"));
 
     // --- Pie Menu Customisation ---
     public static float EXPANSION_FACTOR_WHEN_SELECTED = 0;
