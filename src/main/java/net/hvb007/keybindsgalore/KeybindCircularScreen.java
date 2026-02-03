@@ -1,5 +1,6 @@
 package net.hvb007.keybindsgalore;
 
+import com.mojang.blaze3d.vertex.Tesselator;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
@@ -14,6 +15,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,10 +80,10 @@ public class KeybindCircularScreen extends Screen {
             this.selectedSectorIndex = -1;
         }
 
-        final int colorEven = 0x80606060;
-        final int colorOdd = 0x80808080;
+        final int colorEven = 0xFF606060; // Opaque for hardware rendering
+        final int colorOdd = 0xFF808080;
         final int colorSelected = 0xFFE0E0E0;
-        final int colorLastOddFix = 0x80A0A0A0; // A third color for the odd-sector case
+        final int colorLastOddFix = 0xFFA0A0A0;
 
         // Render sectors
         for (int i = 0; i < numberOfSectors; i++) {
@@ -104,12 +106,11 @@ public class KeybindCircularScreen extends Screen {
                 }
             }
 
-            // We need to draw two triangles to form a sector of the pie
-            TriangleStripRenderer.fillTriangle(context, this.centreX, this.centreY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, color);
+            // Draw the sector using the new hardware renderer
+            KBRenderer.drawTriangle(context, this.centreX, this.centreY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, color);
         }
 
         // Render cancel zone
-        // This is a bit of a hack, we draw a black circle by drawing a lot of triangles
         for (int i = 0; i < 360; i++) {
             float startAngle = (float) Math.toRadians(i);
             float endAngle = (float) Math.toRadians(i + 1);
@@ -119,7 +120,7 @@ public class KeybindCircularScreen extends Screen {
             float outerX2 = this.centreX + (float) Math.cos(endAngle) * this.cancelZoneRadius;
             float outerY2 = this.centreY + (float) Math.sin(endAngle) * this.cancelZoneRadius;
 
-            TriangleStripRenderer.fillTriangle(context, this.centreX, this.centreY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, 0xFF000000);
+            KBRenderer.drawTriangle(context, this.centreX, this.centreY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, 0xFF000000);
         }
 
 
