@@ -1,6 +1,11 @@
 package net.hvb007.keybindsgalore;
 
 import com.mojang.blaze3d.vertex.Tesselator;
+import io.wispforest.owo.ui.base.BaseOwoScreen;
+import io.wispforest.owo.ui.container.UIContainers;
+import io.wispforest.owo.ui.container.FlowLayout;
+import io.wispforest.owo.ui.core.OwoUIAdapter;
+import io.wispforest.owo.ui.core.Surface;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
@@ -15,6 +20,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
+import org.jetbrains.annotations.NotNull;
 
 
 import java.util.ArrayList;
@@ -23,7 +29,7 @@ import java.util.Objects;
 
 import static net.hvb007.keybindsgalore.KeybindsGalore.customDataManager;
 
-public class KeybindCircularScreen extends Screen {
+public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
 
     private final InputConstants.Key conflictedKey;
     private final List<KeyMapping> conflicts = new ArrayList<>();
@@ -38,14 +44,26 @@ public class KeybindCircularScreen extends Screen {
     private boolean isFirstFrame = true;
 
     public KeybindCircularScreen(InputConstants.Key key) {
-        super(GameNarrator.NO_TITLE);
+        super(); 
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
     }
 
     @Override
+    protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
+        return OwoUIAdapter.create(this, UIContainers::verticalFlow);
+    }
+
+    @Override
+    protected void build(FlowLayout rootComponent) {
+        if (Configurations.DARKENED_BACKGROUND) {
+            rootComponent.surface(Surface.VANILLA_TRANSLUCENT);
+        }
+    }
+
+    @Override
     protected void init() {
-        super.init();
+        super.init(); // Important for Owo
         this.centreX = this.width / 2;
         this.centreY = this.height / 2;
         this.maxRadius = Math.min((this.centreX * Configurations.PIE_MENU_SCALE) - Configurations.PIE_MENU_MARGIN, (this.centreY * Configurations.PIE_MENU_SCALE) - Configurations.PIE_MENU_MARGIN);
@@ -56,9 +74,8 @@ public class KeybindCircularScreen extends Screen {
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        if (Configurations.DARKENED_BACKGROUND) {
-            context.fill(0, 0, this.width, this.height, 0x60000000);
-        }
+        // Call super.render to draw Owo UI components (including the surface background)
+        super.render(context, mouseX, mouseY, delta);
 
         if (this.isFirstFrame) {
             this.init();
@@ -80,7 +97,7 @@ public class KeybindCircularScreen extends Screen {
             this.selectedSectorIndex = -1;
         }
 
-        final int colorEven = 0xFF606060; // Opaque for hardware rendering
+        final int colorEven = 0xFF606060;
         final int colorOdd = 0xFF808080;
         final int colorSelected = 0xFFE0E0E0;
         final int colorLastOddFix = 0xFFA0A0A0;
@@ -89,11 +106,6 @@ public class KeybindCircularScreen extends Screen {
         for (int i = 0; i < numberOfSectors; i++) {
             float startAngle = i * sectorAngle;
             float endAngle = (i + 1) * sectorAngle;
-
-            float outerX1 = this.centreX + (float) Math.cos(startAngle) * this.maxRadius;
-            float outerY1 = this.centreY + (float) Math.sin(startAngle) * this.maxRadius;
-            float outerX2 = this.centreX + (float) Math.cos(endAngle) * this.maxRadius;
-            float outerY2 = this.centreY + (float) Math.sin(endAngle) * this.maxRadius;
 
             int color;
             if (i == this.selectedSectorIndex) {
@@ -106,23 +118,12 @@ public class KeybindCircularScreen extends Screen {
                 }
             }
 
-            // Draw the sector using the new hardware renderer
-            KBRenderer.drawTriangle(context, this.centreX, this.centreY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, color);
+            // Use drawSector which handles both software and Owo rendering
+            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.maxRadius, color);
         }
 
-        // Render cancel zone
-        for (int i = 0; i < 360; i++) {
-            float startAngle = (float) Math.toRadians(i);
-            float endAngle = (float) Math.toRadians(i + 1);
-
-            float outerX1 = this.centreX + (float) Math.cos(startAngle) * this.cancelZoneRadius;
-            float outerY1 = this.centreY + (float) Math.sin(startAngle) * this.cancelZoneRadius;
-            float outerX2 = this.centreX + (float) Math.cos(endAngle) * this.cancelZoneRadius;
-            float outerY2 = this.centreY + (float) Math.sin(endAngle) * this.cancelZoneRadius;
-
-            KBRenderer.drawTriangle(context, this.centreX, this.centreY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, 0xFF000000);
-        }
-
+        // Render cancel zone (black circle)
+        TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, 0, (float)Mth.TWO_PI, this.cancelZoneRadius, 0xFF000000);
 
         renderLabelTexts(context, delta, numberOfSectors);
     }

@@ -14,6 +14,7 @@ repositories {
 	mavenCentral()
 	maven { url = "https://maven.fabricmc.net/" }
 	maven { url = "https://maven.wispforest.io" } // Owo Lib repository
+	maven { url = "https://jitpack.io" } // JitPack for transitive dependencies like kdl4j
 }
 
 loom {
@@ -38,7 +39,7 @@ sourceSets {
 }
 
 // Define Owo Lib version here for easy updating
-def owo_version = "0.12.10+1.21"
+def owo_version = "0.13.0+1.21.11"
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"

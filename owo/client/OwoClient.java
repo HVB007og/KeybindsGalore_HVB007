@@ -1,0 +1,81 @@
+package io.wispforest.owo.client;
+
+import io.wispforest.owo.Owo;
+import io.wispforest.owo.braid.display.BraidDisplay;
+import io.wispforest.owo.client.screens.MenuNetworkingInternals;
+import io.wispforest.owo.command.debug.OwoDebugCommands;
+import io.wispforest.owo.config.OwoConfigCommand;
+import io.wispforest.owo.itemgroup.json.OwoItemGroupLoader;
+import io.wispforest.owo.moddata.ModDataLoader;
+import io.wispforest.owo.ui.core.OwoUIPipelines;
+import io.wispforest.owo.ui.parsing.UIModelLoader;
+import io.wispforest.owo.ui.renderstate.OwoSpecialGuiElementRenderers;
+import io.wispforest.owo.ui.util.NinePatchTexture;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.minecraft.class_10799;
+import net.minecraft.class_156;
+import net.minecraft.class_3264;
+import org.jetbrains.annotations.ApiStatus;
+
+@ApiStatus.Internal
+@Environment(EnvType.CLIENT)
+public class OwoClient implements ClientModInitializer {
+
+    private static final String LINUX_RENDERDOC_WARNING = """
+        
+        ========================================
+        Ignored 'owo.renderdocPath' property as this Minecraft instance is not running on Windows.
+        Please populate the LD_PRELOAD environment variable instead
+        ========================================""";
+
+    private static final String MAC_RENDERDOC_WARNING = """
+        
+        ========================================
+        Ignored 'owo.renderdocPath' property as this Minecraft instance is not running on Windows.
+        RenderDoc is not supported on macOS
+        ========================================""";
+
+    private static final String GENERIC_RENDERDOC_WARNING = """
+        
+        ========================================
+        Ignored 'owo.renderdocPath' property as this Minecraft instance is not running on Windows.
+        ========================================""";
+
+    @Override
+    public void onInitializeClient() {
+        ModDataLoader.load(OwoItemGroupLoader.INSTANCE);
+
+        ResourceManagerHelper.get(class_3264.field_14188).registerReloadListener(new UIModelLoader());
+        ResourceManagerHelper.get(class_3264.field_14188).registerReloadListener(new NinePatchTexture.MetadataLoader());
+
+        OwoUIPipelines.register();
+        class_10799.method_67887(BraidDisplay.PIPELINE);
+
+        final var renderdocPath = System.getProperty("owo.renderdocPath");
+        if (renderdocPath != null) {
+            if (class_156.method_668() == class_156.class_158.field_1133) {
+                System.load(renderdocPath);
+            } else {
+                Owo.LOGGER.warn(switch (class_156.method_668()) {
+                    case field_1135 -> LINUX_RENDERDOC_WARNING;
+                    case field_1137 -> MAC_RENDERDOC_WARNING;
+                    default -> GENERIC_RENDERDOC_WARNING;
+                });
+            }
+        }
+
+        MenuNetworkingInternals.Client.init();
+
+        ClientCommandRegistrationCallback.EVENT.register(OwoConfigCommand::register);
+
+        if (Owo.DEBUG) {
+            OwoDebugCommands.Client.register();
+        }
+
+        OwoSpecialGuiElementRenderers.init();
+    }
+}

@@ -1,0 +1,315 @@
+package io.wispforest.owo.network;
+
+import io.wispforest.endec.Endec;
+import io.wispforest.endec.impl.StructEndecBuilder;
+import io.wispforest.owo.Owo;
+import io.wispforest.owo.mixin.ClientCommonPacketListenerImplAccessor;
+import io.wispforest.owo.mixin.ServerCommonPacketListenerImplAccessor;
+import io.wispforest.owo.ops.TextOps;
+import io.wispforest.owo.particles.systems.ParticleSystemController;
+import io.wispforest.owo.serialization.CodecUtils;
+import io.wispforest.owo.serialization.endec.MinecraftEndecs;
+import io.wispforest.owo.util.OwoFreezer;
+import io.wispforest.owo.util.ServicesFrozenException;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.class_2561;
+import net.minecraft.class_2960;
+import net.minecraft.class_310;
+import net.minecraft.class_3545;
+import net.minecraft.class_5250;
+import net.minecraft.class_8610;
+import net.minecraft.class_8674;
+import net.minecraft.class_8710;
+import net.minecraft.class_9139;
+import net.minecraft.server.MinecraftServer;
+import org.jetbrains.annotations.ApiStatus;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.ToIntFunction;
+
+@ApiStatus.Internal
+public final class OwoHandshake {
+
+    private static final Endec<Map<class_2960, Integer>> CHANNEL_HASHES_ENDEC = Endec.map(MinecraftEndecs.IDENTIFIER, Endec.INT);
+
+    private static final class_5250 PREFIX = TextOps.concat(Owo.PREFIX, class_2561.method_30163("§chandshake failure\n"));
+    public static final class_2960 CHANNEL_ID = Owo.id("handshake");
+    public static final class_2960 OFF_CHANNEL_ID = Owo.id("handshake_off");
+
+    private static final boolean ENABLED = System.getProperty("owo.handshake.enabled") != null ? Boolean.getBoolean("owo.handshake.enabled") : Owo.DEBUG;
+    private static boolean HANDSHAKE_REQUIRED = false;
+    private static boolean QUERY_RECEIVED = false;
+
+    private OwoHandshake() {}
+
+    // ------------
+    // Registration
+    // ------------
+
+    public static void enable() {
+        if (OwoFreezer.isFrozen()) {
+            throw new ServicesFrozenException("The oωo handshake may only be enabled during mod initialization");
+        }
+    }
+
+    public static void requireHandshake() {
+        if (OwoFreezer.isFrozen()) {
+            throw new ServicesFrozenException("The oωo handshake may only be made required during mod initialization");
+        }
+
+        HANDSHAKE_REQUIRED = true;
+    }
+
+    static {
+        PayloadTypeRegistry.configurationS2C().register(HandshakeRequest.ID, CodecUtils.toPacketCodec(HandshakeRequest.ENDEC));
+        PayloadTypeRegistry.configurationC2S().register(HandshakeResponse.ID, CodecUtils.toPacketCodec(HandshakeResponse.ENDEC));
+
+        ServerConfigurationConnectionEvents.CONFIGURE.register(OwoHandshake::configureStart);
+        ServerConfigurationNetworking.registerGlobalReceiver(HandshakeResponse.ID, OwoHandshake::syncServer);
+
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            if (!ENABLED) {
+                PayloadTypeRegistry.configurationS2C().register(HandshakeOff.ID, class_9139.method_56431(new HandshakeOff()));
+                ClientConfigurationNetworking.registerGlobalReceiver(HandshakeOff.ID, (payload, context) -> {});
+            }
+
+            ClientConfigurationNetworking.registerGlobalReceiver(HandshakeRequest.ID, OwoHandshake::syncClient);
+            ClientConfigurationConnectionEvents.READY.register(OwoHandshake::handleReadyClient);
+
+            ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+                QUERY_RECEIVED = false;
+                QueuedChannelSet.channels = null;
+            });
+
+            ClientConfigurationConnectionEvents.DISCONNECT.register((handler, client) -> {
+                QUERY_RECEIVED = false;
+                QueuedChannelSet.channels = null;
+            });
+        }
+    }
+
+    public static boolean isValidClient() {
+        return ENABLED && QUERY_RECEIVED;
+    }
+
+    // -------
+    // Packets
+    // -------
+
+    private static void configureStart(class_8610 handler, MinecraftServer server) {
+        if (!ENABLED) return;
+
+        if (ServerConfigurationNetworking.canSend(handler, OFF_CHANNEL_ID)) {
+            Owo.LOGGER.info("[Handshake] Handshake disabled by client, skipping");
+            return;
+        }
+
+        if (!ServerConfigurationNetworking.canSend(handler, CHANNEL_ID)) {
+            if (!HANDSHAKE_REQUIRED) return;
+
+            handler.method_52396(TextOps.concat(PREFIX, class_2561.method_30163("incompatible client")));
+            Owo.LOGGER.info("[Handshake] Handshake failed, client doesn't understand channel packet");
+            return;
+        }
+
+        var optionalChannels = formatHashes(OwoNetChannel.OPTIONAL_CHANNELS, OwoHandshake::hashChannel);
+        ServerConfigurationNetworking.send(handler, new HandshakeRequest(optionalChannels));
+        Owo.LOGGER.info("[Handshake] Sending channel packet");
+    }
+
+    @Environment(EnvType.CLIENT)
+    private static void syncClient(HandshakeRequest request, ClientConfigurationNetworking.Context context) {
+        Owo.LOGGER.info("[Handshake] Sending client channels");
+        QUERY_RECEIVED = true;
+
+        QueuedChannelSet.channels = filterOptionalServices(request.optionalChannels(), OwoNetChannel.REGISTERED_CHANNELS, OwoHandshake::hashChannel);
+
+        var requiredChannels = formatHashes(OwoNetChannel.REQUIRED_CHANNELS, OwoHandshake::hashChannel);
+        var requiredControllers = formatHashes(ParticleSystemController.REGISTERED_CONTROLLERS, OwoHandshake::hashController);
+        var optionalChannels = formatHashes(OwoNetChannel.OPTIONAL_CHANNELS, OwoHandshake::hashChannel);
+
+        context.responseSender().sendPacket(new HandshakeResponse(requiredChannels, requiredControllers, optionalChannels));
+    }
+
+    private static void syncServer(HandshakeResponse response, ServerConfigurationNetworking.Context context) {
+        Owo.LOGGER.info("[Handshake] Receiving client channels");
+
+        StringBuilder disconnectMessage = new StringBuilder();
+
+        boolean isAllGood = verifyReceivedHashes("channels", response.requiredChannels(), OwoNetChannel.REQUIRED_CHANNELS, OwoHandshake::hashChannel, disconnectMessage);
+        isAllGood &= verifyReceivedHashes("controllers", response.requiredControllers(), ParticleSystemController.REGISTERED_CONTROLLERS, OwoHandshake::hashController, disconnectMessage);
+
+        if (!isAllGood) {
+            context.responseSender().disconnect(TextOps.concat(PREFIX, class_2561.method_30163(disconnectMessage.toString())));
+        }
+
+        ((OwoClientConnectionExtension) ((ServerCommonPacketListenerImplAccessor) context.networkHandler()).owo$getConnection()).owo$setChannelSet(filterOptionalServices(response.optionalChannels(), OwoNetChannel.OPTIONAL_CHANNELS, OwoHandshake::hashChannel));
+
+        Owo.LOGGER.info("[Handshake] Handshake completed successfully");
+    }
+
+    @Environment(EnvType.CLIENT)
+    private static void handleReadyClient(class_8674 handler, class_310 client) {
+        if (ClientConfigurationNetworking.canSend(CHANNEL_ID) || !HANDSHAKE_REQUIRED || !ENABLED) return;
+
+        client.execute(() -> {
+            ((ClientCommonPacketListenerImplAccessor) handler)
+                    .getConnection()
+                    .method_10747(TextOps.concat(PREFIX, class_2561.method_30163("incompatible server")));
+        });
+    }
+
+    // -------
+    // Utility
+    // -------
+
+    private static <T> Set<class_2960> filterOptionalServices(Map<class_2960, Integer> remoteMap, Map<class_2960, T> localMap, ToIntFunction<T> hashFunction) {
+        Set<class_2960> readableServices = new HashSet<>();
+
+        for (var entry : remoteMap.entrySet()) {
+            var service = localMap.get(entry.getKey());
+
+            if (service == null) continue;
+            if (hashFunction.applyAsInt(service) != entry.getValue()) continue;
+
+            readableServices.add(entry.getKey());
+        }
+
+        return readableServices;
+    }
+
+    private static <T> boolean verifyReceivedHashes(String serviceNamePlural, Map<class_2960, Integer> clientMap, Map<class_2960, T> serverMap, ToIntFunction<T> hashFunction, StringBuilder disconnectMessage) {
+        boolean isAllGood = true;
+
+        if (!clientMap.keySet().equals(serverMap.keySet())) {
+            isAllGood = false;
+
+            var leftovers = findCollisions(clientMap.keySet(), serverMap.keySet());
+
+            if (!leftovers.method_15442().isEmpty()) {
+                disconnectMessage.append("server is missing ").append(serviceNamePlural).append(":\n");
+                leftovers.method_15442().forEach(identifier -> disconnectMessage.append("§7").append(identifier).append("§r\n"));
+            }
+
+            if (!leftovers.method_15441().isEmpty()) {
+                disconnectMessage.append("client is missing ").append(serviceNamePlural).append(":\n");
+                leftovers.method_15441().forEach(identifier -> disconnectMessage.append("§7").append(identifier).append("§r\n"));
+            }
+        }
+
+        boolean hasMismatchedHashes = false;
+        for (var entry : clientMap.entrySet()) {
+            var actualServiceObject = serverMap.get(entry.getKey());
+            if (actualServiceObject == null) continue;
+
+            int localHash = hashFunction.applyAsInt(actualServiceObject);
+
+            if (localHash != entry.getValue()) {
+                if (!hasMismatchedHashes) {
+                    disconnectMessage.append(serviceNamePlural).append(" with mismatched hashes:\n");
+                }
+
+                disconnectMessage.append("§7").append(entry.getKey()).append("§r\n");
+
+                isAllGood = false;
+                hasMismatchedHashes = true;
+            }
+        }
+
+        return isAllGood;
+    }
+
+    private static <T> Map<class_2960, Integer> formatHashes(Map<class_2960, T> values, ToIntFunction<T> hashFunction) {
+        Map<class_2960, Integer> hashes = new HashMap<>();
+
+        for (var entry : values.entrySet()) {
+            hashes.put(entry.getKey(), hashFunction.applyAsInt(entry.getValue()));
+        }
+
+        return hashes;
+    }
+
+    private static class_3545<Set<class_2960>, Set<class_2960>> findCollisions(Set<class_2960> first, Set<class_2960> second) {
+        var firstLeftovers = new HashSet<class_2960>();
+        var secondLeftovers = new HashSet<class_2960>();
+
+        first.forEach(identifier -> {
+            if (!second.contains(identifier)) firstLeftovers.add(identifier);
+        });
+
+        second.forEach(identifier -> {
+            if (!first.contains(identifier)) secondLeftovers.add(identifier);
+        });
+
+        return new class_3545<>(firstLeftovers, secondLeftovers);
+    }
+
+    private static int hashChannel(OwoNetChannel channel) {
+        int serializersHash = 0;
+        for (var entry : channel.endecsByIndex.int2ObjectEntrySet()) {
+            serializersHash += entry.getIntKey() * 31 + entry.getValue().getRecordClass().getName().hashCode();
+        }
+        return 31 * channel.packetId.comp_2242().hashCode() + serializersHash;
+    }
+
+    private static int hashController(ParticleSystemController controller) {
+        int serializersHash = 0;
+        for (var entry : controller.systemsByIndex.int2ObjectEntrySet()) {
+            serializersHash += entry.getIntKey();
+        }
+        return 31 * controller.channelId.hashCode() + serializersHash;
+    }
+
+    public record HandshakeRequest(Map<class_2960, Integer> optionalChannels) implements class_8710 {
+
+        public static final class_9154<HandshakeRequest> ID = new class_9154<>(OwoHandshake.CHANNEL_ID);
+        public static final Endec<HandshakeRequest> ENDEC = StructEndecBuilder.of(
+                CHANNEL_HASHES_ENDEC.fieldOf("optionalChannels", HandshakeRequest::optionalChannels),
+                HandshakeRequest::new
+        );
+
+        @Override
+        public class_9154<? extends class_8710> method_56479() {
+            return ID;
+        }
+    }
+
+    public record HandshakeOff() implements class_8710 {
+        public static final class_9154<HandshakeOff> ID = new class_9154<>(OwoHandshake.OFF_CHANNEL_ID);
+
+        @Override
+        public class_9154<? extends class_8710> method_56479() {
+            return ID;
+        }
+
+    }
+
+    private record HandshakeResponse(Map<class_2960, Integer> requiredChannels,
+                                     Map<class_2960, Integer> requiredControllers,
+                                     Map<class_2960, Integer> optionalChannels) implements class_8710 {
+
+        public static final class_9154<HandshakeResponse> ID = new class_9154<>(OwoHandshake.CHANNEL_ID);
+        public static final Endec<HandshakeResponse> ENDEC = StructEndecBuilder.of(
+                CHANNEL_HASHES_ENDEC.fieldOf("requiredChannels", HandshakeResponse::requiredChannels),
+                CHANNEL_HASHES_ENDEC.fieldOf("requiredControllers", HandshakeResponse::requiredControllers),
+                CHANNEL_HASHES_ENDEC.fieldOf("optionalChannels", HandshakeResponse::optionalChannels),
+                HandshakeResponse::new
+        );
+
+        @Override
+        public class_9154<? extends class_8710> method_56479() {
+            return ID;
+        }
+    }
+}
