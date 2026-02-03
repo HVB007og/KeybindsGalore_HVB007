@@ -20,6 +20,7 @@ public class Configurations {
 
     // --- Behaviour ---
     public static boolean USE_CIRCULAR_MENU = false;
+    public static boolean USE_SOFTWARE_RENDERING = true; // Default to true (current implementation)
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>(Arrays.asList("Debug"));
     public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>(Arrays.asList(340, 341, 87, 65, 83, 68, 32));

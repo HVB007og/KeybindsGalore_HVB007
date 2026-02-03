@@ -13,6 +13,7 @@ base {
 repositories {
 	mavenCentral()
 	maven { url = "https://maven.fabricmc.net/" }
+	maven { url = "https://maven.wispforest.io" } // Owo Lib repository
 }
 
 loom {
@@ -36,15 +37,20 @@ sourceSets {
 	}
 }
 
+// Define Owo Lib version here for easy updating
+def owo_version = "0.12.10+1.21"
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	// Required for resolving Mojang's codecs and FastUtil classes
-//	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	mappings loom.officialMojangMappings()
 	modImplementation "it.unimi.dsi:fastutil:8.5.12"
-	// modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}" // Optional
+	
+	// Owo Lib dependencies
+	modImplementation "io.wispforest:owo-lib:${owo_version}"
+	annotationProcessor "io.wispforest:owo-lib:${owo_version}" // For owo-config
+	include "io.wispforest:owo-sentinel:${owo_version}" // Auto-downloader for users
 }
 
 processResources {
@@ -84,5 +90,3 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
 }
-
-//println("Mapping version: " + project.yarn_mappings)
