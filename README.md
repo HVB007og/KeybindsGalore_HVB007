@@ -1,124 +1,68 @@
-# KeybindsGalore Plus
+# KeybindsGalore
 
-> [!WARNING]<br>
-> Version 1.4.0 has been removed from Modrinth as it contains too many bugs.
-> Version 1.4.1 will be published soon.
+A Fabric mod that opens a popup menu when multiple actions are bound to the same key, allowing you to choose which action to perform.
 
-> [!NOTE]<br>
-> This project is a fork of KeybindsGalore, originally by Cael and updated to 1.20 by HVB007.
-> <br>[HVB007's project is here](https://github.com/HVB007og/KeybindsGalore_HVB007_1.20.x), and Cael's [original project is here](https://github.com/CaelTheColher/KeybindsGalore).
+---
 
-<br>
+## Features
 
-A keybind conflict management and general quality-of-life mod!
+*   **Conflict Resolution:** Opens a menu to resolve conflicting keybinds instead of executing all of them.
+*   **Circular Pie Menu:** A modern, intuitive pie menu for selecting actions.
+*   **Mouse Button Support:** Works with conflicting mouse button bindings.
+*   **Dual Rendering Modes:** Choose between a high-performance hardware-accelerated renderer (via owo-lib) or a compatible software renderer.
+*   **Extensive Configuration:** Almost every visual aspect, from colors to rendering modes, can be configured in the properties file.
 
-- Provides a **pie menu** for conflicting keybinds
-- **Corrects vanilla conflict handling**, similar to [Keybinds Fix](https://www.curseforge.com/minecraft/mc-mods/keybind-fix)
-- Supports **mouse buttons**
-- **Fixes many bugs** and adds many improvements to the original mod
-- Supports **1.20.x** and **1.21.x**
-- Supports **Fabric** and **Forge/NeoForge (via Sinytra Connector)**
+---
 
-<div style="display: flex; justify-content: center; align-items: center;">
-  <img src="https://github.com/AV306/KeybindsGalore-Plus/blob/14b7001f913c9bf089ef4fc41934c60dcf0db275/images/kbg_plus_demo.gif?raw=true" max-height=400 />
-</div>
+## What's New in Version 1.6.0
 
-<br>
+This version introduces a major rewrite of the rendering system and adds new configuration options.
 
-## How to Use
+*   **Owo Lib Dependency**: The mod now uses **owo-lib** for its UI and rendering. This is a **required dependency**. `owo-sentinel` is included to help users download it automatically if it's missing.
+*   **Dual Rendering Modes**: You can now choose between two rendering modes for the pie menu via the `USE_SOFTWARE_RENDERING` option in the properties file.
+  - **Hardware Rendering (Owo Lib)**: The new default. Provides a perfectly smooth, circular pie menu with better performance.
+  - **Software Rendering (Primitive)**: A fallback option that draws the pie menu using basic shapes. It retains the polygonal look and has been optimized to fix visual glitches.
+*   **Mappings Updated**: Switched from Yarn to **Minecraft Official Mappings**. This aligns with Mojang's move towards deobfuscation in newer versions, ensuring better long-term maintenance.
+* **New Configuration Options**:
+  - `USE_SOFTWARE_RENDERING`: Switch between the two rendering modes.
+  - All pie menu colors (sectors, cancel zone, hover effects) are now fully configurable in the properties file.
+*   **Bug Fixes**:
+  - The "diamond" shaped center hole in software rendering mode now correctly forms a polygon that matches the number of sectors.
+  - Visual artifacts and seams with semi-transparent sectors in software rendering have been fixed.
 
-KeybindsGalore+ will automatically detect conflicting keybinds!
+---
 
-- **Pressing** a conflicted key *down* will **open the pie menu**
-- **Releasing** a conflicted key (when the pie menu is displayed) will **activate the highlighted action** and **close** the pie menu
-- **Clicking** on a section of the pie menu (without releasing the key) will **activate the highlighted action** and **deactivate** it when the key is **released**
+## Requirements
 
-NB: When the pie menu *opens*, all actions currently activated (e.g. holding a key down) will be deactivated.
-<br>
+![Fabric API](https://img.shields.io/badge/Fabric%20API-Required-blue)
+![Owo Lib](https://img.shields.io/badge/Owo%20Lib-Required-red)
 
-## Modifications to Original
+*   Minecraft 1.21.x
+*   Fabric Loader
+*   [Fabric API](https://modrinth.com/mod/fabric-api)
+*   [owo-lib](https://modrinth.com/mod/owo-lib)
 
-- Optimised conflict searching
-- Keybind labels now show their category along with their name
-- Customisable keybind labels (see [this issue](https://github.com/AV306/KeybindsGalore-Plus/issues/3))
-- Label texts no longer run off the screen
-- Fully customisable pie menu
-- Allows compatibility with non-vanilla keybinds (insert your mod's keybinds into the [conflict table](https://github.com/AV306/KeybindsGalore-Plus/blob/1.21/src/main/java/me/av306/keybindsgaloreplus/KeybindManager.java) whenever convenient!)
-- **And more...**
+---
 
-<br>
+## Configuration
 
-## Bug-busters :heart:
+The mod can be configured by editing the `keybindsgalore.properties` file located in your `config` folder. You can customize all colors, radii, and rendering modes.
 
-Bug reports and feature requests VERY welcome!
+**Example Options:**
+*   `USE_SOFTWARE_RENDERING=false` (Set to `true` to use the primitive renderer)
+*   `PIE_MENU_SECTOR_COLOR_EVEN=0xC0606060`
+*   `PIE_MENU_CANCEL_ZONE_HOVER_COLOR=0xC0B04232`
 
-- lightmcxx
-- mo9713
-- Poopooracoocoo
-- GabanKillasta
-- Tgaisen
-- GhostIsBeHere
-- Alwis2000
-- StarsShine11904
-- ClutchMasterYT
-- GuardedHoney53
-- BumbleTree
-- Mideks
-- UNI717
-- IG114514
-- WxAaRoNxW
+---
+## History & Credits
 
-(let me know if I missed you!)
+This mod has a rich history of community contributions:
 
-<br>
+*   **Original Author:** The mod was originally created by **Cael**.
+  *   [Cael's Original Project](https://github.com/CaelTheColher/KeybindsGalore)
+*   **1.20.x Update:** It was first updated to 1.20.x by me, **HVB007**.
+  *   [HVB007's GitHub](https://github.com/HVB007og/KeybindsGalore_HVB007_1.20.x)
+*   **KeybindsGalore Plus:** The project was significantly enhanced and maintained as "KeybindsGalore Plus" by **AV306**, who added many features and bug fixes.
+  *   [AV306's "KeybindsGalore Plus" Project](https://github.com/AV306/KeybindsGalore-Plus)
 
-## Roadmap
-
-### 1.3.5
-
-- Bugfixes
-
-### 1.4.0
-
-- Blacklist/whitelist toggle for ignored key list
-- Per-keybind overrides in custom data for:
-  - Label text (category + name / name only / custom text)
-  - sector colour
-  - sector opacity
-- Removal of non-lazy conflict check
-
-(need more features? make a [feature request](https://github.com/AV306/KeybindsGalore-Plus/issues)!)
-
-<br>
-
-## [[ Old README below ]]
-
-# KeybindsGalore_HVB007_1.20.x
-Updated to 1.20 by HVB007.
-
->Github : https://github.com/HVB007og/KeybindsGalore_HVB007_1.20.x 
->Fabric mod Which opens an popup when there are multiple actions bound to the same key in the Minecraft>controls>Keybinds settings. then choose one of the options to use.
-
->Changelog keybindsgalore-0.2-1.20:
-
-Works with 1.20.2
-
-Added Feature: Will not open the menu when pressing certain keys (Due to keys compatibility with other mods) as follows: 
-1.tab 
-2.caps lock 
-3.left shift 
-4.left control 
-5.space 
-6.left alt 
-7.w 
-8.a 
-9.s 
-10.d
-
-Future Feature: Add mod setting to configure the keys to disable.
-
->Does not support conflicting Keybinds not using the Minecraft Keybinds settings.
-
-Updated to 1.20.x by HVB007
-
-Updated version of keybindsgalore by Cael : https://github.com/CaelTheColher/KeybindsGalore
+This current version for 1.21.x (1.4.1 to 1.6.0) builds upon all their hard work.
