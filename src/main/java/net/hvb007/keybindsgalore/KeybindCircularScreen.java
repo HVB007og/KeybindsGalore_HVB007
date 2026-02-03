@@ -97,10 +97,11 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
             this.selectedSectorIndex = -1;
         }
 
-        final int colorEven = 0xFF606060;
-        final int colorOdd = 0xFF808080;
-        final int colorSelected = 0xFFE0E0E0;
-        final int colorLastOddFix = 0xFFA0A0A0;
+        // Use semi-transparent colors (Alpha C0 = ~75% opacity)
+        final int colorEven = 0xC0606060;
+        final int colorOdd = 0xC0808080;
+        final int colorSelected = 0xC0E0E0E0;
+        final int colorLastOddFix = 0xC0A0A0A0;
 
         // Render sectors
         for (int i = 0; i < numberOfSectors; i++) {
@@ -123,13 +124,12 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
         }
 
         // Render cancel zone (black circle, red if hovered)
-        int cancelZoneColor = 0xFF000000; // Default Black
+        int cancelZoneColor = 0xC0000000; // Semi-transparent Black
         if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
-            cancelZoneColor = 0xFFB04232; // Red when hovered
+            cancelZoneColor = 0xC0B04232; // Semi-transparent Red when hovered
         }
         
         // Draw cancel zone as a polygon matching the sector count
-        // This ensures the hole shape matches the sector arrangement (e.g. triangle for 3 sectors)
         for (int i = 0; i < numberOfSectors; i++) {
             float start = i * sectorAngle;
             float end = (i + 1) * sectorAngle;
