@@ -6,9 +6,7 @@
       "KeyMappingMixin",
       "KeyMappingAccessor",
       "KeyBindsScreenMixin",
-      "MinecraftAccessor",
-      "MinecraftMixin",
-      "PlayerTabOverlayMixin"
+      "MinecraftAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1
