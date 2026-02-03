@@ -1,7 +1,6 @@
-// IDK what Mixins are but this code was here and didn't require much changing and i don't remember the changes i made if there were any
 package net.hvb007.keybindsgalore.mixin;
 
-import net.hvb007.keybindsgalore.KeybindsManager;
+import net.hvb007.keybindsgalore.KeybindManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,26 +15,21 @@ public abstract class MixinKeyBinding {
     @Shadow private InputUtil.Key boundKey;
 
     @Inject(method = "setKeyPressed", at = @At("HEAD"), cancellable = true)
-    private static void setKeyPressed(InputUtil.Key key, boolean pressed, CallbackInfo ci) throws Exception {
-        if (pressed) {
-            boolean conflicting = KeybindsManager.handleConflict(key);
-            if (conflicting) {
-                ci.cancel();
-            }
-        }
+    private static void setKeyPressed(InputUtil.Key key, boolean pressed, CallbackInfo ci) {
+        KeybindManager.handleKeyPress(key, pressed, ci);
     }
 
     @Inject(method = "onKeyPressed", at = @At("HEAD"), cancellable = true)
     private static void onKeyPressed(InputUtil.Key key, CallbackInfo ci) {
-        if (KeybindsManager.isConflicting(key)) {
-            ci.cancel();
-            KeybindsManager.openConflictMenu(key);
-        }
+        KeybindManager.handleOnKeyPressed(key, ci);
     }
 
     @Inject(method = "setPressed", at = @At("HEAD"), cancellable = true)
     private void setPressed(boolean pressed, CallbackInfo ci) {
-        if (KeybindsManager.isConflicting(this.boundKey)) {
+        // This mixin is intended to prevent vanilla keybinding logic from interfering
+        // when our custom conflict resolution is active.
+        // If the key is conflicting and we are handling it, cancel the vanilla setPressed.
+        if (KeybindManager.hasConflicts(this.boundKey)) {
             ci.cancel();
         }
     }

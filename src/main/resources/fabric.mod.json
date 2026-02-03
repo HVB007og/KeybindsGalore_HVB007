@@ -1,22 +1,43 @@
 {
-	"schemaVersion": 1,
-	"id": "keybindsgalore",
-	"version": "${version}",
+    "schemaVersion": 1,
+    "id": "keybindsgalore",
+    "version": "${version}",
 
-	"name": "Keybinds Galore",
-	"description": "Adds a popup menu when a conflicting keybind is pressed. Updated to 1.20 by HVB007, Originally by Cael",
-	"authors": [
-		"HVB007"
-	],
-	"license": "GNU Lesser General Public License v3.0",
-	"icon": "assets/keybindsgalore/keybindsgalore_icon.png",
+    "name": "Keybinds Galore",
+    "description": "Keybind pie menu / QoL mod. Originally by Cael, updated by HVB007.",
+    "authors": [
+       "Blender",
+       "HVB007",
+       "Cael"
+    ],
+    "contributors": [
+       "PoopooRacoocoo -- Java incompatibility issue",
+       "Mo9713 & customjack -- editable keybind description",
+       "GabanKillasta -- compatibility with zoom mods",
+       "GhostIsBeHere -- key blacklist",
+       "Alwis2000 -- flagging yet another Java incompatibility mistake",
+       "GuardedHoney53 -- the very funny setPressed issue",
+       "ClutchMasterYT",
+       "BumbleTree -- bad SemVer",
+       "Mideks -- console spam",
+       "UNI717 -- sinytra Connector compatibility",
+       "IG114514 -- mouse support and compatibility",
+       "WxAaRoNxW -- click-to-activate and compatibility",
+       "...and more on GitHub!"
+    ],
+    "license": "GNU Lesser General Public License v3.0",
+    "icon": "assets/keybindsgalore/icon.png",
 
-	"environment": "client",
-	"mixins": [
-		"keybindsgalore.mixins.json"
-	],
-	"depends": {
-		"fabricloader": ">=0.14.8",
-		"minecraft": "1.20.x"
-	}
+    "environment": "client",
+    "entrypoints": {
+       "client": [ "net.hvb007.keybindsgalore.KeybindsGalore" ]
+    },
+    "mixins": [
+      "keybindsgalore.mixins.json"
+    ],
+    "depends": {
+       "fabricloader": ">=0.16.0",
+       "minecraft": ">=1.21.11",
+       "java": ">=21"
+    }
 }
