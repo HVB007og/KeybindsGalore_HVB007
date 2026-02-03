@@ -41,10 +41,6 @@ public class KeybindsGalore implements ClientModInitializer {
         if (!FabricLoader.getInstance().isModLoaded("owo")) {
             owoLibMissing = true;
             LOGGER.warn("Owo Lib not found! Reverting to software rendering.");
-            // Force software rendering if Owo is missing, regardless of config
-            // We do this after config load usually, but here we set a flag or override later.
-            // Since config is loaded below, we should override it after loading or ensure the renderer checks this flag.
-            // But Configurations.USE_SOFTWARE_RENDERING is static.
         }
 
         try {
@@ -76,8 +72,16 @@ public class KeybindsGalore implements ClientModInitializer {
                 if (paramTypes.length > 0 && !paramTypes[paramTypes.length - 1].equals(String.class)) {
                     // If the last parameter is not a String, we assume it's the enum type.
                     // We try to get the MISC enum field first, and if that fails, we try GAMEPLAY.
-                    try { categoryArg = KeyMapping.class.getField("MISC").get(null); }
-                    catch (NoSuchFieldException e) { categoryArg = KeyMapping.class.getField("GAMEPLAY").get(null); }
+                    try { 
+                        categoryArg = KeyMapping.class.getField("MISC").get(null); 
+                    } catch (NoSuchFieldException e) { 
+                        try {
+                            categoryArg = KeyMapping.class.getField("GAMEPLAY").get(null); 
+                        } catch (NoSuchFieldException e2) {
+                            // Fallback to string if fields are missing (e.g. 1.21+ might use strings again or different names)
+                            categoryArg = "key.categories.misc";
+                        }
+                    }
                 }
 
                 // The number and types of parameters in the constructor have also changed.
