@@ -65,15 +65,39 @@ public class TriangleStripRenderer {
         fillTriangle(drawContext, x1, y1, x2, y2, x3, y3, color);
     }
 
-    public static void drawSector(GuiGraphics drawContext, int centerX, int centerY, float startAngleRad, float endAngleRad, float radius, int color) {
+    public static void drawSector(GuiGraphics drawContext, int centerX, int centerY, float startAngleRad, float endAngleRad, float innerRadius, float outerRadius, int color) {
         if (Configurations.USE_SOFTWARE_RENDERING) {
+            // Check if angle is too large (>= PI/2) and split if necessary to avoid collinear vertices
+            // Using PI/2 (90 degrees) ensures we get a diamond shape for 180 degree sectors
+            float angleDiff = endAngleRad - startAngleRad;
+            if (angleDiff > (float)Math.PI / 2.0f + 0.01f) { // Add epsilon for float precision
+                float midAngle = startAngleRad + angleDiff / 2.0f;
+                drawSector(drawContext, centerX, centerY, startAngleRad, midAngle, innerRadius, outerRadius, color);
+                drawSector(drawContext, centerX, centerY, midAngle, endAngleRad, innerRadius, outerRadius, color);
+                return;
+            }
+
             // Calculate vertices for software rendering
-            float outerX1 = centerX + (float) Math.cos(startAngleRad) * radius;
-            float outerY1 = centerY + (float) Math.sin(startAngleRad) * radius;
-            float outerX2 = centerX + (float) Math.cos(endAngleRad) * radius;
-            float outerY2 = centerY + (float) Math.sin(endAngleRad) * radius;
+            float cosStart = (float) Math.cos(startAngleRad);
+            float sinStart = (float) Math.sin(startAngleRad);
+            float cosEnd = (float) Math.cos(endAngleRad);
+            float sinEnd = (float) Math.sin(endAngleRad);
+
+            float innerX1 = centerX + cosStart * innerRadius;
+            float innerY1 = centerY + sinStart * innerRadius;
+            float outerX1 = centerX + cosStart * outerRadius;
+            float outerY1 = centerY + sinStart * outerRadius;
             
-            fillTriangle(drawContext, centerX, centerY, (int) outerX1, (int) outerY1, (int) outerX2, (int) outerY2, color);
+            float innerX2 = centerX + cosEnd * innerRadius;
+            float innerY2 = centerY + sinEnd * innerRadius;
+            float outerX2 = centerX + cosEnd * outerRadius;
+            float outerY2 = centerY + sinEnd * outerRadius;
+            
+            // Draw two triangles to form the sector quad
+            // Triangle 1: Inner1, Outer1, Outer2
+            fillTriangle(drawContext, (int)innerX1, (int)innerY1, (int)outerX1, (int)outerY1, (int)outerX2, (int)outerY2, color);
+            // Triangle 2: Inner1, Outer2, Inner2
+            fillTriangle(drawContext, (int)innerX1, (int)innerY1, (int)outerX2, (int)outerY2, (int)innerX2, (int)innerY2, color);
         } else {
             // Owo Lib rendering
             OwoUIGraphics owoGraphics = OwoUIGraphics.of(drawContext);
@@ -84,8 +108,9 @@ public class TriangleStripRenderer {
             double endDeg = Math.toDegrees(endAngleRad) + 180;
             
             int segments = 32; 
-
-            owoGraphics.drawCircle(centerX, centerY, startDeg, endDeg, segments, radius, Color.ofArgb(color));
+            
+            // Use drawRing for sectors with inner radius
+            owoGraphics.drawRing(centerX, centerY, startDeg, endDeg, segments, innerRadius, outerRadius, Color.ofArgb(color), Color.ofArgb(color));
         }
     }
 }

@@ -2,7 +2,7 @@ package net.hvb007.keybindsgalore;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import io.wispforest.owo.ui.base.BaseOwoScreen;
-import io.wispforest.owo.ui.container.UIContainers;
+import io.wispforest.owo.ui.container.UIContainers; // Corrected import
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.OwoUIAdapter;
 import io.wispforest.owo.ui.core.Surface;
@@ -51,7 +51,7 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
 
     @Override
     protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
-        return OwoUIAdapter.create(this, UIContainers::verticalFlow);
+        return OwoUIAdapter.create(this, UIContainers::verticalFlow); // Corrected usage
     }
 
     @Override
@@ -118,12 +118,9 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
                 }
             }
 
-            // Use drawSector which handles both software and Owo rendering
-            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.maxRadius, color);
+            // Use drawSector with inner radius (cancel zone)
+            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, this.maxRadius, color);
         }
-
-        // Render cancel zone (black circle)
-        TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, 0, (float)Mth.TWO_PI, this.cancelZoneRadius, 0xFF000000);
 
         renderLabelTexts(context, delta, numberOfSectors);
     }
