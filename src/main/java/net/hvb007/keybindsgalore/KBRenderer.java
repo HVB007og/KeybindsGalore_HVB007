@@ -1,13 +1,12 @@
 package net.hvb007.keybindsgalore;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.*;
+import net.minecraft.client.gui.GuiGraphics;
 
 /**
  * This class provides utility methods for rendering triangles and other shapes
  * using a software-based approach for GUI rendering.
  */
-public class TriangleStripRenderer {
+public class KBRenderer {
 
     /**
      * Fills a triangle using horizontal scanlines.
@@ -22,7 +21,7 @@ public class TriangleStripRenderer {
      * @param y3 Y coordinate of the third vertex
      * @param color The ARGB color value
      */
-    public static void fillTriangle(DrawContext drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
+    public static void fillTriangle(GuiGraphics drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
         // Sort vertices by y coordinate
         if (y1 > y2) {
             int tx = x1; x1 = x2; x2 = tx;
@@ -55,9 +54,12 @@ public class TriangleStripRenderer {
                 xRight = temp;
             }
 
-            drawContext.drawHorizontalLine((int)xLeft, (int)xRight, y, color);
+            drawContext.hLine((int)xLeft, (int)xRight, y, color);
         }
     }
 
-    // You can add other rendering methods here if needed, but for now, we'll keep it simple.
+    public static void drawTriangle(GuiGraphics drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
+        // Use software rendering as it is the most reliable method for GUI in this version
+        fillTriangle(drawContext, x1, y1, x2, y2, x3, y3, color);
+    }
 }
