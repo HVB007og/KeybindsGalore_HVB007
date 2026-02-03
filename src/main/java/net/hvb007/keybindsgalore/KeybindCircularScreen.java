@@ -97,11 +97,11 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
             this.selectedSectorIndex = -1;
         }
 
-        // Use semi-transparent colors (Alpha C0 = ~75% opacity)
-        final int colorEven = 0xC0606060;
-        final int colorOdd = 0xC0808080;
-        final int colorSelected = 0xC0E0E0E0;
-        final int colorLastOddFix = 0xC0A0A0A0;
+        // Use configurable colors
+        final int colorEven = Configurations.PIE_MENU_SECTOR_COLOR_EVEN;
+        final int colorOdd = Configurations.PIE_MENU_SECTOR_COLOR_ODD;
+        final int colorSelected = Configurations.PIE_MENU_SECTOR_COLOR_SELECTED;
+        final int colorLastOddFix = Configurations.PIE_MENU_SECTOR_COLOR_LAST_ODD;
 
         // Render sectors
         for (int i = 0; i < numberOfSectors; i++) {
@@ -123,10 +123,10 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
             TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, this.maxRadius, color);
         }
 
-        // Render cancel zone (black circle, red if hovered)
-        int cancelZoneColor = 0xC0000000; // Semi-transparent Black
+        // Render cancel zone (configurable colors)
+        int cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
         if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
-            cancelZoneColor = 0xC0B04232; // Semi-transparent Red when hovered
+            cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR;
         }
         
         // Draw cancel zone as a polygon matching the sector count

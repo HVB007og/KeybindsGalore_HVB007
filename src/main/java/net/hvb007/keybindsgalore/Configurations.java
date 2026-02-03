@@ -35,9 +35,20 @@ public class Configurations {
     public static int PIE_MENU_MARGIN = 0;
     public static float PIE_MENU_SCALE = 0.6f;
     public static float CANCEL_ZONE_SCALE = 0.25f;
-    public static int PIE_MENU_COLOR = 0x00404040;
+    
+    // Deprecated/Unused colors (kept for compatibility if needed, but we use specific ones now)
+    public static int PIE_MENU_COLOR = 0x00404040; 
     public static int PIE_MENU_SELECT_COLOR = 0x00FFFFFF;
     public static int PIE_MENU_HIGHLIGHT_COLOR = 0x00EED202;
+    
+    // New Configurable Colors (Defaults with ~75% opacity 0xC0)
+    public static int PIE_MENU_SECTOR_COLOR_EVEN = 0xC0606060;
+    public static int PIE_MENU_SECTOR_COLOR_ODD = 0xC0808080;
+    public static int PIE_MENU_SECTOR_COLOR_SELECTED = 0xC0E0E0E0;
+    public static int PIE_MENU_SECTOR_COLOR_LAST_ODD = 0xC0A0A0A0;
+    public static int PIE_MENU_CANCEL_ZONE_COLOR = 0xC0000000;
+    public static int PIE_MENU_CANCEL_ZONE_HOVER_COLOR = 0xC0B04232;
+
     public static int PIE_MENU_COLOR_LIGHTEN_FACTOR = 0x191919;
     public static short PIE_MENU_ALPHA = 0x40;
     public static boolean SECTOR_GRADATION = true;
