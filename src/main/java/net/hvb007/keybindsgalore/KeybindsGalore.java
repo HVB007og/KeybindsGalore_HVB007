@@ -30,15 +30,32 @@ public class KeybindsGalore implements ClientModInitializer {
     public static KeyMapping activePulseTarget = null;
     // Ticks remaining to hold the activePulseTarget as pressed.
     public static int pulseTimer = 0;
+    
+    private static boolean owoLibMissing = false;
 
     @Override
     public void onInitializeClient() {
         LOGGER.info("KeybindsGalore initialising...");
+        
+        // Check for Owo Lib
+        if (!FabricLoader.getInstance().isModLoaded("owo")) {
+            owoLibMissing = true;
+            LOGGER.warn("Owo Lib not found! Reverting to software rendering.");
+            // Force software rendering if Owo is missing, regardless of config
+            // We do this after config load usually, but here we set a flag or override later.
+            // Since config is loaded below, we should override it after loading or ensure the renderer checks this flag.
+            // But Configurations.USE_SOFTWARE_RENDERING is static.
+        }
 
         try {
             configManager = new ConfigManager("KeybindsGalore", FabricLoader.getInstance().getConfigDir(), "keybindsgalore.properties", Configurations.class, null);
             if (Configurations.DEBUG) {
                 configManager.printAllConfigs();
+            }
+            
+            // Override config if Owo is missing
+            if (owoLibMissing) {
+                Configurations.USE_SOFTWARE_RENDERING = true;
             }
 
             customDataManager = new DataManager(FabricLoader.getInstance().getConfigDir(), "keybindsgalore_customdata.data");
@@ -93,6 +110,10 @@ public class KeybindsGalore implements ClientModInitializer {
                 if (configReloadKeybind != null && configReloadKeybind.consumeClick()) {
                     try {
                         configManager.readConfigFile();
+                        // Re-apply override if config reloaded
+                        if (owoLibMissing) {
+                            Configurations.USE_SOFTWARE_RENDERING = true;
+                        }
                         customDataManager.readDataFile();
                     } catch (IOException ex) {
                         if (client.player != null) client.player.displayClientMessage(Component.translatable("text.keybindsgalore.configreloadfail", ex.getMessage()), false);
@@ -111,7 +132,17 @@ public class KeybindsGalore implements ClientModInitializer {
         }
 
         // Find all conflicting keybinds when the player joins a world.
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> KeybindManager.findAllConflicts());
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            KeybindManager.findAllConflicts();
+            
+            if (owoLibMissing && client.player != null) {
+                client.player.displayClientMessage(
+                    Component.literal("KeybindsGalore: Owo Lib not found! Reverted to primitive rendering. Install Owo Lib for a better experience.")
+                    .withStyle(ChatFormatting.GOLD), 
+                    false
+                );
+            }
+        });
     }
 
     /**

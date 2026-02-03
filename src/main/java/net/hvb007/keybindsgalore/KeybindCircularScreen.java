@@ -2,7 +2,7 @@ package net.hvb007.keybindsgalore;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import io.wispforest.owo.ui.base.BaseOwoScreen;
-import io.wispforest.owo.ui.container.UIContainers; // Corrected import
+import io.wispforest.owo.ui.container.UIContainers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.OwoUIAdapter;
 import io.wispforest.owo.ui.core.Surface;
@@ -51,7 +51,7 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
 
     @Override
     protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
-        return OwoUIAdapter.create(this, UIContainers::verticalFlow); // Corrected usage
+        return OwoUIAdapter.create(this, UIContainers::verticalFlow);
     }
 
     @Override
@@ -118,9 +118,19 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
                 }
             }
 
-            // Use drawSector with inner radius (cancel zone)
+            // Use drawSector which handles both software and Owo rendering
             TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, this.maxRadius, color);
         }
+
+        // Render cancel zone (black circle, red if hovered)
+        int cancelZoneColor = 0xFF000000; // Default Black
+        if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
+            cancelZoneColor = 0xFFB04232; // Red when hovered
+        }
+        
+        // We use drawSector with 0 to 2PI to draw a full circle/ring.
+        // Inner radius 0 makes it a filled circle.
+        TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, 0, (float)Mth.TWO_PI, 0, this.cancelZoneRadius, cancelZoneColor);
 
         renderLabelTexts(context, delta, numberOfSectors);
     }
