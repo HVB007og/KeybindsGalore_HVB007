@@ -67,10 +67,11 @@ public class TriangleStripRenderer {
 
     public static void drawSector(GuiGraphics drawContext, int centerX, int centerY, float startAngleRad, float endAngleRad, float innerRadius, float outerRadius, int color) {
         if (Configurations.USE_SOFTWARE_RENDERING) {
-            // Check if angle is too large (>= PI/2) and split if necessary to avoid collinear vertices
-            // Using PI/2 (90 degrees) ensures we get a diamond shape for 180 degree sectors
+            // Check if angle is too large (>= PI) and split if necessary to avoid collinear vertices
+            // Using PI (180 degrees) - epsilon ensures we only split when absolutely necessary (e.g. 2 sectors)
+            // This preserves the N-gon shape of the inner hole for N > 2.
             float angleDiff = endAngleRad - startAngleRad;
-            if (angleDiff > (float)Math.PI / 2.0f + 0.01f) { // Add epsilon for float precision
+            if (angleDiff > (float)Math.PI - 0.01f) {
                 float midAngle = startAngleRad + angleDiff / 2.0f;
                 drawSector(drawContext, centerX, centerY, startAngleRad, midAngle, innerRadius, outerRadius, color);
                 drawSector(drawContext, centerX, centerY, midAngle, endAngleRad, innerRadius, outerRadius, color);

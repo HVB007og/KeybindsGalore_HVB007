@@ -128,9 +128,13 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
             cancelZoneColor = 0xFFB04232; // Red when hovered
         }
         
-        // We use drawSector with 0 to 2PI to draw a full circle/ring.
-        // Inner radius 0 makes it a filled circle.
-        TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, 0, (float)Mth.TWO_PI, 0, this.cancelZoneRadius, cancelZoneColor);
+        // Draw cancel zone as a polygon matching the sector count
+        // This ensures the hole shape matches the sector arrangement (e.g. triangle for 3 sectors)
+        for (int i = 0; i < numberOfSectors; i++) {
+            float start = i * sectorAngle;
+            float end = (i + 1) * sectorAngle;
+            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, start, end, 0, this.cancelZoneRadius, cancelZoneColor);
+        }
 
         renderLabelTexts(context, delta, numberOfSectors);
     }
