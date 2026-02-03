@@ -79,38 +79,12 @@ public class TriangleStripRenderer {
             OwoUIGraphics owoGraphics = OwoUIGraphics.of(drawContext);
             
             // Convert radians to degrees
-            // Add 90 degrees offset because Owo seems to start at South (Down) or similar?
-            // User reported diametrically opposite (180 deg) offset.
-            // Let's try adding 180 degrees.
-            double offset = 90; // Actually, usually 0 is East. If it's opposite, maybe it's West?
-            // If I hover 3 (Left-Up) and 1 (Right-Down) highlights.
-            // 3 is 180-270. 1 is 0-90.
-            // So I need to shift 0-90 to 180-270. That is +180.
+            // Add 180 degrees offset to correct orientation
+            double startDeg = Math.toDegrees(startAngleRad) + 180;
+            double endDeg = Math.toDegrees(endAngleRad) + 180;
             
-            // Wait, if I hover 3 (Left-Up), I WANT 3 to highlight.
-            // But 1 highlights.
-            // So when I pass angles for 3 (180-270), it draws at 0-90?
-            // No, the loop iterates 0..N.
-            // If selectedSectorIndex is 3.
-            // The loop draws sector 3 with "Selected" color.
-            // Sector 3 angles are 270-360 (Up-Right).
-            // If it draws at Left-Down (90-180), then it's 180 off.
-            
-            // Let's try adding 90 first, because usually 0 is Up in some systems.
-            // If 0 is Up (270 deg standard), and I pass 0 (East), it draws at East relative to Up? i.e. Right-Down?
-            
-            // Let's try adding 90 degrees.
-            // If that's wrong, I'll try 180.
-            // Actually, if it's "diametrically opposite", it's 180.
-            
-            // But wait, Owo might be using a different coordinate system.
-            // Let's try +90 first as it's a common offset (East vs North).
-            
-            double startDeg = Math.toDegrees(startAngleRad) + 90;
-            double endDeg = Math.toDegrees(endAngleRad) + 90;
-
             int segments = 32; 
-            
+
             owoGraphics.drawCircle(centerX, centerY, startDeg, endDeg, segments, radius, Color.ofArgb(color));
         }
     }
