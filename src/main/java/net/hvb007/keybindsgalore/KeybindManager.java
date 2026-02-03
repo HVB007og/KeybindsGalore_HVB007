@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class KeybindManager {
     // Maps a physical key to a list of all KeyBinding objects bound to it.
     public static final Map<InputConstants.Key, List<KeyMapping>> conflictTable = new HashMap<>();
-    // Tracks keys that are in "click and hold" mode.
+    // Tracks keys that are in "click and hold" mode. This is a placeholder for a future feature.
     public static final HashMap<Integer, KeyMapping> clickHoldKeys = new HashMap<>();
     // Tracks which conflict warnings have been shown to the player in this session.
     public static final HashSet<InputConstants.Key> shownConflictWarnings = new HashSet<>();
@@ -54,14 +54,9 @@ public class KeybindManager {
         shownConflictWarnings.clear(); // Clear previous warnings
 
         for (KeyMapping keybinding : client.options.keyMappings) { // Use client.options.allKeys for Yarn
-            String id = keybinding.getName();
-
-            // Optionally filter out keybinds from the "debug" category.
-            if (Configurations.FILTER_DEBUG_KEYS) {
-                String categoryName = safeGetCategory(keybinding);
-                if (categoryName.toLowerCase().contains("debug") || id.toLowerCase().contains("debug")) {
-                    continue;
-                }
+            // Filter out keybinds from configured categories.
+            if (Configurations.FILTERED_CATEGORY_KEYS.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(keybinding)))) {
+                continue;
             }
 
             InputConstants.Key physicalKey = ((KeyMappingAccessor) keybinding).getKey();
@@ -202,8 +197,37 @@ public class KeybindManager {
                     ci.cancel();
 
                     if (!shownConflictWarnings.contains(key)) {
-                        // (Warning message logic remains the same as before)
-                        shownConflictWarnings.add(key);
+                        Minecraft client = Minecraft.getInstance();
+                        if (client.player != null) {
+                            MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Key '")
+                                .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
+                                .append(Component.literal("' has conflicts. Prioritizing '"))
+                                .append(Component.translatable(priorityKey.getName()).withStyle(ChatFormatting.AQUA))
+                                .append(Component.literal("'."))
+                                .withStyle(ChatFormatting.RED);
+                            client.player.displayClientMessage(warningHeader, false);
+
+                            MutableComponent otherKeys = Component.literal("");
+                            boolean first = true;
+                            for (KeyMapping otherKb : conflicts) {
+                                if (otherKb == priorityKey) continue;
+                                if (!first) {
+                                    otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
+                                }
+                                otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
+                                first = false;
+                            }
+
+                            if (!otherKeys.getString().isEmpty()) {
+                                 client.player.displayClientMessage(
+                                    Component.literal("Other conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
+                                    .append(otherKeys)
+                                    .append(Component.literal(". Please rebind them in your controls!").withStyle(ChatFormatting.GRAY)),
+                                    false
+                                );
+                            }
+                            shownConflictWarnings.add(key);
+                        }
                     }
 
                     ((KeyMappingAccessor) priorityKey).setIsDown(true);

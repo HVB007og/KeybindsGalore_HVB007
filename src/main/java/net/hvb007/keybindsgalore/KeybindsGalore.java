@@ -43,25 +43,38 @@ public class KeybindsGalore implements ClientModInitializer {
 
             customDataManager = new DataManager(FabricLoader.getInstance().getConfigDir(), "keybindsgalore_customdata.data");
 
-            // Register a keybind to reload the config file in-game.
-            // Uses reflection to support multiple Minecraft versions.
+            // This block uses reflection to register a keybind in a way that is compatible with multiple
+            // Minecraft versions. The constructor for KeyMapping has changed over time, and this code
+            // dynamically figures out which constructor to use at runtime.
             try {
+                // Get the first public constructor of the KeyMapping class. This is a bit of a gamble,
+                // but it's the most likely one to be the primary constructor.
                 Constructor<?> constructor = KeyMapping.class.getConstructors()[0];
+
+                // The category argument for the constructor has also changed.
+                // In older versions, it was a String (e.g., "key.categories.misc").
+                // In newer versions, it's an enum (e.g., KeyMapping.MISC).
                 Object categoryArg = "key.categories.misc";
                 Class<?>[] paramTypes = constructor.getParameterTypes();
                 if (paramTypes.length > 0 && !paramTypes[paramTypes.length - 1].equals(String.class)) {
+                    // If the last parameter is not a String, we assume it's the enum type.
+                    // We try to get the MISC enum field first, and if that fails, we try GAMEPLAY.
                     try { categoryArg = KeyMapping.class.getField("MISC").get(null); }
                     catch (NoSuchFieldException e) { categoryArg = KeyMapping.class.getField("GAMEPLAY").get(null); }
                 }
 
+                // The number and types of parameters in the constructor have also changed.
+                // Newer versions have an InputConstants.Type parameter as the second argument.
                 if (paramTypes.length > 1 && paramTypes[1].equals(InputConstants.Type.class)) {
+                    // This is the constructor for newer Minecraft versions.
                     configReloadKeybind = (KeyMapping) constructor.newInstance("key.keybindsgalore.reloadconfigs", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, categoryArg);
                 } else {
+                    // This is the constructor for older Minecraft versions.
                     configReloadKeybind = (KeyMapping) constructor.newInstance("key.keybindsgalore.reloadconfigs", GLFW.GLFW_KEY_UNKNOWN, categoryArg);
                 }
                 KeyBindingHelper.registerKeyBinding(configReloadKeybind);
             } catch (Exception e) {
-                LOGGER.error("Failed to register config reload keybind!", e);
+                LOGGER.error("Failed to register config reload keybind using reflection!", e);
             }
 
             // Register a client tick event to manage the pulse timer.
