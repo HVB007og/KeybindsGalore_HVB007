@@ -6,6 +6,7 @@ import io.wispforest.owo.ui.container.UIContainers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.OwoUIAdapter;
 import io.wispforest.owo.ui.core.Surface;
+import io.wispforest.owo.ui.event.*;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
@@ -15,6 +16,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.GameNarrator;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
@@ -158,7 +160,7 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
             if (sectorIndex == this.selectedSectorIndex && Configurations.EXPANSION_FACTOR_WHEN_SELECTED > 0) {
                 radius = this.maxRadius * (1.0f + Configurations.EXPANSION_FACTOR_WHEN_SELECTED);
             }
-
+            
             float textRadius = radius * 1.1f;
             float angle = (sectorIndex + 0.5f) * sectorAngle;
 
@@ -193,6 +195,15 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
 
     private static double mouseAngle(int x, int y, int mx, int my) {
         return (Mth.atan2(my - y, mx - x) + Math.PI * 2) % (Math.PI * 2);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (this.conflictedKey.getValue() == event.button()) {
+            this.closePieMenu();
+            return true;
+        }
+        return super.mouseReleased(event);
     }
 
     public void onKeyRelease() {
