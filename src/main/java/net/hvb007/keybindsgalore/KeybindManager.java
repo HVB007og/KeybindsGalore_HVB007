@@ -129,11 +129,10 @@ public class KeybindManager {
     public static void handleKeyPress(InputConstants.Key key, boolean pressed, CallbackInfo ci) {
         boolean wasSelectorScreenOpen = Minecraft.getInstance().screen instanceof KeybindSelectorScreen || Minecraft.getInstance().screen instanceof KeybindCircularScreen;
 
-        // --- PRESS LOGIC ---
-        if (pressed && hasConflicts(key)) {
+        if (hasConflicts(key)) {
             // Handle ignored keys: show a warning but don't interfere.
             if (isIgnoredKey(key)) {
-                if (!shownConflictWarnings.contains(key)) {
+                if (pressed && !shownConflictWarnings.contains(key)) {
                     Minecraft client = Minecraft.getInstance();
                     if (client.player != null) {
                         MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Ignored key '")
@@ -193,10 +192,16 @@ public class KeybindManager {
                 }
 
                 if (priorityKey != null) {
-                    // A priority key was found. Execute its action and show a warning.
-                    ci.cancel();
+                    // A priority key was found.
+                    ci.cancel(); // Cancel vanilla processing for ALL keys on this bind
 
-                    if (!shownConflictWarnings.contains(key)) {
+                    // Manually update the priority key state
+                    ((KeyMappingAccessor) priorityKey).setIsDown(pressed);
+                    if (pressed) {
+                        ((KeyMappingAccessor) priorityKey).setClickCount(((KeyMappingAccessor) priorityKey).getKey().getValue() + 1);
+                    }
+
+                    if (pressed && !shownConflictWarnings.contains(key)) {
                         Minecraft client = Minecraft.getInstance();
                         if (client.player != null) {
                             MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Key '")
@@ -207,6 +212,7 @@ public class KeybindManager {
                                 .withStyle(ChatFormatting.RED);
                             client.player.displayClientMessage(warningHeader, false);
 
+                            // ADDED: Display other conflicting keybinds
                             MutableComponent otherKeys = Component.literal("");
                             boolean first = true;
                             for (KeyMapping otherKb : conflicts) {
@@ -229,47 +235,45 @@ public class KeybindManager {
                             shownConflictWarnings.add(key);
                         }
                     }
-
-                    ((KeyMappingAccessor) priorityKey).setIsDown(true);
-                    ((KeyMappingAccessor) priorityKey).setClickCount(1);
-                    KeybindsGalore.activePulseTarget = priorityKey;
-                    KeybindsGalore.pulseTimer = Configurations.PULSE_TIMER_DURATION;
+                    return;
                 } else {
-                    // No priority key found. Open the conflict resolution menu.
-                    ci.cancel();
-                    openConflictMenu(key);
+                    // No priority key found.
+                    if (pressed) {
+                        // Open the conflict resolution menu.
+                        ci.cancel();
+                        openConflictMenu(key);
+                    } else {
+                        // Release logic for menu
+                        if (wasSelectorScreenOpen) {
+                            Screen currentScreen = Minecraft.getInstance().screen;
+                            if (currentScreen instanceof KeybindSelectorScreen) {
+                                ((KeybindSelectorScreen) currentScreen).onKeyRelease();
+                            } else if (currentScreen instanceof KeybindCircularScreen) {
+                                ((KeybindCircularScreen) currentScreen).onKeyRelease();
+                            }
+                        }
+                        
+                        // Also ensure all conflicting keys are released
+                        if (conflicts != null) {
+                            for (KeyMapping kb : conflicts) {
+                                ((KeyMappingAccessor) kb).setIsDown(false);
+                            }
+                        }
+                        ci.cancel();
+                    }
                 }
                 return;
             }
         }
 
-        // --- RELEASE LOGIC ---
+        // --- RELEASE LOGIC FOR PULSE ---
         if (!pressed) {
-            if (wasSelectorScreenOpen) {
-                Screen currentScreen = Minecraft.getInstance().screen;
-                if (currentScreen instanceof KeybindSelectorScreen) {
-                    ((KeybindSelectorScreen) currentScreen).onKeyRelease();
-                } else if (currentScreen instanceof KeybindCircularScreen) {
-                    ((KeybindCircularScreen) currentScreen).onKeyRelease();
-                }
-            }
-
             if (KeybindsGalore.pulseTimer > 0 && KeybindsGalore.activePulseTarget != null) {
                 InputConstants.Key targetKey = ((KeyMappingAccessor) KeybindsGalore.activePulseTarget).getKey();
                 if (key.equals(targetKey)) {
                     ((KeyMappingAccessor) KeybindsGalore.activePulseTarget).setIsDown(true);
                     ci.cancel();
                 }
-            }
-            else if (wasSelectorScreenOpen) {
-                List<KeyMapping> conflicts = getConflicts(key);
-                if (conflicts != null) {
-                    for (KeyMapping kb : conflicts) {
-                        ((KeyMappingAccessor) kb).setIsDown(false);
-                        ((KeyMappingAccessor) kb).setClickCount(0);
-                    }
-                }
-                ci.cancel();
             }
         }
     }

@@ -67,7 +67,7 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
         this.centreX = this.width / 2;
         this.centreY = this.height / 2;
         this.maxRadius = Math.min((this.centreX * Configurations.PIE_MENU_SCALE) - Configurations.PIE_MENU_MARGIN, (this.centreY * Configurations.PIE_MENU_SCALE) - Configurations.PIE_MENU_MARGIN);
-        this.maxExpandedRadius = this.maxRadius * Configurations.EXPANSION_FACTOR_WHEN_SELECTED;
+        this.maxExpandedRadius = this.maxRadius * (1.0f + Configurations.EXPANSION_FACTOR_WHEN_SELECTED);
         this.cancelZoneRadius = maxRadius * Configurations.CANCEL_ZONE_SCALE;
         this.isFirstFrame = false;
     }
@@ -109,8 +109,14 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
             float endAngle = (i + 1) * sectorAngle;
 
             int color;
+            float currentRadius = this.maxRadius;
+
             if (i == this.selectedSectorIndex) {
                 color = colorSelected;
+                // Apply expansion factor
+                if (Configurations.EXPANSION_FACTOR_WHEN_SELECTED > 0) {
+                    currentRadius = this.maxRadius * (1.0f + Configurations.EXPANSION_FACTOR_WHEN_SELECTED);
+                }
             } else {
                 if (numberOfSectors % 2 != 0 && i == numberOfSectors - 1) {
                     color = colorLastOddFix;
@@ -120,7 +126,7 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
             }
 
             // Use drawSector which handles both software and Owo rendering
-            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, this.maxRadius, color);
+            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, currentRadius, color);
         }
 
         // Render cancel zone (configurable colors)
@@ -147,6 +153,12 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
         for (int sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++) {
             float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
             float radius = this.maxRadius;
+            
+            // Adjust text radius if sector is expanded
+            if (sectorIndex == this.selectedSectorIndex && Configurations.EXPANSION_FACTOR_WHEN_SELECTED > 0) {
+                radius = this.maxRadius * (1.0f + Configurations.EXPANSION_FACTOR_WHEN_SELECTED);
+            }
+
             float textRadius = radius * 1.1f;
             float angle = (sectorIndex + 0.5f) * sectorAngle;
 
