@@ -133,34 +133,43 @@ public class KeybindManager {
             // Handle ignored keys: show a warning but don't interfere.
             if (isIgnoredKey(key)) {
                 if (pressed && !shownConflictWarnings.contains(key)) {
-                    Minecraft client = Minecraft.getInstance();
-                    if (client.player != null) {
-                        MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Ignored key '")
-                            .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
-                            .append(Component.literal("' has conflicts. Letting Minecraft handle it."))
-                            .withStyle(ChatFormatting.RED);
-                        client.player.displayClientMessage(warningHeader, false);
+                    if (Configurations.SHOW_CONFLICT_WARNINGS) {
+                        Minecraft client = Minecraft.getInstance();
+                        if (client.player != null) {
+                            MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Ignored key '")
+                                .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
+                                .append(Component.literal("' has conflicts. Letting Minecraft handle it."))
+                                .withStyle(ChatFormatting.RED);
+                            client.player.displayClientMessage(warningHeader, false);
 
-                        MutableComponent otherKeys = Component.literal("");
-                        boolean first = true;
-                        for (KeyMapping otherKb : getConflicts(key)) {
-                            if (!first) {
-                                otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
+                            MutableComponent otherKeys = Component.literal("");
+                            boolean first = true;
+                            for (KeyMapping otherKb : getConflicts(key)) {
+                                if (!first) {
+                                    otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
+                                }
+                                otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
+                                first = false;
                             }
-                            otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
-                            first = false;
-                        }
 
-                        if (!otherKeys.getString().isEmpty()) {
-                             client.player.displayClientMessage(
-                                Component.literal("Conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
-                                .append(otherKeys)
-                                .append(Component.literal(". Please rebind them in your controls!").withStyle(ChatFormatting.GRAY)),
-                                false
-                            );
+                            if (!otherKeys.getString().isEmpty()) {
+                                 client.player.displayClientMessage(
+                                    Component.literal("Conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
+                                    .append(otherKeys)
+                                    .append(Component.literal(". Please rebind them in your controls!").withStyle(ChatFormatting.GRAY)),
+                                    false
+                                );
+                            }
                         }
-                        shownConflictWarnings.add(key);
+                    } else {
+                        String conflictingKeybinds = getConflicts(key).stream()
+                            .map(KeyMapping::getName)
+                            .map(Component::translatable)
+                            .map(Component::getString)
+                            .collect(Collectors.joining(", "));
+                        KeybindsGalore.LOGGER.info("KeybindsGalore: Ignored key '{}' has conflicts. Letting Minecraft handle it. Conflicts: {}", key.getDisplayName().getString(), conflictingKeybinds);
                     }
+                    shownConflictWarnings.add(key);
                 }
                 // Do not cancel the event. Let Minecraft handle the key press.
                 return;
@@ -202,38 +211,49 @@ public class KeybindManager {
                     }
 
                     if (pressed && !shownConflictWarnings.contains(key)) {
-                        Minecraft client = Minecraft.getInstance();
-                        if (client.player != null) {
-                            MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Key '")
-                                .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
-                                .append(Component.literal("' has conflicts. Prioritizing '"))
-                                .append(Component.translatable(priorityKey.getName()).withStyle(ChatFormatting.AQUA))
-                                .append(Component.literal("'."))
-                                .withStyle(ChatFormatting.RED);
-                            client.player.displayClientMessage(warningHeader, false);
+                        if (Configurations.SHOW_CONFLICT_WARNINGS) {
+                            Minecraft client = Minecraft.getInstance();
+                            if (client.player != null) {
+                                MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Key '")
+                                    .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
+                                    .append(Component.literal("' has conflicts. Prioritizing '"))
+                                    .append(Component.translatable(priorityKey.getName()).withStyle(ChatFormatting.AQUA))
+                                    .append(Component.literal("'."))
+                                    .withStyle(ChatFormatting.RED);
+                                client.player.displayClientMessage(warningHeader, false);
 
-                            // ADDED: Display other conflicting keybinds
-                            MutableComponent otherKeys = Component.literal("");
-                            boolean first = true;
-                            for (KeyMapping otherKb : conflicts) {
-                                if (otherKb == priorityKey) continue;
-                                if (!first) {
-                                    otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
+                                // ADDED: Display other conflicting keybinds
+                                MutableComponent otherKeys = Component.literal("");
+                                boolean first = true;
+                                for (KeyMapping otherKb : conflicts) {
+                                    if (otherKb == priorityKey) continue;
+                                    if (!first) {
+                                        otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
+                                    }
+                                    otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
+                                    first = false;
                                 }
-                                otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
-                                first = false;
-                            }
 
-                            if (!otherKeys.getString().isEmpty()) {
-                                 client.player.displayClientMessage(
-                                    Component.literal("Other conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
-                                    .append(otherKeys)
-                                    .append(Component.literal(". Please rebind them in your controls!").withStyle(ChatFormatting.GRAY)),
-                                    false
-                                );
+                                if (!otherKeys.getString().isEmpty()) {
+                                     client.player.displayClientMessage(
+                                        Component.literal("Other conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
+                                        .append(otherKeys)
+                                        .append(Component.literal(". Please rebind them in your controls!").withStyle(ChatFormatting.GRAY)),
+                                        false
+                                    );
+                                }
                             }
-                            shownConflictWarnings.add(key);
+                        } else {
+                            final KeyMapping finalPriorityKey = priorityKey;
+                            String conflictingKeybinds = conflicts.stream()
+                                .filter(kb -> kb != finalPriorityKey)
+                                .map(KeyMapping::getName)
+                                .map(Component::translatable)
+                                .map(Component::getString)
+                                .collect(Collectors.joining(", "));
+                            KeybindsGalore.LOGGER.info("KeybindsGalore: Key '{}' has conflicts. Prioritizing '{}'. Other conflicts: {}", key.getDisplayName().getString(), priorityKey.getName(), conflictingKeybinds);
                         }
+                        shownConflictWarnings.add(key);
                     }
                     return;
                 } else {

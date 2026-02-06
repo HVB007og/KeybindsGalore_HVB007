@@ -21,6 +21,7 @@ public class Configurations {
     // --- Behaviour ---
     public static boolean USE_CIRCULAR_MENU = false;
     public static boolean USE_SOFTWARE_RENDERING = false; // Default to false to test Owo rendering
+    public static boolean SHOW_CONFLICT_WARNINGS = true; // Show conflict warnings in chat
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>(Arrays.asList("Debug"));
     public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>(Arrays.asList(340, 341, 87, 65, 83, 68, 32));
@@ -41,7 +42,7 @@ public class Configurations {
     public static int PIE_MENU_SELECT_COLOR = 0x00FFFFFF;
     public static int PIE_MENU_HIGHLIGHT_COLOR = 0x00EED202;
     
-    // New Configurable Colors (Defaults with ~75% opacity 0xC0)
+    // New Configurable Colors (Defaults with ~75% opacity C0)
     public static int PIE_MENU_SECTOR_COLOR_EVEN = 0xC0606060;
     public static int PIE_MENU_SECTOR_COLOR_ODD = 0xC0808080;
     public static int PIE_MENU_SECTOR_COLOR_SELECTED = 0xC0E0E0E0;
