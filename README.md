@@ -14,7 +14,7 @@ A Fabric mod that opens a popup menu when multiple actions are bound to the same
 
 ---
 
-## What's New in Version 1.6.0
+## What's New in Version 1.6.X
 
 This version introduces a major rewrite of the rendering system and adds new configuration options.
 
