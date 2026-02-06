@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 
 import net.hvb007.keybindsgalore.configmanager.ConfigManager;
 import net.hvb007.keybindsgalore.customdata.DataManager;
@@ -24,7 +25,6 @@ public class KeybindsGalore implements ClientModInitializer {
     public static ConfigManager configManager;
     public static DataManager customDataManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("keybindsgalore");
-    private static KeyMapping configReloadKeybind;
 
     // The keybinding we want to force-press after a menu selection.
     public static KeyMapping activePulseTarget = null;
@@ -56,48 +56,6 @@ public class KeybindsGalore implements ClientModInitializer {
 
             customDataManager = new DataManager(FabricLoader.getInstance().getConfigDir(), "keybindsgalore_customdata.data");
 
-            // This block uses reflection to register a keybind in a way that is compatible with multiple
-            // Minecraft versions. The constructor for KeyMapping has changed over time, and this code
-            // dynamically figures out which constructor to use at runtime.
-            try {
-                // Get the first public constructor of the KeyMapping class. This is a bit of a gamble,
-                // but it's the most likely one to be the primary constructor.
-                Constructor<?> constructor = KeyMapping.class.getConstructors()[0];
-
-                // The category argument for the constructor has also changed.
-                // In older versions, it was a String (e.g., "key.categories.misc").
-                // In newer versions, it's an enum (e.g., KeyMapping.MISC).
-                Object categoryArg = "key.categories.misc";
-                Class<?>[] paramTypes = constructor.getParameterTypes();
-                if (paramTypes.length > 0 && !paramTypes[paramTypes.length - 1].equals(String.class)) {
-                    // If the last parameter is not a String, we assume it's the enum type.
-                    // We try to get the MISC enum field first, and if that fails, we try GAMEPLAY.
-                    try { 
-                        categoryArg = KeyMapping.class.getField("MISC").get(null); 
-                    } catch (NoSuchFieldException e) { 
-                        try {
-                            categoryArg = KeyMapping.class.getField("GAMEPLAY").get(null); 
-                        } catch (NoSuchFieldException e2) {
-                            // Fallback to string if fields are missing (e.g. 1.21+ might use strings again or different names)
-                            categoryArg = "key.categories.misc";
-                        }
-                    }
-                }
-
-                // The number and types of parameters in the constructor have also changed.
-                // Newer versions have an InputConstants.Type parameter as the second argument.
-                if (paramTypes.length > 1 && paramTypes[1].equals(InputConstants.Type.class)) {
-                    // This is the constructor for newer Minecraft versions.
-                    configReloadKeybind = (KeyMapping) constructor.newInstance("key.keybindsgalore.reloadconfigs", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, categoryArg);
-                } else {
-                    // This is the constructor for older Minecraft versions.
-                    configReloadKeybind = (KeyMapping) constructor.newInstance("key.keybindsgalore.reloadconfigs", GLFW.GLFW_KEY_UNKNOWN, categoryArg);
-                }
-                KeyBindingHelper.registerKeyBinding(configReloadKeybind);
-            } catch (Exception e) {
-                LOGGER.error("Failed to register config reload keybind using reflection!", e);
-            }
-
             // Register a client tick event to manage the pulse timer.
             ClientTickEvents.END_CLIENT_TICK.register(client -> {
                 // Decrement the pulse timer each tick.
@@ -107,27 +65,6 @@ public class KeybindsGalore implements ClientModInitializer {
                     if (pulseTimer == 0 && activePulseTarget != null) {
                         ((KeyMappingAccessor) activePulseTarget).setIsDown(false);
                         activePulseTarget = null;
-                    }
-                }
-
-                // Handle the config reload keybind press.
-                if (configReloadKeybind != null && configReloadKeybind.consumeClick()) {
-                    try {
-                        configManager.readConfigFile();
-                        // Re-apply override if config reloaded
-                        if (owoLibMissing) {
-                            Configurations.USE_SOFTWARE_RENDERING = true;
-                        }
-                        customDataManager.readDataFile();
-                    } catch (IOException ex) {
-                        if (client.player != null) client.player.displayClientMessage(Component.translatable("text.keybindsgalore.configreloadfail", ex.getMessage()), false);
-                        return;
-                    }
-
-                    if (client.player != null) {
-                        if (configManager.errorFlag) client.player.displayClientMessage(Component.translatable("text.keybindsgalore.configerrors").withStyle(ChatFormatting.RED), false);
-                        if (customDataManager.hasCustomData) client.player.displayClientMessage(Component.translatable("text.keybindsgalore.customdatafound"), false);
-                        client.player.displayClientMessage(Component.translatable("text.keybindsgalore.configreloaded"), false);
                     }
                 }
             });

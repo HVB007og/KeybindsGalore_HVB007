@@ -156,7 +156,7 @@ public class KeybindManager {
                                  client.player.displayClientMessage(
                                     Component.literal("Conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
                                     .append(otherKeys)
-                                    .append(Component.literal(". Please rebind them in your controls!").withStyle(ChatFormatting.GRAY)),
+                                    .append(Component.literal(". Please rebind them in your controls!If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY)),
                                     false
                                 );
                             }
@@ -238,7 +238,7 @@ public class KeybindManager {
                                      client.player.displayClientMessage(
                                         Component.literal("Other conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
                                         .append(otherKeys)
-                                        .append(Component.literal(". Please rebind them in your controls!").withStyle(ChatFormatting.GRAY)),
+                                        .append(Component.literal(". Please rebind them in your controls! If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY)),
                                         false
                                     );
                                 }

@@ -8,6 +8,8 @@ import net.hvb007.keybindsgalore.KeybindsGalore;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -123,22 +125,41 @@ public class ConfigManager {
         if (type == short.class) {
             field.setShort(this.configurableClassInstance, Short.parseShort(value.replace("0x", ""), 16));
         } else if (type == int.class) {
-            field.setInt(this.configurableClassInstance, Integer.parseInt(value.replace("0x", ""), value.startsWith("0x") ? 16 : 10));
+            if (value.startsWith("0x")) {
+                field.setInt(this.configurableClassInstance, (int) Long.parseLong(value.replace("0x", ""), 16));
+            } else {
+                field.setInt(this.configurableClassInstance, Integer.parseInt(value));
+            }
         } else if (type == float.class) {
             field.setFloat(this.configurableClassInstance, Float.parseFloat(value));
         } else if (type == boolean.class) {
             field.setBoolean(this.configurableClassInstance, Boolean.parseBoolean(value));
         } else if (type == ArrayList.class) {
-            ArrayList<Integer> list = new ArrayList<>();
+            // Get the generic type of the ArrayList
+            ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+            Type listType = genericType.getActualTypeArguments()[0];
+
             String[] values = value.replaceAll("[\\[\\]\\s]+", "").split(",");
-            if (values.length == 1 && values[0].isEmpty()) {
-                // Handle empty list case
-            } else {
-                for (String s : values) {
-                    list.add(Integer.parseInt(s.trim()));
+            
+            if (listType == String.class) {
+                ArrayList<String> list = new ArrayList<>();
+                if (!(values.length == 1 && values[0].isEmpty())) {
+                    for (String s : values) {
+                        list.add(s.trim());
+                    }
                 }
+                field.set(this.configurableClassInstance, list);
+            } else if (listType == Integer.class) {
+                ArrayList<Integer> list = new ArrayList<>();
+                if (!(values.length == 1 && values[0].isEmpty())) {
+                    for (String s : values) {
+                        list.add(Integer.parseInt(s.trim()));
+                    }
+                }
+                field.set(this.configurableClassInstance, list);
+            } else {
+                KeybindsGalore.LOGGER.error("Unrecognized ArrayList type for field: {}", field.getName());
             }
-            field.set(this.configurableClassInstance, list);
         } else {
             KeybindsGalore.LOGGER.error("Unrecognized data type for field: {}", field.getName());
         }
