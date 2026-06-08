@@ -10,6 +10,7 @@ import java.util.Arrays;
 public class Configurations {
     // --- General ---
     public static boolean DEBUG = false;
+    public static boolean VERBOSE_DEBUG = false;
 
     // --- Performance ---
     public static boolean LAZY_CONFLICT_CHECK = true;

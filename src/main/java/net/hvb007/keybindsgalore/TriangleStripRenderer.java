@@ -120,19 +120,26 @@ public class TriangleStripRenderer {
             // Use fillQuad instead of two triangles to avoid seams
             fillQuad(drawContext, (int)innerX1, (int)innerY1, (int)outerX1, (int)outerY1, (int)outerX2, (int)outerY2, (int)innerX2, (int)innerY2, color);
         } else {
+            if (Configurations.VERBOSE_DEBUG) {
+                KeybindsGalore.LOGGER.info("(KBG DEBUG) drawSector HW: center({}, {}), rIn={}, rOut={}, angles({} -> {}), color={}", 
+                    centerX, centerY, innerRadius, outerRadius, startAngleRad, endAngleRad, Integer.toHexString(color));
+            }
+            
             // Hardware-accelerated rendering natively without OwoLib
             com.mojang.blaze3d.systems.RenderSystem.enableBlend();
             com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+            com.mojang.blaze3d.systems.RenderSystem.disableCull();
+            com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
             com.mojang.blaze3d.systems.RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::getPositionColorShader);
 
             org.joml.Matrix4f matrix = drawContext.pose().last().pose();
             com.mojang.blaze3d.vertex.Tesselator tesselator = com.mojang.blaze3d.vertex.Tesselator.getInstance();
             com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = tesselator.begin(com.mojang.blaze3d.vertex.VertexFormat.Mode.TRIANGLE_STRIP, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR);
 
-            float f3 = (float)(color >> 24 & 255) / 255.0F;
-            float f = (float)(color >> 16 & 255) / 255.0F;
-            float f1 = (float)(color >> 8 & 255) / 255.0F;
-            float f2 = (float)(color & 255) / 255.0F;
+            int a = (color >> 24) & 255;
+            int r = (color >> 16) & 255;
+            int g = (color >> 8) & 255;
+            int b = color & 255;
 
             int segments = 32;
             float angleStep = (endAngleRad - startAngleRad) / segments;
@@ -143,12 +150,14 @@ public class TriangleStripRenderer {
                 float sin = (float) Math.sin(angle);
                 
                 // Add inner vertex
-                bufferbuilder.addVertex(matrix, centerX + cos * innerRadius, centerY + sin * innerRadius, 0.0F).setColor(f, f1, f2, f3);
+                bufferbuilder.addVertex(matrix, centerX + cos * innerRadius, centerY + sin * innerRadius, 0.0F).setColor(r, g, b, a);
                 // Add outer vertex
-                bufferbuilder.addVertex(matrix, centerX + cos * outerRadius, centerY + sin * outerRadius, 0.0F).setColor(f, f1, f2, f3);
+                bufferbuilder.addVertex(matrix, centerX + cos * outerRadius, centerY + sin * outerRadius, 0.0F).setColor(r, g, b, a);
             }
             
             com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+            com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
+            com.mojang.blaze3d.systems.RenderSystem.enableCull();
             com.mojang.blaze3d.systems.RenderSystem.disableBlend();
         }
     }
