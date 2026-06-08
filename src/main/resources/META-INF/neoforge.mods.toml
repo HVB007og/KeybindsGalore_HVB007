@@ -1,0 +1,29 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+issueTrackerURL=""
+
+[[mixins]]
+config="keybindsgalore.mixins.json"
+
+[[mods]]
+modId="keybindsgalore"
+version="1.6.1"
+displayName="Keybinds Galore"
+authors="HVB007"
+description='''
+A mod that makes keybinds better.
+'''
+
+[[dependencies.keybindsgalore]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.keybindsgalore]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1,1.22)"
+    ordering="NONE"
+    side="BOTH"

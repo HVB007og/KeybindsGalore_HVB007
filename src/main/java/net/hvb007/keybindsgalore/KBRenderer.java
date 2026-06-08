@@ -41,11 +41,15 @@ public class KBRenderer {
             float xLeft, xRight;
 
             if (y <= y2) {
-                xLeft = x1 + (float)(x2 - x1) * (y - y1) / (y2 - y1 + 1);
-                xRight = x1 + (float)(x3 - x1) * (y - y1) / (y3 - y1 + 1);
+                float denom = y2 - y1;
+                xLeft = (denom == 0) ? x1 : x1 + (float)(x2 - x1) * (y - y1) / denom;
+                denom = y3 - y1;
+                xRight = (denom == 0) ? x1 : x1 + (float)(x3 - x1) * (y - y1) / denom;
             } else {
-                xLeft = x2 + (float)(x3 - x2) * (y - y2) / (y3 - y2 + 1);
-                xRight = x1 + (float)(x3 - x1) * (y - y1) / (y3 - y1 + 1);
+                float denom = y3 - y2;
+                xLeft = (denom == 0) ? x2 : x2 + (float)(x3 - x2) * (y - y2) / denom;
+                denom = y3 - y1;
+                xRight = (denom == 0) ? x1 : x1 + (float)(x3 - x1) * (y - y1) / denom;
             }
 
             if (xLeft > xRight) {

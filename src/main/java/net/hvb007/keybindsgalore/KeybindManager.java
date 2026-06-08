@@ -39,8 +39,8 @@ public class KeybindManager {
     /**
      * Safely gets the display name of a keybinding's category.
      */
-    public static String safeGetCategory(KeyMapping binding) {
-        return binding.getCategory().label().getString();
+    public static Component safeGetCategory(KeyMapping binding) {
+        return Component.translatable(binding.getCategory());
     }
 
     /**
@@ -55,7 +55,7 @@ public class KeybindManager {
 
         for (KeyMapping keybinding : client.options.keyMappings) { // Use client.options.allKeys for Yarn
             // Filter out keybinds from configured categories.
-            if (Configurations.FILTERED_CATEGORY_KEYS.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(keybinding)))) {
+            if (Configurations.FILTERED_CATEGORY_KEYS.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(keybinding).getString()))) {
                 continue;
             }
 
@@ -192,7 +192,7 @@ public class KeybindManager {
                     // 2. If no individual priority, check for priority categories
                     if (priorityKey == null) {
                         for (KeyMapping kb : conflicts) {
-                            if (Configurations.PRIORITY_CATEGORIES.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(kb)))) {
+                            if (Configurations.PRIORITY_CATEGORIES.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(kb).getString()))) {
                                 priorityKey = kb;
                                 break;
                             }
@@ -207,7 +207,7 @@ public class KeybindManager {
                     // Manually update the priority key state
                     ((KeyMappingAccessor) priorityKey).setIsDown(pressed);
                     if (pressed) {
-                        ((KeyMappingAccessor) priorityKey).setClickCount(((KeyMappingAccessor) priorityKey).getKey().getValue() + 1);
+                        ((KeyMappingAccessor) priorityKey).setClickCount(1);
                     }
 
                     if (pressed && !shownConflictWarnings.contains(key)) {
