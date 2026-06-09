@@ -7,7 +7,10 @@ plugins {
 version = '1.6.1'
 group = 'net.hvb007'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java {
+    withSourcesJar()
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+}
 
 neoForge {
     // NeoForge 1.21.1 versions start with 21.1.x
