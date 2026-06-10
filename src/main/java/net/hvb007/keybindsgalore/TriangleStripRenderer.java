@@ -2,8 +2,6 @@ package net.hvb007.keybindsgalore;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
-import io.wispforest.owo.ui.core.OwoUIGraphics;
-import io.wispforest.owo.ui.core.Color;
 
 /**
  * This class provides utility methods for rendering triangles and other shapes
@@ -26,11 +24,15 @@ public class TriangleStripRenderer {
             float xLeft, xRight;
 
             if (y <= y2) {
-                xLeft = x1 + (float)(x2 - x1) * (y - y1) / (y2 - y1 + 1);
-                xRight = x1 + (float)(x3 - x1) * (y - y1) / (y3 - y1 + 1);
+                float denom = y2 - y1;
+                xLeft = (denom == 0) ? x1 : x1 + (float)(x2 - x1) * (y - y1) / denom;
+                denom = y3 - y1;
+                xRight = (denom == 0) ? x1 : x1 + (float)(x3 - x1) * (y - y1) / denom;
             } else {
-                xLeft = x2 + (float)(x3 - x2) * (y - y2) / (y3 - y2 + 1);
-                xRight = x1 + (float)(x3 - x1) * (y - y1) / (y3 - y1 + 1);
+                float denom = y3 - y2;
+                xLeft = (denom == 0) ? x2 : x2 + (float)(x3 - x2) * (y - y2) / denom;
+                denom = y3 - y1;
+                xRight = (denom == 0) ? x1 : x1 + (float)(x3 - x1) * (y - y1) / denom;
             }
 
             if (xLeft > xRight) { float temp = xLeft; xLeft = xRight; xRight = temp; }
@@ -118,15 +120,45 @@ public class TriangleStripRenderer {
             // Use fillQuad instead of two triangles to avoid seams
             fillQuad(drawContext, (int)innerX1, (int)innerY1, (int)outerX1, (int)outerY1, (int)outerX2, (int)outerY2, (int)innerX2, (int)innerY2, color);
         } else {
-            // Owo Lib rendering
-            OwoUIGraphics owoGraphics = OwoUIGraphics.of(drawContext);
+            if (Configurations.VERBOSE_DEBUG) {
+                KeybindsGalore.LOGGER.info("(KBG DEBUG) drawSector HW: center({}, {}), rIn={}, rOut={}, angles({} -> {}), color={}", 
+                    centerX, centerY, innerRadius, outerRadius, startAngleRad, endAngleRad, Integer.toHexString(color));
+            }
             
-            double startDeg = Math.toDegrees(startAngleRad) + 180;
-            double endDeg = Math.toDegrees(endAngleRad) + 180;
+            // Hardware-accelerated rendering natively without OwoLib
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+            com.mojang.blaze3d.systems.RenderSystem.disableCull();
+            com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
+            com.mojang.blaze3d.systems.RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::getPositionColorShader);
+
+            org.joml.Matrix4f matrix = drawContext.pose().last().pose();
+            com.mojang.blaze3d.vertex.Tesselator tesselator = com.mojang.blaze3d.vertex.Tesselator.getInstance();
+            com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = tesselator.begin(com.mojang.blaze3d.vertex.VertexFormat.Mode.TRIANGLE_STRIP, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR);
+
+            int a = (color >> 24) & 255;
+            int r = (color >> 16) & 255;
+            int g = (color >> 8) & 255;
+            int b = color & 255;
+
+            int segments = 32;
+            float angleStep = (endAngleRad - startAngleRad) / segments;
             
-            int segments = 32; 
+            for (int i = 0; i <= segments; i++) {
+                float angle = startAngleRad + i * angleStep;
+                float cos = (float) Math.cos(angle);
+                float sin = (float) Math.sin(angle);
+                
+                // Add inner vertex
+                bufferbuilder.addVertex(matrix, centerX + cos * innerRadius, centerY + sin * innerRadius, 0.0F).setColor(r, g, b, a);
+                // Add outer vertex
+                bufferbuilder.addVertex(matrix, centerX + cos * outerRadius, centerY + sin * outerRadius, 0.0F).setColor(r, g, b, a);
+            }
             
-            owoGraphics.drawRing(centerX, centerY, startDeg, endDeg, segments, innerRadius, outerRadius, Color.ofArgb(color), Color.ofArgb(color));
+            com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+            com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
+            com.mojang.blaze3d.systems.RenderSystem.enableCull();
+            com.mojang.blaze3d.systems.RenderSystem.disableBlend();
         }
     }
 }

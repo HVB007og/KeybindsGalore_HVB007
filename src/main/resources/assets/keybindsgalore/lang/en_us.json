@@ -1,0 +1,31 @@
+{
+  "title.keybindsgalore.config": "Keybinds Galore Configuration",
+  "category.keybindsgalore.general": "General Settings",
+  "category.keybindsgalore.visual": "Visual Settings (Pie Menu)",
+  "category.keybindsgalore.behavior": "Behavior Settings",
+
+  "option.keybindsgalore.debug": "Enable Debug Logging",
+  "option.keybindsgalore.debug.tooltip": "Logs every keypress and prioritization check to the console (huge log output!).",
+  "option.keybindsgalore.use_circular_menu": "Use Pie Menu (Circular)",
+  "option.keybindsgalore.show_conflict_warnings": "Show Chat Warnings",
+  "option.keybindsgalore.filtered_categories": "Filtered Categories",
+  "key.keybindsgalore.open_capture": "Open Keybind Capture Screen",
+  "option.keybindsgalore.priority_keybinds": "Priority Actions",
+  "option.keybindsgalore.priority_keybinds.tooltip": "Specific actions (like 'Jump') that will always take priority if a conflict occurs. Format: actionID:keyName",
+  
+  "text.keybindsgalore.capture_hotkey_info": "Tip: Press the '%s' hotkey in-game to quickly capture and PRIORITIZE an action!",
+  "text.keybindsgalore.action_prioritized": "Action '%s' on key '%s' is now prioritized.",
+  
+  "title.keybindsgalore.capture": "Prioritize Action",
+  "title.keybindsgalore.select_action": "Select Action to Prioritize",
+  "text.keybindsgalore.press_any_key": "Press any key (or mouse button)...",
+  "text.keybindsgalore.capture_instruction": "The mod will find all actions bound to that key.",
+  
+  "option.keybindsgalore.darkened_background": "Darken Background in Menu",
+  "option.keybindsgalore.color_even": "Sector Color (Even)",
+  "option.keybindsgalore.color_odd": "Sector Color (Odd)",
+  "option.keybindsgalore.color_selected": "Selected Sector Color",
+  "option.keybindsgalore.color_cancel": "Cancel Zone Color",
+  "option.keybindsgalore.color_cancel_hover": "Cancel Zone Hover Color",
+  "option.keybindsgalore.pie_scale": "Pie Menu Scale"
+}

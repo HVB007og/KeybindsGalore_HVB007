@@ -1,12 +1,5 @@
 package net.hvb007.keybindsgalore;
 
-import com.mojang.blaze3d.vertex.Tesselator;
-import io.wispforest.owo.ui.base.BaseOwoScreen;
-import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.OwoUIAdapter;
-import io.wispforest.owo.ui.core.Surface;
-import io.wispforest.owo.ui.event.*;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
@@ -16,14 +9,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.GameNarrator;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.Util;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
-import org.jetbrains.annotations.NotNull;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,56 +19,35 @@ import java.util.Objects;
 
 import static net.hvb007.keybindsgalore.KeybindsGalore.customDataManager;
 
-public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
+public class KeybindCircularScreen extends Screen {
 
     private final InputConstants.Key conflictedKey;
     private final List<KeyMapping> conflicts = new ArrayList<>();
     private int selectedSectorIndex = -1;
-    private int ticksInScreen = 0;
-    private boolean mouseDown = false;
 
     private int centreX = 0, centreY = 0;
     private float maxRadius = 0;
-    private float maxExpandedRadius = 0;
     private float cancelZoneRadius = 0;
-    private boolean isFirstFrame = true;
 
     public KeybindCircularScreen(InputConstants.Key key) {
-        super(); 
+        super(GameNarrator.NO_TITLE);
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
     }
 
     @Override
-    protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
-        return OwoUIAdapter.create(this, UIContainers::verticalFlow);
-    }
-
-    @Override
-    protected void build(FlowLayout rootComponent) {
-        if (Configurations.DARKENED_BACKGROUND) {
-            rootComponent.surface(Surface.VANILLA_TRANSLUCENT);
-        }
-    }
-
-    @Override
     protected void init() {
-        super.init(); // Important for Owo
+        super.init();
         this.centreX = this.width / 2;
         this.centreY = this.height / 2;
-        this.maxRadius = Math.min((this.centreX * Configurations.PIE_MENU_SCALE) - Configurations.PIE_MENU_MARGIN, (this.centreY * Configurations.PIE_MENU_SCALE) - Configurations.PIE_MENU_MARGIN);
-        this.maxExpandedRadius = this.maxRadius * (1.0f + Configurations.EXPANSION_FACTOR_WHEN_SELECTED);
-        this.cancelZoneRadius = maxRadius * Configurations.CANCEL_ZONE_SCALE;
-        this.isFirstFrame = false;
+        this.maxRadius = Math.min(this.width, this.height) / 2.0f * 0.8f;
+        this.cancelZoneRadius = maxRadius * 0.2f;
     }
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        // Call super.render to draw Owo UI components (including the surface background)
-        super.render(context, mouseX, mouseY, delta);
-
-        if (this.isFirstFrame) {
-            this.init();
+        if (Configurations.DARKENED_BACKGROUND) {
+            this.renderBackground(context, mouseX, mouseY, delta);
         }
 
         double mouseAngle = mouseAngle(this.centreX, this.centreY, mouseX, mouseY);
@@ -99,13 +66,11 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
             this.selectedSectorIndex = -1;
         }
 
-        // Use configurable colors
         final int colorEven = Configurations.PIE_MENU_SECTOR_COLOR_EVEN;
         final int colorOdd = Configurations.PIE_MENU_SECTOR_COLOR_ODD;
         final int colorSelected = Configurations.PIE_MENU_SECTOR_COLOR_SELECTED;
         final int colorLastOddFix = Configurations.PIE_MENU_SECTOR_COLOR_LAST_ODD;
 
-        // Render sectors
         for (int i = 0; i < numberOfSectors; i++) {
             float startAngle = i * sectorAngle;
             float endAngle = (i + 1) * sectorAngle;
@@ -115,10 +80,6 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
 
             if (i == this.selectedSectorIndex) {
                 color = colorSelected;
-                // Apply expansion factor
-                if (Configurations.EXPANSION_FACTOR_WHEN_SELECTED > 0) {
-                    currentRadius = this.maxRadius * (1.0f + Configurations.EXPANSION_FACTOR_WHEN_SELECTED);
-                }
             } else {
                 if (numberOfSectors % 2 != 0 && i == numberOfSectors - 1) {
                     color = colorLastOddFix;
@@ -127,27 +88,25 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
                 }
             }
 
-            // Use drawSector which handles both software and Owo rendering
             TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, currentRadius, color);
         }
 
-        // Render cancel zone (configurable colors)
         int cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
         if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
             cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR;
         }
         
-        // Draw cancel zone as a polygon matching the sector count
         for (int i = 0; i < numberOfSectors; i++) {
             float start = i * sectorAngle;
             float end = (i + 1) * sectorAngle;
             TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, start, end, 0, this.cancelZoneRadius, cancelZoneColor);
         }
 
-        renderLabelTexts(context, delta, numberOfSectors);
+        renderLabelTexts(context, numberOfSectors);
+        super.render(context, mouseX, mouseY, delta);
     }
 
-    private void renderLabelTexts(GuiGraphics context, float delta, int numberOfSectors) {
+    private void renderLabelTexts(GuiGraphics context, int numberOfSectors) {
         if (numberOfSectors == 0) return;
 
         Font textRenderer = Minecraft.getInstance().font;
@@ -155,11 +114,6 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
         for (int sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++) {
             float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
             float radius = this.maxRadius;
-            
-            // Adjust text radius if sector is expanded
-            if (sectorIndex == this.selectedSectorIndex && Configurations.EXPANSION_FACTOR_WHEN_SELECTED > 0) {
-                radius = this.maxRadius * (1.0f + Configurations.EXPANSION_FACTOR_WHEN_SELECTED);
-            }
             
             float textRadius = radius * 1.1f;
             float angle = (sectorIndex + 0.5f) * sectorAngle;
@@ -185,7 +139,6 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
 
             if (this.selectedSectorIndex == sectorIndex) {
                 actionName = ChatFormatting.UNDERLINE + actionName;
-                // Draw highlight box BEHIND text - Very Light Grey with 50% opacity
                 context.fill((int)xPos - 2, (int)yPos - 2, (int)xPos + textWidth + 2, (int)yPos + textHeight + 2, 0x80E0E0E0);
             }
 
@@ -195,15 +148,6 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
 
     private static double mouseAngle(int x, int y, int mx, int my) {
         return (Mth.atan2(my - y, mx - x) + Math.PI * 2) % (Math.PI * 2);
-    }
-
-    @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
-        if (this.conflictedKey.getValue() == event.button()) {
-            this.closePieMenu();
-            return true;
-        }
-        return super.mouseReleased(event);
     }
 
     public void onKeyRelease() {
@@ -227,11 +171,6 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
         }
     }
 
-    @Override
-    public void tick() {
-        this.ticksInScreen++;
-    }
-
     private Component formatName(KeyMapping kb) {
         String id = KeybindManager.safeGetTranslationKey(kb);
         String cat = KeybindManager.safeGetCategory(kb);
@@ -250,5 +189,12 @@ public class KeybindCircularScreen extends BaseOwoScreen<FlowLayout> {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        if (Configurations.DARKENED_BACKGROUND) {
+            context.fill(0, 0, this.width, this.height, 0x60000000);
+        }
     }
 }

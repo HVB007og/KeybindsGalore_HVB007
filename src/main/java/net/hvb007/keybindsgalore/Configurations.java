@@ -10,6 +10,7 @@ import java.util.Arrays;
 public class Configurations {
     // --- General ---
     public static boolean DEBUG = false;
+    public static boolean VERBOSE_DEBUG = false;
 
     // --- Performance ---
     public static boolean LAZY_CONFLICT_CHECK = true;
@@ -24,12 +25,18 @@ public class Configurations {
     public static boolean SHOW_CONFLICT_WARNINGS = true; // Show conflict warnings in chat
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>(Arrays.asList("Debug"));
-    public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>(Arrays.asList(340, 341, 87, 65, 83, 68, 32));
-    public static boolean INVERT_IGNORED_KEYS_LIST = false;
     public static boolean USE_KEYBIND_FIX = true;
     public static int PULSE_TIMER_DURATION = 5;
     public static ArrayList<String> PRIORITY_CATEGORIES = new ArrayList<>(Arrays.asList("Movement"));
-    public static ArrayList<String> PRIORITY_KEYBINDS = new ArrayList<>(Arrays.asList("key.attack", "key.use"));
+    public static ArrayList<String> PRIORITY_KEYBINDS = new ArrayList<>(Arrays.asList(
+            "key.forward:key.keyboard.w",
+            "key.left:key.keyboard.a",
+            "key.back:key.keyboard.s",
+            "key.right:key.keyboard.d",
+            "key.jump:key.keyboard.space",
+            "key.sneak:key.keyboard.left.shift",
+            "key.sprint:key.keyboard.left.control"
+    ));
 
     // --- Pie Menu Customisation ---
     public static float EXPANSION_FACTOR_WHEN_SELECTED = 0;

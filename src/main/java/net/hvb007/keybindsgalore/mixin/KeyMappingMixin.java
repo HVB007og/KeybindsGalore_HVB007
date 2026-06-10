@@ -47,11 +47,15 @@ public abstract class KeyMappingMixin {
 
         // Block any attempt to press a conflicting key unless it's our chosen target
         // or the special-cased 'toggleGui' key.
-        // FIX: Do NOT block ignored keys!
-        if (pressed && KeybindManager.hasConflicts(this.key) && !KeybindManager.isIgnoredKey(this.key)) {
-            if (self != KeybindsGalore.activePulseTarget && !self.getName().equals("key.toggleGui")) {
-                ci.cancel();
+        if (pressed && KeybindManager.hasConflicts(this.key)) {
+            KeyMapping priority = KeybindManager.getPriorityKey(this.key);
+            
+            // Allow if this IS the priority key, or if it's the pulse target, or toggleGui
+            if (self == priority || self == KeybindsGalore.activePulseTarget || self.getName().equals("key.toggleGui")) {
+                return; // Let it pass
             }
+            
+            ci.cancel();
         }
     }
 }

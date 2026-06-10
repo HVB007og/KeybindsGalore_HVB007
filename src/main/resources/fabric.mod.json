@@ -30,14 +30,15 @@
 
     "environment": "client",
     "entrypoints": {
-       "client": [ "net.hvb007.keybindsgalore.KeybindsGalore" ]
+       "client": [ "net.hvb007.keybindsgalore.KeybindsGalore" ],
+       "modmenu": [ "net.hvb007.keybindsgalore.configmanager.ModMenuIntegration" ]
     },
     "mixins": [
       "keybindsgalore.mixins.json"
     ],
     "depends": {
        "fabricloader": ">=0.16.0",
-       "minecraft": ">=1.21.11",
+       "minecraft": ">=1.21.1",
        "java": ">=21"
     }
 }

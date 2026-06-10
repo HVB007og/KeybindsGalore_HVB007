@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "name": "permission-alarm",
+            "type": "command",
+            "command": "powershell.exe -ExecutionPolicy Bypass -File .gemini/hooks/beep.ps1"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -30,34 +30,38 @@ public class KeybindsGalore implements ClientModInitializer {
     public static KeyMapping activePulseTarget = null;
     // Ticks remaining to hold the activePulseTarget as pressed.
     public static int pulseTimer = 0;
-    
-    private static boolean owoLibMissing = false;
+
+    public static KeyMapping openCaptureKey;
 
     @Override
     public void onInitializeClient() {
         LOGGER.info("KeybindsGalore initialising...");
-        
-        // Check for Owo Lib
-        if (!FabricLoader.getInstance().isModLoaded("owo")) {
-            owoLibMissing = true;
-            LOGGER.warn("Owo Lib not found! Reverting to software rendering.");
-        }
+
+        openCaptureKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.keybindsgalore.open_capture",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_K,
+                "category.keybindsgaloreplus.keybinds"
+        ));
 
         try {
             configManager = new ConfigManager("KeybindsGalore", FabricLoader.getInstance().getConfigDir(), "keybindsgalore.properties", Configurations.class, null);
             if (Configurations.DEBUG) {
                 configManager.printAllConfigs();
             }
-            
-            // Override config if Owo is missing
-            if (owoLibMissing) {
-                Configurations.USE_SOFTWARE_RENDERING = true;
-            }
 
             customDataManager = new DataManager(FabricLoader.getInstance().getConfigDir(), "keybindsgalore_customdata.data");
 
             // Register a client tick event to manage the pulse timer.
             ClientTickEvents.END_CLIENT_TICK.register(client -> {
+                while (openCaptureKey.consumeClick()) {
+                    client.setScreen(new net.hvb007.keybindsgalore.configmanager.KeyCaptureScreen(null, (capturedKey, conflicts) -> {
+                        client.setScreen(new net.hvb007.keybindsgalore.configmanager.ActionSelectionScreen(null, conflicts, selected -> {
+                            KeybindManager.prioritizeAction(selected, capturedKey);
+                        }));
+                    }));
+                }
+
                 // Decrement the pulse timer each tick.
                 if (pulseTimer > 0) {
                     pulseTimer--;
@@ -75,14 +79,6 @@ public class KeybindsGalore implements ClientModInitializer {
         // Find all conflicting keybinds when the player joins a world.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             KeybindManager.findAllConflicts();
-            
-            if (owoLibMissing && client.player != null) {
-                client.player.displayClientMessage(
-                    Component.literal("KeybindsGalore: Owo Lib not found! Reverted to primitive rendering. Install Owo Lib for a better experience.")
-                    .withStyle(ChatFormatting.GOLD), 
-                    false
-                );
-            }
         });
     }
 

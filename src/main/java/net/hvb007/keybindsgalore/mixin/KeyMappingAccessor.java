@@ -17,6 +17,9 @@ public interface KeyMappingAccessor {
     @Accessor
     void setClickCount(int timesPressed);
 
+    @Accessor
+    int getClickCount();
+
     /**
      * Accessor for the 'pressed' field.
      */

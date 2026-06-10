@@ -40,7 +40,7 @@ public class KeybindManager {
      * Safely gets the display name of a keybinding's category.
      */
     public static String safeGetCategory(KeyMapping binding) {
-        return binding.getCategory().label().getString();
+        return binding.getCategory();
     }
 
     /**
@@ -50,11 +50,14 @@ public class KeybindManager {
     public static void findAllConflicts() {
         KeybindsGalore.LOGGER.info("Scanning for conflicting keybinds...");
         Minecraft client = Minecraft.getInstance();
+        
+        validateAndMigratePriorityKeybinds(client);
+
         conflictTable.clear();
         shownConflictWarnings.clear(); // Clear previous warnings
 
         for (KeyMapping keybinding : client.options.keyMappings) { // Use client.options.allKeys for Yarn
-            // Filter out keybinds from configured categories.
+            // 1. Filter out keybinds from configured categories.
             if (Configurations.FILTERED_CATEGORY_KEYS.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(keybinding)))) {
                 continue;
             }
@@ -72,10 +75,45 @@ public class KeybindManager {
     }
 
     /**
-     * Checks if a key is configured to be ignored by this mod.
+     * Migrates old priority entries (ActionID) to the new format (ActionID:KeyName).
      */
-    public static boolean isIgnoredKey(InputConstants.Key key) {
-        return Configurations.IGNORED_KEYS.contains(key.getValue()) ^ Configurations.INVERT_IGNORED_KEYS_LIST;
+    private static void validateAndMigratePriorityKeybinds(Minecraft client) {
+        boolean changed = false;
+        List<String> newPriorities = new ArrayList<>();
+        HashSet<String> uniqueKeys = new HashSet<>();
+
+        for (String entry : Configurations.PRIORITY_KEYBINDS) {
+            if (!entry.contains(":")) {
+                // Old format. Try to find the key for this action.
+                for (KeyMapping kb : client.options.keyMappings) {
+                    if (kb.getName().equals(entry)) {
+                        String keyName = ((KeyMappingAccessor) kb).getKey().getName();
+                        String newEntry = entry + ":" + keyName;
+                        if (!uniqueKeys.contains(keyName)) {
+                            newPriorities.add(newEntry);
+                            uniqueKeys.add(keyName);
+                            changed = true;
+                        }
+                        break;
+                    }
+                }
+            } else {
+                String keyName = entry.split(":", 2)[1];
+                if (!uniqueKeys.contains(keyName)) {
+                    newPriorities.add(entry);
+                    uniqueKeys.add(keyName);
+                } else {
+                    // Duplicate priority for the same key. Remove it.
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed) {
+            Configurations.PRIORITY_KEYBINDS.clear();
+            Configurations.PRIORITY_KEYBINDS.addAll(newPriorities);
+            KeybindsGalore.configManager.saveConfigFile();
+        }
     }
 
     /**
@@ -117,9 +155,39 @@ public class KeybindManager {
      * This stops the game from thinking a "click" happened when we are just opening the menu.
      */
     public static void handleOnKeyPressed(InputConstants.Key key, CallbackInfo ci) {
-        if (hasConflicts(key) && !isIgnoredKey(key) && !isClickHoldKey(key)) {
-            ci.cancel();
+        if (hasConflicts(key) && !isClickHoldKey(key)) {
+            // Only cancel if there is NO priority action active for this key
+            if (getPriorityKey(key) == null && (KeybindsGalore.activePulseTarget == null || !((KeyMappingAccessor) KeybindsGalore.activePulseTarget).getKey().equals(key))) {
+                ci.cancel();
+            }
         }
+    }
+
+    /**
+     * Determines which keybinding, if any, has priority for a given physical key.
+     */
+    public static KeyMapping getPriorityKey(InputConstants.Key key) {
+        if (!hasConflicts(key)) return null;
+
+        List<KeyMapping> conflicts = getConflicts(key);
+        if (conflicts == null) return null;
+
+        // 1. Check for individually prioritized keybinds (EXCLUSIVE to this physical key)
+        for (KeyMapping kb : conflicts) {
+            String priorityPair = safeGetTranslationKey(kb) + ":" + key.getName();
+            if (Configurations.PRIORITY_KEYBINDS.stream().anyMatch(s -> s.equalsIgnoreCase(priorityPair))) {
+                return kb;
+            }
+        }
+
+        // 2. If no individual priority, check for priority categories
+        for (KeyMapping kb : conflicts) {
+            if (Configurations.PRIORITY_CATEGORIES.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(kb)))) {
+                return kb;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -127,87 +195,40 @@ public class KeybindManager {
      * This method decides whether to execute a priority action, open the conflict menu, or do nothing.
      */
     public static void handleKeyPress(InputConstants.Key key, boolean pressed, CallbackInfo ci) {
+        if (Configurations.DEBUG) {
+            KeybindsGalore.LOGGER.info("[KBG DEBUG] Key Input: {} | Pressed: {}", key.getName(), pressed);
+        }
+
         boolean wasSelectorScreenOpen = Minecraft.getInstance().screen instanceof KeybindSelectorScreen || Minecraft.getInstance().screen instanceof KeybindCircularScreen;
 
         if (hasConflicts(key)) {
-            // Handle ignored keys: show a warning but don't interfere.
-            if (isIgnoredKey(key)) {
-                if (pressed && !shownConflictWarnings.contains(key)) {
-                    if (Configurations.SHOW_CONFLICT_WARNINGS) {
-                        Minecraft client = Minecraft.getInstance();
-                        if (client.player != null) {
-                            MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Ignored key '")
-                                .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
-                                .append(Component.literal("' has conflicts. Letting Minecraft handle it."))
-                                .withStyle(ChatFormatting.RED);
-                            client.player.displayClientMessage(warningHeader, false);
-
-                            MutableComponent otherKeys = Component.literal("");
-                            boolean first = true;
-                            for (KeyMapping otherKb : getConflicts(key)) {
-                                if (!first) {
-                                    otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
-                                }
-                                otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
-                                first = false;
-                            }
-
-                            if (!otherKeys.getString().isEmpty()) {
-                                 client.player.displayClientMessage(
-                                    Component.literal("Conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
-                                    .append(otherKeys)
-                                    .append(Component.literal(". Please rebind them in your controls!If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY)),
-                                    false
-                                );
-                            }
-                        }
-                    } else {
-                        String conflictingKeybinds = getConflicts(key).stream()
-                            .map(KeyMapping::getName)
-                            .map(Component::translatable)
-                            .map(Component::getString)
-                            .collect(Collectors.joining(", "));
-                        KeybindsGalore.LOGGER.info("KeybindsGalore: Ignored key '{}' has conflicts. Letting Minecraft handle it. Conflicts: {}", key.getDisplayName().getString(), conflictingKeybinds);
-                    }
-                    shownConflictWarnings.add(key);
-                }
-                // Do not cancel the event. Let Minecraft handle the key press.
-                return;
+            if (Configurations.DEBUG) {
+                KeybindsGalore.LOGGER.info("[KBG DEBUG] Conflict detected for key: {}", key.getName());
             }
 
-            // Handle non-ignored keys with the priority system.
             if (!isClickHoldKey(key)) {
-                List<KeyMapping> conflicts = getConflicts(key);
-                KeyMapping priorityKey = null;
-
-                if (conflicts != null) {
-                    // 1. Check for individually whitelisted keybinds
-                    for (KeyMapping kb : conflicts) {
-                        if (Configurations.PRIORITY_KEYBINDS.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetTranslationKey(kb)))) {
-                            priorityKey = kb;
-                            break;
-                        }
-                    }
-
-                    // 2. If no individual priority, check for priority categories
-                    if (priorityKey == null) {
-                        for (KeyMapping kb : conflicts) {
-                            if (Configurations.PRIORITY_CATEGORIES.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(kb)))) {
-                                priorityKey = kb;
-                                break;
-                            }
-                        }
-                    }
-                }
+                KeyMapping priorityKey = getPriorityKey(key);
 
                 if (priorityKey != null) {
-                    // A priority key was found.
-                    ci.cancel(); // Cancel vanilla processing for ALL keys on this bind
-
-                    // Manually update the priority key state
+                    if (Configurations.DEBUG) {
+                        KeybindsGalore.LOGGER.info("[KBG DEBUG] Executing priority action: {} | State: {}", priorityKey.getName(), pressed ? "PRESSED" : "RELEASED");
+                    }
+                    
+                    // Manually force the pressed state for hold actions (like moving)
+                    // because vanilla's polling can get confused when there are conflicts.
                     ((KeyMappingAccessor) priorityKey).setIsDown(pressed);
+
+                    // Route the priority action gracefully through vanilla systems
                     if (pressed) {
-                        ((KeyMappingAccessor) priorityKey).setClickCount(((KeyMappingAccessor) priorityKey).getKey().getValue() + 1);
+                        // Set it as the pulse target so the mixin allows it through
+                        KeybindsGalore.activePulseTarget = priorityKey;
+                        // DO NOT cancel CI. Let vanilla process the set() normally.
+                        // Vanilla setDown() will naturally increment the clickCount for us.
+                    } else {
+                        // If it's released, clear the target
+                        if (KeybindsGalore.activePulseTarget == priorityKey) {
+                            KeybindsGalore.activePulseTarget = null;
+                        }
                     }
 
                     if (pressed && !shownConflictWarnings.contains(key)) {
@@ -225,7 +246,7 @@ public class KeybindManager {
                                 // ADDED: Display other conflicting keybinds
                                 MutableComponent otherKeys = Component.literal("");
                                 boolean first = true;
-                                for (KeyMapping otherKb : conflicts) {
+                                for (KeyMapping otherKb : getConflicts(key)) {
                                     if (otherKb == priorityKey) continue;
                                     if (!first) {
                                         otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
@@ -243,22 +264,16 @@ public class KeybindManager {
                                     );
                                 }
                             }
-                        } else {
-                            final KeyMapping finalPriorityKey = priorityKey;
-                            String conflictingKeybinds = conflicts.stream()
-                                .filter(kb -> kb != finalPriorityKey)
-                                .map(KeyMapping::getName)
-                                .map(Component::translatable)
-                                .map(Component::getString)
-                                .collect(Collectors.joining(", "));
-                            KeybindsGalore.LOGGER.info("KeybindsGalore: Key '{}' has conflicts. Prioritizing '{}'. Other conflicts: {}", key.getDisplayName().getString(), priorityKey.getName(), conflictingKeybinds);
                         }
                         shownConflictWarnings.add(key);
                     }
-                    return;
+                    return; // Return immediately, letting vanilla take over
                 } else {
                     // No priority key found.
                     if (pressed) {
+                        if (Configurations.DEBUG) {
+                            KeybindsGalore.LOGGER.info("[KBG DEBUG] No priority found, opening conflict menu for key: {}", key.getName());
+                        }
                         // Open the conflict resolution menu.
                         ci.cancel();
                         openConflictMenu(key);
@@ -274,6 +289,7 @@ public class KeybindManager {
                         }
                         
                         // Also ensure all conflicting keys are released
+                        List<KeyMapping> conflicts = getConflicts(key);
                         if (conflicts != null) {
                             for (KeyMapping kb : conflicts) {
                                 ((KeyMappingAccessor) kb).setIsDown(false);
@@ -284,6 +300,8 @@ public class KeybindManager {
                 }
                 return;
             }
+        } else if (Configurations.DEBUG) {
+            KeybindsGalore.LOGGER.info("[KBG DEBUG] No conflicts for key: {}", key.getName());
         }
 
         // --- RELEASE LOGIC FOR PULSE ---
@@ -295,6 +313,34 @@ public class KeybindManager {
                     ci.cancel();
                 }
             }
+        }
+    }
+
+    /**
+     * Adds a prioritized action for a specific key, replacing any existing priority for that same key.
+     */
+    public static void prioritizeAction(KeyMapping selected, InputConstants.Key key) {
+        String newPair = selected.getName() + ":" + key.getName();
+        
+        // Exclusivity Check: Remove any existing priority entry that uses this same physical key
+        Configurations.PRIORITY_KEYBINDS.removeIf(entry -> {
+            if (entry.contains(":")) {
+                String existingKeyName = entry.split(":", 2)[1];
+                return existingKeyName.equalsIgnoreCase(key.getName());
+            }
+            return false;
+        });
+
+        Configurations.PRIORITY_KEYBINDS.add(newPair);
+        KeybindsGalore.configManager.saveConfigFile();
+        findAllConflicts();
+        
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance().player.displayClientMessage(
+                Component.translatable("text.keybindsgalore.action_prioritized", 
+                Component.translatable(selected.getName()), 
+                Component.translatable(key.getName())), false
+            );
         }
     }
 }
