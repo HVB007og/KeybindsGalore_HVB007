@@ -50,12 +50,18 @@ public abstract class KeyMappingMixin {
         if (pressed && KeybindManager.hasConflicts(this.key)) {
             KeyMapping priority = KeybindManager.getPriorityKey(this.key);
             
-            // Allow if this IS the priority key, or if it's the pulse target, or toggleGui
-            if (self == priority || self == KeybindsGalore.activePulseTarget || self.getName().equals("key.toggleGui")) {
-                return; // Let it pass
+            // Allow if this IS the priority key (by name), or if it's the pulse target, or toggleGui
+            if (priority != null && self.getName().equals(priority.getName())) {
+                return; // Let the priority key pass
+            }
+            if (KeybindsGalore.activePulseTarget != null && self.getName().equals(KeybindsGalore.activePulseTarget.getName())) {
+                return; // Let the pulse target pass
+            }
+            if (self.getName().equals("key.toggleGui")) {
+                return;
             }
             
-            ci.cancel();
+            ci.cancel(); // Block non-priority conflicting keys
         }
     }
 }

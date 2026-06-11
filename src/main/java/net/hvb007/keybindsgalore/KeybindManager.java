@@ -156,10 +156,11 @@ public class KeybindManager {
      */
     public static void handleOnKeyPressed(InputConstants.Key key, CallbackInfo ci) {
         if (hasConflicts(key) && !isClickHoldKey(key)) {
-            // Only cancel if there is NO priority action active for this key
-            if (getPriorityKey(key) == null && (KeybindsGalore.activePulseTarget == null || !((KeyMappingAccessor) KeybindsGalore.activePulseTarget).getKey().equals(key))) {
-                ci.cancel();
-            }
+            // ALWAYS cancel vanilla click for conflicting keys.
+            // Vanilla's `click` method blindly increments the clickCount of whichever KeyMapping 
+            // happens to be stored in its internal `MAP` for this physical key (ignoring aliases).
+            // We manually increment the correct priority key's clickCount in handleKeyPress.
+            ci.cancel();
         }
     }
 
@@ -172,22 +173,25 @@ public class KeybindManager {
         List<KeyMapping> conflicts = getConflicts(key);
         if (conflicts == null) return null;
 
+        KeyMapping categoryPriority = null;
+
         // 1. Check for individually prioritized keybinds (EXCLUSIVE to this physical key)
         for (KeyMapping kb : conflicts) {
             String priorityPair = safeGetTranslationKey(kb) + ":" + key.getName();
             if (Configurations.PRIORITY_KEYBINDS.stream().anyMatch(s -> s.equalsIgnoreCase(priorityPair))) {
-                return kb;
+                return kb; // Direct match always wins immediately
+            }
+            
+            // Check category fallback while we loop, but don't return immediately
+            if (categoryPriority == null) {
+                if (Configurations.PRIORITY_CATEGORIES.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(kb)))) {
+                    categoryPriority = kb;
+                }
             }
         }
 
-        // 2. If no individual priority, check for priority categories
-        for (KeyMapping kb : conflicts) {
-            if (Configurations.PRIORITY_CATEGORIES.stream().anyMatch(s -> s.equalsIgnoreCase(safeGetCategory(kb)))) {
-                return kb;
-            }
-        }
-
-        return null;
+        // 2. If no individual priority, return the category priority if found
+        return categoryPriority;
     }
 
     /**
@@ -215,21 +219,24 @@ public class KeybindManager {
                     }
                     
                     // Manually force the pressed state for hold actions (like moving)
-                    // because vanilla's polling can get confused when there are conflicts.
                     ((KeyMappingAccessor) priorityKey).setIsDown(pressed);
 
-                    // Route the priority action gracefully through vanilla systems
                     if (pressed) {
-                        // Set it as the pulse target so the mixin allows it through
+                        // Manually increment the click count for click-based actions (like hotbar slots)
+                        int currentClicks = ((KeyMappingAccessor) priorityKey).getClickCount();
+                        ((KeyMappingAccessor) priorityKey).setClickCount(currentClicks + 1);
+                        
+                        // Set it as the pulse target so the mixin allows it through vanilla polling
                         KeybindsGalore.activePulseTarget = priorityKey;
-                        // DO NOT cancel CI. Let vanilla process the set() normally.
-                        // Vanilla setDown() will naturally increment the clickCount for us.
                     } else {
                         // If it's released, clear the target
                         if (KeybindsGalore.activePulseTarget == priorityKey) {
                             KeybindsGalore.activePulseTarget = null;
                         }
                     }
+
+                    // Cancel the original event so we don't accidentally trigger the non-priority conflicting keys
+                    ci.cancel();
 
                     if (pressed && !shownConflictWarnings.contains(key)) {
                         if (Configurations.SHOW_CONFLICT_WARNINGS) {
