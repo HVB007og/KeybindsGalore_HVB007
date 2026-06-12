@@ -74,6 +74,10 @@ jar {
 	}
 }
 
+tasks.named("runClient", JavaExec) {
+    executable = "C:/Program Files/Java/jdk-17/bin/java.exe"
+}
+
 publishing {
 	publications {
 		mavenJava(MavenPublication) {

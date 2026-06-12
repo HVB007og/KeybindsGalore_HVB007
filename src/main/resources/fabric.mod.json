@@ -37,7 +37,7 @@
       "keybindsgalore.mixins.json"
     ],
 "depends": {
-   "fabricloader": ">=0.14.24",
+   "fabricloader": ">=0.14.8",
    "minecraft": ">=1.19.2",
    "java": ">=17"
 }
