@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.hvb007.keybindsgalore.KeybindManager;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -25,10 +25,10 @@ public class KeyCaptureScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(this.font, Component.translatable("text.keybindsgalore.press_any_key"), this.width / 2, this.height / 2 - 20, 0xFFFFFFFF);
-        context.drawCenteredString(this.font, Component.translatable("text.keybindsgalore.capture_instruction"), this.width / 2, this.height / 2, 0xAAAAAA);
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
+        super.render(poseStack, mouseX, mouseY, delta);
+        drawCenteredString(poseStack, this.font, Component.translatable("text.keybindsgalore.press_any_key"), this.width / 2, this.height / 2 - 20, 0xFFFFFFFF);
+        drawCenteredString(poseStack, this.font, Component.translatable("text.keybindsgalore.capture_instruction"), this.width / 2, this.height / 2, 0xAAAAAA);
     }
 
     @Override

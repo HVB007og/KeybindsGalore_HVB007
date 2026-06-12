@@ -4,7 +4,7 @@ import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -45,9 +45,9 @@ public class KeybindCircularScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
         if (Configurations.DARKENED_BACKGROUND) {
-            this.renderBackground(context);
+            this.renderBackground(poseStack);
         }
 
         double mouseAngle = mouseAngle(this.centreX, this.centreY, mouseX, mouseY);
@@ -88,7 +88,7 @@ public class KeybindCircularScreen extends Screen {
                 }
             }
 
-            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, currentRadius, color);
+            TriangleStripRenderer.drawSector(poseStack, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, currentRadius, color);
         }
 
         int cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
@@ -99,14 +99,14 @@ public class KeybindCircularScreen extends Screen {
         for (int i = 0; i < numberOfSectors; i++) {
             float start = i * sectorAngle;
             float end = (i + 1) * sectorAngle;
-            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, start, end, 0, this.cancelZoneRadius, cancelZoneColor);
+            TriangleStripRenderer.drawSector(poseStack, this.centreX, this.centreY, start, end, 0, this.cancelZoneRadius, cancelZoneColor);
         }
 
-        renderLabelTexts(context, numberOfSectors);
-        super.render(context, mouseX, mouseY, delta);
+        renderLabelTexts(poseStack, numberOfSectors);
+        super.render(poseStack, mouseX, mouseY, delta);
     }
 
-    private void renderLabelTexts(GuiGraphics context, int numberOfSectors) {
+    private void renderLabelTexts(PoseStack poseStack, int numberOfSectors) {
         if (numberOfSectors == 0) return;
 
         Font textRenderer = Minecraft.getInstance().font;
@@ -139,10 +139,10 @@ public class KeybindCircularScreen extends Screen {
 
             if (this.selectedSectorIndex == sectorIndex) {
                 actionName = ChatFormatting.UNDERLINE + actionName;
-                context.fill((int)xPos - 2, (int)yPos - 2, (int)xPos + textWidth + 2, (int)yPos + textHeight + 2, 0x80E0E0E0);
+                fill(poseStack, (int)xPos - 2, (int)yPos - 2, (int)xPos + textWidth + 2, (int)yPos + textHeight + 2, 0x80E0E0E0);
             }
 
-            context.drawString(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
+            textRenderer.draw(poseStack, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF);
         }
     }
 
@@ -192,9 +192,9 @@ public class KeybindCircularScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics context) {
+    public void renderBackground(PoseStack poseStack) {
         if (Configurations.DARKENED_BACKGROUND) {
-            context.fill(0, 0, this.width, this.height, 0x60000000);
+            fill(poseStack, 0, 0, this.width, this.height, 0x60000000);
         }
     }
 }
