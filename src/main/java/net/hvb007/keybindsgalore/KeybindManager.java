@@ -350,4 +350,29 @@ public class KeybindManager {
             );
         }
     }
+
+    /**
+     * Removes the prioritized action for a specific key.
+     */
+    public static void removePriority(InputConstants.Key key) {
+        boolean removed = Configurations.PRIORITY_KEYBINDS.removeIf(entry -> {
+            if (entry.contains(":")) {
+                String existingKeyName = entry.split(":", 2)[1];
+                return existingKeyName.equalsIgnoreCase(key.getName());
+            }
+            return false;
+        });
+
+        if (removed) {
+            KeybindsGalore.configManager.saveConfigFile();
+            findAllConflicts();
+            
+            if (Minecraft.getInstance().player != null) {
+                Minecraft.getInstance().player.displayClientMessage(
+                    Component.translatable("text.keybindsgalore.priority_removed", 
+                    Component.translatable(key.getName())), false
+                );
+            }
+        }
+    }
 }

@@ -15,9 +15,11 @@
   
   "text.keybindsgalore.capture_hotkey_info": "Tip: Press the '%s' hotkey in-game to quickly capture and PRIORITIZE an action!",
   "text.keybindsgalore.action_prioritized": "Action '%s' on key '%s' is now prioritized.",
+  "text.keybindsgalore.priority_removed": "Priority for key '%s' has been removed.",
   
   "title.keybindsgalore.capture": "Prioritize Action",
   "title.keybindsgalore.select_action": "Select Action to Prioritize",
+  "button.keybindsgalore.remove_priority": "Remove Current Priority",
   "text.keybindsgalore.press_any_key": "Press any key (or mouse button)...",
   "text.keybindsgalore.capture_instruction": "The mod will find all actions bound to that key.",
   

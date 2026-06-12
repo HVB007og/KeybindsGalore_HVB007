@@ -56,9 +56,16 @@ public class KeybindsGalore implements ClientModInitializer {
             ClientTickEvents.END_CLIENT_TICK.register(client -> {
                 while (openCaptureKey.consumeClick()) {
                     client.setScreen(new net.hvb007.keybindsgalore.configmanager.KeyCaptureScreen(null, (capturedKey, conflicts) -> {
-                        client.setScreen(new net.hvb007.keybindsgalore.configmanager.ActionSelectionScreen(null, conflicts, selected -> {
-                            KeybindManager.prioritizeAction(selected, capturedKey);
-                        }));
+                        client.setScreen(new net.hvb007.keybindsgalore.configmanager.ActionSelectionScreen(
+                            null, 
+                            conflicts, 
+                            selected -> {
+                                KeybindManager.prioritizeAction(selected, capturedKey);
+                            },
+                            () -> {
+                                KeybindManager.removePriority(capturedKey);
+                            }
+                        ));
                     }));
                 }
 

@@ -57,9 +57,6 @@ public class ConfigScreenBuilder {
                 .setTooltip(Component.translatable("option.keybindsgalore.priority_keybinds.tooltip"))
                 .build());
 
-        behavior.addEntry(entryBuilder.startTextDescription(Component.translatable("text.keybindsgalore.capture_hotkey_info", Component.translatable(KeybindsGalore.openCaptureKey.getName())))
-                .build());
-
         // --- Visual (Pie Menu Colors) ---
         visual.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.keybindsgalore.darkened_background"), Configurations.DARKENED_BACKGROUND)
                 .setDefaultValue(true)
