@@ -133,8 +133,8 @@ public class TriangleStripRenderer {
             com.mojang.blaze3d.systems.RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::getPositionColorShader);
 
             org.joml.Matrix4f matrix = drawContext.pose().last().pose();
-            com.mojang.blaze3d.vertex.Tesselator tesselator = com.mojang.blaze3d.vertex.Tesselator.getInstance();
-            com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = tesselator.begin(com.mojang.blaze3d.vertex.VertexFormat.Mode.TRIANGLE_STRIP, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR);
+            com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder();
+            bufferbuilder.begin(com.mojang.blaze3d.vertex.VertexFormat.Mode.TRIANGLE_STRIP, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR);
 
             int a = (color >> 24) & 255;
             int r = (color >> 16) & 255;
@@ -149,13 +149,11 @@ public class TriangleStripRenderer {
                 float cos = (float) Math.cos(angle);
                 float sin = (float) Math.sin(angle);
                 
-                // Add inner vertex
-                bufferbuilder.addVertex(matrix, centerX + cos * innerRadius, centerY + sin * innerRadius, 0.0F).setColor(r, g, b, a);
-                // Add outer vertex
-                bufferbuilder.addVertex(matrix, centerX + cos * outerRadius, centerY + sin * outerRadius, 0.0F).setColor(r, g, b, a);
+                bufferbuilder.vertex(matrix, centerX + cos * innerRadius, centerY + sin * innerRadius, 0.0F).color(r, g, b, a);
+                bufferbuilder.vertex(matrix, centerX + cos * outerRadius, centerY + sin * outerRadius, 0.0F).color(r, g, b, a);
             }
             
-            com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+            com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(bufferbuilder.end());
             com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
             com.mojang.blaze3d.systems.RenderSystem.enableCull();
             com.mojang.blaze3d.systems.RenderSystem.disableBlend();

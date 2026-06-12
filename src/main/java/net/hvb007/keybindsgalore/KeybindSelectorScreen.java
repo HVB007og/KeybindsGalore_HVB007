@@ -50,7 +50,7 @@ public class KeybindSelectorScreen extends Screen {
 
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        renderBackground(ctx, mouseX, mouseY, delta);
+        renderBackground(ctx);
         if (firstFrame) {
             widthCenter = width / 2;
             heightCenter = height / 2;
@@ -236,7 +236,7 @@ public class KeybindSelectorScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics ctx, int mx, int my, float d) {
+    public void renderBackground(GuiGraphics ctx) {
         if (Configurations.DARKENED_BACKGROUND) {
             ctx.fill(0, 0, width, height, 0x60000000);
         }

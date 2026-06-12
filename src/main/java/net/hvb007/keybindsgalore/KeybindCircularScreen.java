@@ -47,7 +47,7 @@ public class KeybindCircularScreen extends Screen {
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         if (Configurations.DARKENED_BACKGROUND) {
-            this.renderBackground(context, mouseX, mouseY, delta);
+            this.renderBackground(context);
         }
 
         double mouseAngle = mouseAngle(this.centreX, this.centreY, mouseX, mouseY);
@@ -192,7 +192,7 @@ public class KeybindCircularScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void renderBackground(GuiGraphics context) {
         if (Configurations.DARKENED_BACKGROUND) {
             context.fill(0, 0, this.width, this.height, 0x60000000);
         }

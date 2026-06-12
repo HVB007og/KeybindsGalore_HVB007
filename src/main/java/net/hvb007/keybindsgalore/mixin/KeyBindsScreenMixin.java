@@ -2,8 +2,8 @@ package net.hvb007.keybindsgalore.mixin;
 
 import net.hvb007.keybindsgalore.KeybindManager;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.options.OptionsSubScreen;
-import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
+import net.minecraft.client.gui.screens.OptionsSubScreen;
+import net.minecraft.client.gui.screens.controls.KeyBindsScreen;
 import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
