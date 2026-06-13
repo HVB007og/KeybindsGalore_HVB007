@@ -21,7 +21,7 @@ public class Configurations {
 
     // --- Behaviour ---
     public static boolean USE_CIRCULAR_MENU = false;
-    public static boolean USE_SOFTWARE_RENDERING = false; // Default to false to test Owo rendering
+    public static boolean USE_SOFTWARE_RENDERING = false; // Back to hardware rendering
     public static boolean SHOW_CONFLICT_WARNINGS = true; // Show conflict warnings in chat
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>(Arrays.asList("Debug"));

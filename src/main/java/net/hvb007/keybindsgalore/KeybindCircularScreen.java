@@ -70,41 +70,137 @@ public class KeybindCircularScreen extends Screen {
         final int colorOdd = Configurations.PIE_MENU_SECTOR_COLOR_ODD;
         final int colorSelected = Configurations.PIE_MENU_SECTOR_COLOR_SELECTED;
         final int colorLastOddFix = Configurations.PIE_MENU_SECTOR_COLOR_LAST_ODD;
-
-        for (int i = 0; i < numberOfSectors; i++) {
-            float startAngle = i * sectorAngle;
-            float endAngle = (i + 1) * sectorAngle;
-
-            int color;
-            float currentRadius = this.maxRadius;
-
-            if (i == this.selectedSectorIndex) {
-                color = colorSelected;
-            } else {
-                if (numberOfSectors % 2 != 0 && i == numberOfSectors - 1) {
-                    color = colorLastOddFix;
-                } else {
-                    color = (i % 2 == 0) ? colorEven : colorOdd;
-                }
-            }
-
-            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, currentRadius, color);
-        }
-
+        
         int cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
         if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
             cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR;
         }
-        
-        for (int i = 0; i < numberOfSectors; i++) {
-            float start = i * sectorAngle;
-            float end = (i + 1) * sectorAngle;
-            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, start, end, 0, this.cancelZoneRadius, cancelZoneColor);
+
+        if (!Configurations.USE_SOFTWARE_RENDERING) {
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+            com.mojang.blaze3d.systems.RenderSystem.disableCull();
+            com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
+            com.mojang.blaze3d.systems.RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::getPositionColorShader);
+            
+            com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder();
+
+            // DRAW MAIN SECTORS
+            bufferbuilder.begin(com.mojang.blaze3d.vertex.VertexFormat.Mode.TRIANGLE_FAN, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR);
+
+            // Center vertex always uses sector 0's default color (NOT selected color)
+            // so the highlight gradient only affects the perimeter of the selected sector
+            int centerA = (colorEven >> 24) & 255;
+            int centerR = (colorEven >> 16) & 255;
+            int centerG = (colorEven >> 8) & 255;
+            int centerB = colorEven & 255;
+
+            bufferbuilder.vertex(this.centreX, this.centreY, 0.0D).color(centerR, centerG, centerB, centerA).endVertex();
+
+            for (int i = 0; i < numberOfSectors; i++) {
+                boolean mouseInSector = (i == this.selectedSectorIndex);
+                float radius = this.maxRadius;
+                if (mouseInSector) {
+                    radius *= 1.025f;
+                }
+
+                int color;
+                if (mouseInSector) {
+                    color = colorSelected;
+                } else {
+                    if (numberOfSectors % 2 != 0 && i == numberOfSectors - 1) {
+                        color = colorLastOddFix;
+                    } else {
+                        color = (i % 2 == 0) ? colorEven : colorOdd;
+                    }
+                }
+
+                int a = (color >> 24) & 255;
+                int r = (color >> 16) & 255;
+                int g = (color >> 8) & 255;
+                int b = color & 255;
+
+                float startAngle = i * sectorAngle;
+                float step = (float) Math.PI / 180.0f;
+
+                for (float angleOffset = 0; angleOffset < sectorAngle + step / 2.0f; angleOffset += step) {
+                    float rad = angleOffset + startAngle;
+                    float xp = this.centreX + Mth.cos(rad) * radius;
+                    float yp = this.centreY + Mth.sin(rad) * radius;
+
+                    if (angleOffset == 0) {
+                        bufferbuilder.vertex(xp, yp, 0.0D).color(r, g, b, a).endVertex();
+                    }
+                    bufferbuilder.vertex(xp, yp, 0.0D).color(r, g, b, a).endVertex();
+                }
+            }
+
+            com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(bufferbuilder.end());
+
+            // DRAW CANCEL ZONE ON TOP
+            bufferbuilder.begin(com.mojang.blaze3d.vertex.VertexFormat.Mode.TRIANGLE_FAN, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR);
+
+            int cancelA = (cancelZoneColor >> 24) & 255;
+            int cancelR = (cancelZoneColor >> 16) & 255;
+            int cancelG = (cancelZoneColor >> 8) & 255;
+            int cancelB = cancelZoneColor & 255;
+
+            bufferbuilder.vertex(this.centreX, this.centreY, 0.0D).color(cancelR, cancelG, cancelB, cancelA).endVertex();
+
+            for (int i = 0; i < numberOfSectors; i++) {
+                float startAngle = i * sectorAngle;
+                float step = (float) Math.PI / 180.0f;
+
+                for (float angleOffset = 0; angleOffset < sectorAngle + step / 2.0f; angleOffset += step) {
+                    float rad = angleOffset + startAngle;
+                    float xp = this.centreX + Mth.cos(rad) * this.cancelZoneRadius;
+                    float yp = this.centreY + Mth.sin(rad) * this.cancelZoneRadius;
+
+                    if (i == 0 && angleOffset == 0) {
+                        bufferbuilder.vertex(xp, yp, 0.0D).color(cancelR, cancelG, cancelB, cancelA).endVertex();
+                    }
+                    bufferbuilder.vertex(xp, yp, 0.0D).color(cancelR, cancelG, cancelB, cancelA).endVertex();
+                }
+            }
+
+            com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(bufferbuilder.end());
+
+            com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
+            com.mojang.blaze3d.systems.RenderSystem.enableCull();
+            com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+        } else {
+            // Software rendering logic remains the same (looping individually)
+            for (int i = 0; i < numberOfSectors; i++) {
+                float startAngle = i * sectorAngle;
+                float endAngle = (i + 1) * sectorAngle;
+
+                int color;
+                float currentRadius = this.maxRadius;
+
+                if (i == this.selectedSectorIndex) {
+                    color = colorSelected;
+                } else {
+                    if (numberOfSectors % 2 != 0 && i == numberOfSectors - 1) {
+                        color = colorLastOddFix;
+                    } else {
+                        color = (i % 2 == 0) ? colorEven : colorOdd;
+                    }
+                }
+
+                TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, currentRadius, color);
+            }
+            
+            for (int i = 0; i < numberOfSectors; i++) {
+                float start = i * sectorAngle;
+                float end = (i + 1) * sectorAngle;
+                TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, start, end, 0, this.cancelZoneRadius, cancelZoneColor);
+            }
         }
 
         renderLabelTexts(context, numberOfSectors);
         super.render(context, mouseX, mouseY, delta);
     }
+
 
     private void renderLabelTexts(GuiGraphics context, int numberOfSectors) {
         if (numberOfSectors == 0) return;
@@ -150,9 +246,15 @@ public class KeybindCircularScreen extends Screen {
         return (Mth.atan2(my - y, mx - x) + Math.PI * 2) % (Math.PI * 2);
     }
 
-    public void onKeyRelease() {
-        closePieMenu();
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == this.conflictedKey.getValue()) {
+            closePieMenu();
+            return true;
+        }
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
+
 
     private void closePieMenu() {
         Minecraft client = Minecraft.getInstance();

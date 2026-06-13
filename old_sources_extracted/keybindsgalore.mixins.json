@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "net.hvb007.keybindsgalore.mixin",
+	"compatibilityLevel": "JAVA_17",
+	"mixins": [
+		"MixinKeyBinding",
+		"AccessorKeyBinding"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

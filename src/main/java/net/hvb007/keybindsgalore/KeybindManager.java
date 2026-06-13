@@ -72,6 +72,11 @@ public class KeybindManager {
 
         // Clean up the table by removing entries with no actual conflicts.
         conflictTable.keySet().removeIf(key -> conflictTable.get(key).size() < 2);
+        
+        KeybindsGalore.LOGGER.info("Conflict scan complete. Found {} keys with conflicts.", conflictTable.size());
+        for (Map.Entry<InputConstants.Key, List<KeyMapping>> entry : conflictTable.entrySet()) {
+            KeybindsGalore.LOGGER.info("Conflict: Key {} has {} bindings.", entry.getKey().getName(), entry.getValue().size());
+        }
     }
 
     /**
@@ -204,6 +209,9 @@ public class KeybindManager {
         }
 
         boolean wasSelectorScreenOpen = Minecraft.getInstance().screen instanceof KeybindSelectorScreen || Minecraft.getInstance().screen instanceof KeybindCircularScreen;
+        if (Configurations.DEBUG) {
+            KeybindsGalore.LOGGER.info("[KBG DEBUG] Handle KeyPress: {} | Pressed: {} | Screen: {} | WasSelectorScreenOpen: {}", key.getName(), pressed, Minecraft.getInstance().screen, wasSelectorScreenOpen);
+        }
 
         if (hasConflicts(key)) {
             if (Configurations.DEBUG) {
@@ -286,14 +294,8 @@ public class KeybindManager {
                         openConflictMenu(key);
                     } else {
                         // Release logic for menu
-                        if (wasSelectorScreenOpen) {
-                            Screen currentScreen = Minecraft.getInstance().screen;
-                            if (currentScreen instanceof KeybindSelectorScreen) {
-                                ((KeybindSelectorScreen) currentScreen).onKeyRelease();
-                            } else if (currentScreen instanceof KeybindCircularScreen) {
-                                ((KeybindCircularScreen) currentScreen).onKeyRelease();
-                            }
-                        }
+                        // The screen itself now handles key releases via the `keyReleased` override.
+                        // We do not need to do anything here.
                         
                         // Also ensure all conflicting keys are released
                         List<KeyMapping> conflicts = getConflicts(key);

@@ -63,13 +63,15 @@ public class KeybindSelectorScreen extends Screen {
         renderLabels(ctx);
     }
 
-    /**
-     * Called by the KeybindManager when the physical key is released.
-     * This is the trigger to finalize the selection.
-     */
-    public void onKeyRelease() {
-        handleSelectionFinish();
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == this.conflictedKey.getValue()) {
+            handleSelectionFinish();
+            return true;
+        }
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
+
 
     /**
      * Finalizes the keybind selection, activates the chosen keybind,

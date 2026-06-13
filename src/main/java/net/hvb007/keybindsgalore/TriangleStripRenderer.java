@@ -120,11 +120,6 @@ public class TriangleStripRenderer {
             // Use fillQuad instead of two triangles to avoid seams
             fillQuad(drawContext, (int)innerX1, (int)innerY1, (int)outerX1, (int)outerY1, (int)outerX2, (int)outerY2, (int)innerX2, (int)innerY2, color);
         } else {
-            if (Configurations.VERBOSE_DEBUG) {
-                KeybindsGalore.LOGGER.info("(KBG DEBUG) drawSector HW: center({}, {}), rIn={}, rOut={}, angles({} -> {}), color={}", 
-                    centerX, centerY, innerRadius, outerRadius, startAngleRad, endAngleRad, Integer.toHexString(color));
-            }
-            
             // Hardware-accelerated rendering natively without OwoLib
             com.mojang.blaze3d.systems.RenderSystem.enableBlend();
             com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
@@ -136,27 +131,36 @@ public class TriangleStripRenderer {
             com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder();
             bufferbuilder.begin(com.mojang.blaze3d.vertex.VertexFormat.Mode.TRIANGLE_STRIP, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR);
 
-            int a = (color >> 24) & 255;
-            int r = (color >> 16) & 255;
-            int g = (color >> 8) & 255;
-            int b = color & 255;
-
-            int segments = 32;
-            float angleStep = (endAngleRad - startAngleRad) / segments;
+            addSectorVertices(bufferbuilder, matrix, centerX, centerY, startAngleRad, endAngleRad, innerRadius, outerRadius, color);
             
-            for (int i = 0; i <= segments; i++) {
-                float angle = startAngleRad + i * angleStep;
-                float cos = (float) Math.cos(angle);
-                float sin = (float) Math.sin(angle);
-                
-                bufferbuilder.vertex(matrix, centerX + cos * innerRadius, centerY + sin * innerRadius, 0.0F).color(r, g, b, a);
-                bufferbuilder.vertex(matrix, centerX + cos * outerRadius, centerY + sin * outerRadius, 0.0F).color(r, g, b, a);
-            }
-            
-            com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(bufferbuilder.end());
+            com.mojang.blaze3d.vertex.BufferUploader.draw(bufferbuilder.end());
             com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
             com.mojang.blaze3d.systems.RenderSystem.enableCull();
             com.mojang.blaze3d.systems.RenderSystem.disableBlend();
         }
     }
+
+    /**
+     * Adds vertices for a sector to the provided buffer builder.
+     * Does NOT begin or end the buffer.
+     */
+    public static void addSectorVertices(com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder, org.joml.Matrix4f matrix, float centerX, float centerY, float startAngleRad, float endAngleRad, float innerRadius, float outerRadius, int color) {
+        int a = (color >> 24) & 255;
+        int r = (color >> 16) & 255;
+        int g = (color >> 8) & 255;
+        int b = color & 255;
+
+        int segments = 32;
+        float angleStep = (endAngleRad - startAngleRad) / segments;
+        
+        for (int i = 0; i <= segments; i++) {
+            float angle = startAngleRad + i * angleStep;
+            float cos = (float) Math.cos(angle);
+            float sin = (float) Math.sin(angle);
+            
+            bufferbuilder.vertex(matrix, centerX + cos * innerRadius, centerY + sin * innerRadius, 200.0F).color(r, g, b, a).endVertex();
+            bufferbuilder.vertex(matrix, centerX + cos * outerRadius, centerY + sin * outerRadius, 200.0F).color(r, g, b, a).endVertex();
+        }
+    }
+
 }

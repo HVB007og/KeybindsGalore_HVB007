@@ -1,0 +1,22 @@
+{
+	"schemaVersion": 1,
+	"id": "keybindsgalore",
+	"version": "${version}",
+
+	"name": "Keybinds Galore",
+	"description": "Adds a popup menu when a conflicting keybind is pressed. Updated to 1.20 by HVB007, Originally by Cael",
+	"authors": [
+		"HVB007"
+	],
+	"license": "GNU Lesser General Public License v3.0",
+	"icon": "assets/keybindsgalore/icon.png",
+
+	"environment": "client",
+	"mixins": [
+		"keybindsgalore.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.8",
+		"minecraft": "1.20.x"
+	}
+}
