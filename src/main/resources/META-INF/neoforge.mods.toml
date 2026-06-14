@@ -8,11 +8,17 @@ config="keybindsgalore.mixins.json"
 
 [[mods]]
 modId="keybindsgalore"
-version="1.6.1"
+version="1.7.2"
 displayName="Keybinds Galore"
 authors="HVB007"
 description='''
-A mod that makes keybinds better.
+Keybinds Galore enhances Minecraft's keybinding system with a pie menu, priority actions, conflict detection, and more.
+
+v1.7.2:
+- Full Cloth Config GUI with all options + hover tooltips
+- Fixed PIE_MENU_ALPHA value inflation bug
+- Improved config screen categories (General, Behaviour, Visual)
+- All prior features: pie menu, K-key capture flow, priority system
 '''
 
 [[dependencies.keybindsgalore]]
