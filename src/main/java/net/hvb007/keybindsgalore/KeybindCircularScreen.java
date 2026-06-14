@@ -182,8 +182,8 @@ public class KeybindCircularScreen extends Screen {
 
     private Component formatName(KeyMapping kb) {
         String id = KeybindManager.safeGetTranslationKey(kb);
-        Component cat = KeybindManager.safeGetCategory(kb);
-        String nameStr = cat.getString() + ": " + Component.translatable(id).getString();
+        String cat = KeybindManager.safeGetCategory(kb);
+        String nameStr = Component.translatable(cat).getString() + ": " + Component.translatable(id).getString();
         if (customDataManager.hasCustomData) {
             try {
                 if (customDataManager.customData.get(id).hideCategory)

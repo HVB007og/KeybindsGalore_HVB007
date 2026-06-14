@@ -213,8 +213,8 @@ public class KeybindSelectorScreen extends Screen {
      */
     private String formatName(KeyMapping kb) {
         String id = KeybindManager.safeGetTranslationKey(kb);
-        Component cat = KeybindManager.safeGetCategory(kb);
-        String name = cat.getString() + ": " + Component.translatable(id).getString();
+        String cat = KeybindManager.safeGetCategory(kb);
+        String name = Component.translatable(cat).getString() + ": " + Component.translatable(id).getString();
         if (customDataManager.hasCustomData) {
             try {
                 if (customDataManager.customData.get(id).hideCategory)

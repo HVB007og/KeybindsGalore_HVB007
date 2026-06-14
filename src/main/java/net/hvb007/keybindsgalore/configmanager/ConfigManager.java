@@ -178,4 +178,33 @@ public class ConfigManager {
             }
         }
     }
+
+    /**
+     * Saves the current configuration fields back to the .properties file.
+     */
+    public void saveConfigFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.configFile))) {
+            writer.write("# KeybindsGalore Configuration File\n");
+            writer.write("# This file is automatically updated by the in-game GUI.\n\n");
+
+            for (Field field : this.configurableClass.getDeclaredFields()) {
+                try {
+                    String key = field.getName().toUpperCase(Locale.ROOT);
+                    Object value = field.get(this.configurableClassInstance);
+
+                    if (value instanceof Integer && field.getName().contains("COLOR")) {
+                        writer.write(String.format("%s=0x%08X\n", key, (Integer) value));
+                    } else if (value instanceof ArrayList) {
+                        writer.write(String.format("%s=%s\n", key, value.toString()));
+                    } else {
+                        writer.write(String.format("%s=%s\n", key, value.toString()));
+                    }
+                } catch (IllegalAccessException e) {
+                    KeybindsGalore.LOGGER.error("Failed to access field: {}", field.getName(), e);
+                }
+            }
+        } catch (IOException e) {
+            KeybindsGalore.LOGGER.error("IOException while saving config file!", e);
+        }
+    }
 }

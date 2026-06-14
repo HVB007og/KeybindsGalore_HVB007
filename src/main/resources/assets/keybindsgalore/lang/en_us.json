@@ -1,0 +1,12 @@
+{
+  "key.keybindsgalore.open_capture": "Open Key Capture",
+  "category.keybindsgaloreplus.keybinds": "Keybinds Galore",
+  "title.keybindsgalore.capture": "Capture Key",
+  "title.keybindsgalore.select_action": "Select Action",
+  "title.keybindsgalore.config": "KBG Config",
+  "text.keybindsgalore.press_any_key": "Press any key or click any mouse button...",
+  "text.keybindsgalore.capture_instruction": "Press a key to see its conflicts and set a priority.",
+  "text.keybindsgalore.action_prioritized": "%s has been prioritized on %s",
+  "text.keybindsgalore.priority_removed": "Priority removed for %s",
+  "button.keybindsgalore.remove_priority": "Remove Priority"
+}
