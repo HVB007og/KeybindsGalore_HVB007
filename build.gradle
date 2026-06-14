@@ -4,7 +4,7 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.71'
 }
 
-version = '1.6.1'
+version = '1.7.2'
 group = 'net.hvb007'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
@@ -49,4 +49,8 @@ dependencies {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+java {
+    withSourcesJar()
 }
