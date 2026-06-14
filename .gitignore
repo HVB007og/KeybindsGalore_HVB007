@@ -40,3 +40,5 @@ replay_*.log
 *.lnk
 /fabric-docs1.21.11-main/
 
+
+jars/
