@@ -7,6 +7,6 @@ import net.minecraft.client.gui.screens.Screen;
 public class ConfigScreenFactory implements IConfigScreenFactory {
     @Override
     public Screen createScreen(ModContainer modContainer, Screen parent) {
-        return new ConfigScreen(parent);
+        return ConfigScreen.create(parent);
     }
 }

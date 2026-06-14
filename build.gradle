@@ -39,11 +39,12 @@ neoForge {
 repositories {
     mavenCentral()
     maven { url = "https://maven.neoforged.net/releases" }
-    maven { url = "https://jitpack.io" } 
+    maven { url = "https://jitpack.io" }
+    maven { url = "https://maven.shedaniel.me/" }
 }
 
 dependencies {
-    // Add any dependencies here if needed in the future
+    implementation("me.shedaniel.cloth:cloth-config-neoforge:15.0.140")
 }
 
 tasks.withType(JavaCompile).configureEach {
