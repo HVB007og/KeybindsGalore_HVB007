@@ -1,11 +1,13 @@
 package net.hvb007.keybindsgalore;
 
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 import net.hvb007.keybindsgalore.configmanager.ConfigManager;
+import net.hvb007.keybindsgalore.configmanager.ConfigScreenFactory;
 import net.hvb007.keybindsgalore.customdata.DataManager;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 
@@ -33,8 +36,9 @@ public class KeybindsGalore {
 
     public static KeyMapping openCaptureKey;
 
-    public KeybindsGalore(IEventBus modEventBus) {
+    public KeybindsGalore(IEventBus modEventBus, ModContainer container) {
         LOGGER.info("KeybindsGalore initialising...");
+        container.registerExtensionPoint(IConfigScreenFactory.class, new ConfigScreenFactory());
 
         openCaptureKey = new KeyMapping(
                 "key.keybindsgalore.open_capture",

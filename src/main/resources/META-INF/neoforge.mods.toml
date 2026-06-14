@@ -15,9 +15,6 @@ description='''
 A mod that makes keybinds better.
 '''
 
-[[mods.screenFactories]]
-    factoryClass="net.hvb007.keybindsgalore.configmanager.ConfigScreenFactory"
-
 [[dependencies.keybindsgalore]]
     modId="neoforge"
     type="required"
