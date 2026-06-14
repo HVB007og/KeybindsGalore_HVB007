@@ -4,7 +4,7 @@
     "version": "${version}",
 
     "name": "Keybinds Galore",
-    "description": "Keybind pie menu / QoL mod. Originally by Cael, updated by HVB007.",
+    "description": "Keybinds Galore enhances Minecraft's keybinding system with a pie menu, priority actions, conflict detection, and more.\\nv1.7.2:\\n- Full Cloth Config GUI with all options + hover tooltips\\n- Fixed PIE_MENU_ALPHA value inflation bug\\n- Improved config screen categories (General, Behaviour, Visual)\\n- All prior features: pie menu, K-key capture flow, priority system",
     "authors": [
        "Blender",
        "HVB007",

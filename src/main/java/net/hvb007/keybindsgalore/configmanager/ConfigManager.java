@@ -123,7 +123,11 @@ public class ConfigManager {
         Class<?> type = field.getType();
 
         if (type == short.class) {
-            field.setShort(this.configurableClassInstance, Short.parseShort(value.replace("0x", ""), 16));
+            if (value.startsWith("0x")) {
+                field.setShort(this.configurableClassInstance, Short.parseShort(value.replace("0x", ""), 16));
+            } else {
+                field.setShort(this.configurableClassInstance, Short.parseShort(value));
+            }
         } else if (type == int.class) {
             if (value.startsWith("0x")) {
                 field.setInt(this.configurableClassInstance, (int) Long.parseLong(value.replace("0x", ""), 16));
