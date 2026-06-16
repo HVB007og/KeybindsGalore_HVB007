@@ -11,7 +11,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.GameNarrator;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 
@@ -43,7 +42,7 @@ public class KeybindSelectorScreen extends Screen {
     private int halfCount, topStartY, bottomStartY;
 
     public KeybindSelectorScreen(InputConstants.Key key) {
-        super(GameNarrator.NO_TITLE);
+        super(Component.empty());
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
     }

@@ -6,7 +6,8 @@
       "KeyMappingMixin",
       "KeyMappingAccessor",
       "KeyBindsScreenMixin",
-      "MinecraftAccessor"
+      "MinecraftAccessor",
+      "GuiGraphicsAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

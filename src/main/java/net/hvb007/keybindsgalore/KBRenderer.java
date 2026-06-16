@@ -3,9 +3,15 @@ package net.hvb007.keybindsgalore;
 import net.minecraft.client.gui.GuiGraphics;
 
 /**
- * This class provides utility methods for rendering triangles and other shapes
- * using a software-based approach for GUI rendering.
+ * @deprecated Replaced by TriangleStripRenderer (1.21.5 GPU-batched approach).
+ * Kept as fallback reference only — the scanline fill() approach issues one
+ * draw call per pixel row and is significantly slower than the triangle-strip
+ * batch used in KeybindCircularScreen.
+ *
+ * This class will be removed in a future release once the batch approach is
+ * thoroughly validated across all hardware.
  */
+@Deprecated
 public class KBRenderer {
 
     /**
@@ -54,7 +60,7 @@ public class KBRenderer {
                 xRight = temp;
             }
 
-            drawContext.hLine((int)xLeft, (int)xRight, y, color);
+            drawContext.fill((int)xLeft, y, (int)xRight + 1, y + 1, color);
         }
     }
 

@@ -4,7 +4,7 @@
     "version": "${version}",
 
     "name": "Keybinds Galore",
-    "description": "Keybinds Galore enhances Minecraft's keybinding system with a pie menu, priority actions, conflict detection, and more.\\nv1.7.2:\\n- Full Cloth Config GUI with all options + hover tooltips\\n- Fixed PIE_MENU_ALPHA value inflation bug\\n- Improved config screen categories (General, Behaviour, Visual)\\n- All prior features: pie menu, K-key capture flow, priority system",
+    "description": "Keybinds Galore enhances Minecraft's keybinding system with a pie menu, priority actions, conflict detection, and more.\\nv1.7.2 (Fabric 1.21.5):\\n- Upgraded to Minecraft 1.21.5 (Spring to Life)\\n- Custom RenderPipeline + RenderType for GPU-batched sector rendering\\n- GuiGraphicsAccessor mixin for shared buffer access\\n- Fixed pie menu not rendering (flush + render order)\\n- Full Cloth Config GUI with all options + hover tooltips\\n- All prior features: pie menu, K-key capture flow, priority system",
     "authors": [
        "Blender",
        "HVB007",
@@ -37,8 +37,8 @@
       "keybindsgalore.mixins.json"
     ],
     "depends": {
-       "fabricloader": ">=0.16.0",
-       "minecraft": "1.21.1",
+        "fabricloader": ">=0.19.3",
+        "minecraft": "1.21.5",
        "java": ">=21"
     }
 }

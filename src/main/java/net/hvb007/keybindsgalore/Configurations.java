@@ -20,8 +20,11 @@ public class Configurations {
     public static boolean LABEL_TEXT_SHADOW = false;
 
     // --- Behaviour ---
-    public static boolean USE_CIRCULAR_MENU = false;
-    public static boolean USE_SOFTWARE_RENDERING = false; // Default to false to test Owo rendering
+    public static boolean USE_CIRCULAR_MENU = true;
+    // Deprecated in 1.21.5 — Tesselator/BufferUploader removed by Mojang.
+    // All GUI rendering now goes through BufferSource.getBuffer() with a RenderType layer.
+    // This flag is kept for config compatibility but has no runtime effect.
+    public static boolean USE_SOFTWARE_RENDERING = true;
     public static boolean SHOW_CONFLICT_WARNINGS = true; // Show conflict warnings in chat
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>(Arrays.asList("Debug"));

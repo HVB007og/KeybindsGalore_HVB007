@@ -8,7 +8,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.GameNarrator;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Mth;
@@ -30,7 +29,7 @@ public class KeybindCircularScreen extends Screen {
     private float cancelZoneRadius = 0;
 
     public KeybindCircularScreen(InputConstants.Key key) {
-        super(GameNarrator.NO_TITLE);
+        super(Component.empty());
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
     }
@@ -46,6 +45,7 @@ public class KeybindCircularScreen extends Screen {
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        // DARKENED_BACKGROUND is drawn first so it sits behind everything.
         if (Configurations.DARKENED_BACKGROUND) {
             this.renderBackground(context, mouseX, mouseY, delta);
         }
@@ -71,6 +71,11 @@ public class KeybindCircularScreen extends Screen {
         final int colorSelected = Configurations.PIE_MENU_SECTOR_COLOR_SELECTED;
         final int colorLastOddFix = Configurations.PIE_MENU_SECTOR_COLOR_LAST_ODD;
 
+        // CRITICAL: super.render() MUST be called before sector drawing.
+        // In 1.21.5, GuiGraphics.fill() flushes its buffer immediately, so if
+        // we drew sectors first the background gradient would overwrite them.
+        super.render(context, mouseX, mouseY, delta);
+
         for (int i = 0; i < numberOfSectors; i++) {
             float startAngle = i * sectorAngle;
             float endAngle = (i + 1) * sectorAngle;
@@ -91,6 +96,9 @@ public class KeybindCircularScreen extends Screen {
             TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, currentRadius, color);
         }
 
+        // Draw the cancel zone (center hole) on top of the sectors.
+        // Uses the same triangle-strip batch approach, but with radius 0..cancelZoneRadius.
+        // When hovered, draws a reddish tone to indicate "release to cancel".
         int cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
         if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
             cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR;
@@ -103,7 +111,6 @@ public class KeybindCircularScreen extends Screen {
         }
 
         renderLabelTexts(context, numberOfSectors);
-        super.render(context, mouseX, mouseY, delta);
     }
 
     private void renderLabelTexts(GuiGraphics context, int numberOfSectors) {
