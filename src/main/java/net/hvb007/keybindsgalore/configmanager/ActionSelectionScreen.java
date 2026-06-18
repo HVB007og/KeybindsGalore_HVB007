@@ -37,7 +37,7 @@ public class ActionSelectionScreen extends Screen {
         }).bounds(this.width / 2 - 100, y - 30, 200, 20).build());
 
         for (KeyMapping kb : options) {
-            this.addRenderableWidget(Button.builder(Component.translatable(kb.getCategory()).append(": ").append(Component.translatable(kb.getName())), button -> {
+            this.addRenderableWidget(Button.builder(kb.getCategory().label().copy().append(": ").append(Component.translatable(kb.getName())), button -> {
                 callback.accept(kb);
                 Minecraft.getInstance().setScreen(parent);
             }).bounds(this.width / 2 - 100, y, 200, 20).build());

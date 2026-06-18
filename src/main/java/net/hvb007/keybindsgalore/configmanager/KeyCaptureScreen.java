@@ -7,6 +7,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -32,13 +34,13 @@ public class KeyCaptureScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == 256) { // ESC
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == 256) { // ESC
             Minecraft.getInstance().setScreen(parent);
             return true;
         }
 
-        InputConstants.Key key = InputConstants.Type.KEYSYM.getOrCreate(keyCode);
+        InputConstants.Key key = InputConstants.Type.KEYSYM.getOrCreate(event.key());
         List<KeyMapping> conflicts = new ArrayList<>();
         
         for (KeyMapping kb : Minecraft.getInstance().options.keyMappings) {
@@ -58,8 +60,8 @@ public class KeyCaptureScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        InputConstants.Key key = InputConstants.Type.MOUSE.getOrCreate(button);
+    public boolean mouseClicked(MouseButtonEvent event, boolean bl) {
+        InputConstants.Key key = InputConstants.Type.MOUSE.getOrCreate(event.button());
         List<KeyMapping> conflicts = new ArrayList<>();
         
         for (KeyMapping kb : Minecraft.getInstance().options.keyMappings) {

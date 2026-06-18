@@ -40,7 +40,7 @@ public class KeybindManager {
      * Safely gets the display name of a keybinding's category.
      */
     public static String safeGetCategory(KeyMapping binding) {
-        return binding.getCategory();
+        return binding.getCategory().id().toString();
     }
 
     /**

@@ -38,7 +38,7 @@ public class KeybindsGalore implements ClientModInitializer {
                 "key.keybindsgalore.open_capture",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_K,
-                "category.keybindsgaloreplus.keybinds"
+                KeyMapping.Category.MISC
         ));
 
         try {
