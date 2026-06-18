@@ -1,28 +1,45 @@
-Full Customization: Configure colors, transparency, and rendering modes in the config file.
-⚠️ Requirements
-Fabric API
-History & Changelog
-1.6.2 (Current):
-Config: Replaced `FILTER_DEBUG_KEYS` with the more flexible `FILTERED_CATEGORY_KEYS` list, allowing any category to be excluded from conflicts.
-Config: Fixed hex value parsing in the properties file and added support for generic string lists.
-UX: Conflict warnings in chat now include instructions on how to disable them via config.
-Internal: Refined code by removing legacy reflection logic for better stability.
-1.6.1:
-Rendering Overhaul: Removed the owo-lib dependency! Hardware-accelerated rendering is now handled natively via Minecraft's Tesselator for a perfectly smooth, standalone experience.
-Bug Fixes: Fixed an issue where the background blurred incorrectly when the menu opened.
-Config: Added new configurable colors for the menu sectors and hover states.
-1.6.0:
-Rendering Overhaul: Implemented owo-lib for hardware rendering.
-Visual Fixes: Fixed the "diamond hole" issue in software rendering and removed transparency artifacts.
-Config: Added options to toggle rendering modes and customize all UI colors.
-1.5.2 (1.21.11):
-Primitive working sectors enabled by default. Functional but basic.
-1.21.5:
-Big thanks to diblenderbenzene (AV306) for maintaining KeybindsGalore Plus and fixing many bugs.
-Updated to support 1.21.x despite major Minecraft rendering changes.
-1.21.6:
-Temporary Box-type menu implemented while pie menu rendering was broken.
-Updated to 1.20.x/1.21.x by HVB007 Original mod by Cael: KeybindsGalore
+KeybindsGalore
+================
+A Fabric mod that opens a popup menu when multiple actions are bound to the same key, allowing you to choose which action to perform.
+
+✨ Features
+----------
+- **Conflict Resolution** — Opens a menu to resolve conflicting keybinds instead of executing all of them at once.
+- **Circular Pie Menu** — A modern, intuitive pie menu for selecting actions.
+- **Smooth GPU Rendering** — The pie menu is rendered via owo-lib's deferred GUI system, providing polished visuals with proper depth ordering and no z-fighting.
+- **Mouse Button Support** — Works with conflicting mouse button bindings.
+- **Extensive Configuration** — Almost every visual aspect, from colors to radii, can be configured in the properties file.
+
+🚀 What's New in Version 1.7.2+1.21.7
+--------------------------------------
+This version upgrades the mod to Minecraft 1.21.7 and migrates rendering to use the owo-lib library for reliable deferred-GUI rendering.
+
+- **Minecraft 1.21.7 support** — Fabric API 0.129.0+1.21.7, Fabric Loader 0.19.3.
+- **owo-lib dependency** (`0.12.21+1.21.6`) — Pie menu now uses `OwoUIDrawContext.drawRing()` / `drawCircle()`, fully compatible with Minecraft 1.21.7's deferred GUI rendering system. This replaces all previous custom low-level rendering code.
+- **Removed** custom `TriangleStripRenderer`, `GuiGraphicsAccessor` mixin — all replaced by owo-lib's built-in render states and pipelines.
+- **Cloth Config 19.0.147** — Full configuration GUI with all options and hover tooltips.
+- **ModMenu 15.0.0** integration.
+
+📦 Requirements
+---------------
+- Minecraft **1.21.7**
+- Fabric Loader **>=0.19.3**
+- Fabric API **>=0.129.0**
+
+The mod bundles owo-lib internally — no separate download needed.
+
+⚙️ Configuration
+-----------------
+The mod can be configured by editing the `keybindsgalore.properties` file in your config folder, or via the in-game ModMenu configuration screen. You can customize all colors, radii, and rendering behaviour.
+
+📖 History & Credits
+---------------------
+- **Original Author**: Cael — [Original Project](https://github.com/CaelTheColher/KeybindsGalore)
+- **1.20.x Update**: HVB007 — [GitHub](https://github.com/HVB007)
+- **KeybindsGalore Plus**: AV306 — [Project](https://github.com/AV306/KeybindsGalore-Plus)
+- **1.21.x Re-Rewrite**: HVB007 — added native hardware rendering without external UI libraries.
+- **1.21.7+ owo-lib Migration**: HVB007 — adapted to Minecraft's deferred GUI system using owo-lib.
 
 🤖 AI Declaration
-Portions of this mod's code (specifically regarding the hardware-accelerated rendering rewrite and bug fixing) were written with the assistance of AI tools.
+------------------
+Portions of this mod's code were written with the assistance of AI tools. All AI-generated code has been reviewed, tested, and verified for functionality by the developer.

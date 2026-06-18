@@ -1,5 +1,7 @@
 package net.hvb007.keybindsgalore;
 
+import io.wispforest.owo.ui.core.Color;
+import io.wispforest.owo.ui.core.OwoUIDrawContext;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
@@ -45,7 +47,6 @@ public class KeybindCircularScreen extends Screen {
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        // DARKENED_BACKGROUND is drawn first so it sits behind everything.
         if (Configurations.DARKENED_BACKGROUND) {
             this.renderBackground(context, mouseX, mouseY, delta);
         }
@@ -71,18 +72,16 @@ public class KeybindCircularScreen extends Screen {
         final int colorSelected = Configurations.PIE_MENU_SECTOR_COLOR_SELECTED;
         final int colorLastOddFix = Configurations.PIE_MENU_SECTOR_COLOR_LAST_ODD;
 
-        // CRITICAL: super.render() MUST be called before sector drawing.
-        // In 1.21.5, GuiGraphics.fill() flushes its buffer immediately, so if
-        // we drew sectors first the background gradient would overwrite them.
         super.render(context, mouseX, mouseY, delta);
 
+        int segments = Math.max(4, Configurations.CIRCLE_VERTICES);
+        OwoUIDrawContext ctx = OwoUIDrawContext.of(context);
+
         for (int i = 0; i < numberOfSectors; i++) {
-            float startAngle = i * sectorAngle;
-            float endAngle = (i + 1) * sectorAngle;
+            float startAngleRad = i * sectorAngle;
+            float endAngleRad = (i + 1) * sectorAngle;
 
             int color;
-            float currentRadius = this.maxRadius;
-
             if (i == this.selectedSectorIndex) {
                 color = colorSelected;
             } else {
@@ -93,22 +92,26 @@ public class KeybindCircularScreen extends Screen {
                 }
             }
 
-            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, startAngle, endAngle, this.cancelZoneRadius, currentRadius, color);
+            // owo-lib drawRing uses degrees; add 180 to account for
+            // owo's internal -cos/-sin vertex convention so sectors
+            // align with our mouse-angle calculation (0 = right).
+            double startDeg = Math.toDegrees(startAngleRad) + 180;
+            double endDeg = Math.toDegrees(endAngleRad) + 180;
+
+            ctx.drawRing(this.centreX, this.centreY,
+                startDeg, endDeg,
+                segments,
+                this.cancelZoneRadius, this.maxRadius,
+                Color.ofArgb(color), Color.ofArgb(color));
         }
 
-        // Draw the cancel zone (center hole) on top of the sectors.
-        // Uses the same triangle-strip batch approach, but with radius 0..cancelZoneRadius.
-        // When hovered, draws a reddish tone to indicate "release to cancel".
-        int cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
-        if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
-            cancelZoneColor = Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR;
-        }
-        
-        for (int i = 0; i < numberOfSectors; i++) {
-            float start = i * sectorAngle;
-            float end = (i + 1) * sectorAngle;
-            TriangleStripRenderer.drawSector(context, this.centreX, this.centreY, start, end, 0, this.cancelZoneRadius, cancelZoneColor);
-        }
+        int cancelZoneColor = mouseDistanceFromCentre <= this.cancelZoneRadius
+            ? Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR
+            : Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
+
+        ctx.drawCircle(this.centreX, this.centreY, 0, 360,
+            segments, this.cancelZoneRadius,
+            Color.ofArgb(cancelZoneColor));
 
         renderLabelTexts(context, numberOfSectors);
     }
@@ -121,7 +124,7 @@ public class KeybindCircularScreen extends Screen {
         for (int sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++) {
             float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
             float radius = this.maxRadius;
-            
+
             float textRadius = radius * 1.1f;
             float angle = (sectorIndex + 0.5f) * sectorAngle;
 
