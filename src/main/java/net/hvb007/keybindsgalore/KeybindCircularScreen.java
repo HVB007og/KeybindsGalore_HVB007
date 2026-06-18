@@ -1,7 +1,7 @@
 package net.hvb007.keybindsgalore;
 
 import io.wispforest.owo.ui.core.Color;
-import io.wispforest.owo.ui.core.OwoUIDrawContext;
+import io.wispforest.owo.ui.core.OwoUIGraphics;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
@@ -75,7 +75,7 @@ public class KeybindCircularScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         int segments = Math.max(4, Configurations.CIRCLE_VERTICES);
-        OwoUIDrawContext ctx = OwoUIDrawContext.of(context);
+        OwoUIGraphics ctx = OwoUIGraphics.of(context);
 
         for (int i = 0; i < numberOfSectors; i++) {
             float startAngleRad = i * sectorAngle;
