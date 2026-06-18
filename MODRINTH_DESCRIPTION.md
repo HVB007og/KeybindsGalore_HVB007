@@ -10,21 +10,20 @@ A Fabric mod that opens a popup menu when multiple actions are bound to the same
 - **Mouse Button Support** — Works with conflicting mouse button bindings.
 - **Extensive Configuration** — Almost every visual aspect, from colors to radii, can be configured in the properties file.
 
-🚀 What's New in Version 1.7.2+1.21.7
+🚀 What's New in Version 1.7.2+1.21.8
 --------------------------------------
-This version upgrades the mod to Minecraft 1.21.7 and migrates rendering to use the owo-lib library for reliable deferred-GUI rendering.
+This version upgrades the mod to Minecraft 1.21.8.
 
-- **Minecraft 1.21.7 support** — Fabric API 0.129.0+1.21.7, Fabric Loader 0.19.3.
-- **owo-lib dependency** (`0.12.21+1.21.6`) — Pie menu now uses `OwoUIDrawContext.drawRing()` / `drawCircle()`, fully compatible with Minecraft 1.21.7's deferred GUI rendering system. This replaces all previous custom low-level rendering code.
-- **Removed** custom `TriangleStripRenderer`, `GuiGraphicsAccessor` mixin — all replaced by owo-lib's built-in render states and pipelines.
-- **Cloth Config 19.0.147** — Full configuration GUI with all options and hover tooltips.
+- **Minecraft 1.21.8 support** - Fabric API 0.136.0+1.21.8, Fabric Loader 0.19.3.
+- **owo-lib** `0.12.23+1.21.8` — Pie menu uses `OwoUIDrawContext.drawRing()` / `drawCircle()` for reliable deferred-GUI rendering.
+- **Cloth Config 19.0.147** - Full configuration GUI with all options and hover tooltips.
 - **ModMenu 15.0.0** integration.
 
 📦 Requirements
 ---------------
-- Minecraft **1.21.7**
+- Minecraft **1.21.8**
 - Fabric Loader **>=0.19.3**
-- Fabric API **>=0.129.0**
+- Fabric API **>=0.136.0**
 
 The mod bundles owo-lib internally — no separate download needed.
 

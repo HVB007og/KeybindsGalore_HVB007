@@ -1,7 +1,7 @@
-## 1.7.2+1.21.7 — Fabric 1.21.7 Upgrade + owo-lib Rendering
+## 1.7.2+1.21.8 — Fabric 1.21.8 Upgrade
 
-- **Minecraft 1.21.7** — Fabric API 0.129.0+1.21.7, Fabric Loader 0.19.3
-- **Added owo-lib dependency** (`0.12.21+1.21.6`) — replaces all custom low-level rendering code
-- **Pie menu rendering fixed**: sectors now use `OwoUIDrawContext.drawRing()` / `drawCircle()` from owo-lib, compatible with 1.21.7's deferred GUI system
-- **Removed** custom `TriangleStripRenderer`, `GuiGraphicsAccessor` mixin, and `GUI_TRIANGLE_STRIP` pipeline
-- **Updated** Cloth Config 19.0.147, ModMenu 15.0.0
+- **Minecraft 1.21.8** — Fabric API 0.136.0+1.21.8, Fabric Loader 0.19.3
+- **owo-lib 0.12.23+1.21.8** — compatible with Minecraft 1.21.8's deferred GUI system
+- **Cloth Config 19.0.147**, **ModMenu 15.0.0**
+- owo-lib-based pie menu rendering via `OwoUIDrawContext.drawRing()` / `drawCircle()`
+- All prior features: pie menu, K-key capture flow, priority system, conflict detection
