@@ -1,11 +1,13 @@
 # Changelog
 
-## 1.7.2+1.21.8 (Fabric 1.21.8)
-- Upgraded to Minecraft 1.21.8
-- Fabric API 0.136.0+1.21.8, Fabric Loader 0.19.3
-- owo-lib 0.12.23+1.21.8, Cloth Config 19.0.147, ModMenu 15.0.0
+## 1.7.2+1.21.9 (Fabric 1.21.9)
+- Upgraded to Minecraft 1.21.9
+- Fabric API 0.134.1+1.21.9, Fabric Loader 0.19.3
+- owo-lib 0.12.24+1.21.9, Cloth Config 19.0.147, ModMenu 15.0.0
 - owo-lib-based pie menu rendering (unchanged from 1.21.7)
 - All prior features: pie menu, K-key capture flow, priority system, conflict detection
+
+## 1.7.2+1.21.8 (Fabric 1.21.8)
 
 ## 1.7.2+1.21.7 (Fabric 1.21.7)
 

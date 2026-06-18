@@ -10,20 +10,20 @@ A Fabric mod that opens a popup menu when multiple actions are bound to the same
 - **Mouse Button Support** — Works with conflicting mouse button bindings.
 - **Extensive Configuration** — Almost every visual aspect, from colors to radii, can be configured in the properties file.
 
-🚀 What's New in Version 1.7.2+1.21.8
+🚀 What's New in Version 1.7.2+1.21.9
 --------------------------------------
-This version upgrades the mod to Minecraft 1.21.8.
+This version upgrades the mod to Minecraft 1.21.9.
 
-- **Minecraft 1.21.8 support** - Fabric API 0.136.0+1.21.8, Fabric Loader 0.19.3.
-- **owo-lib** `0.12.23+1.21.8` — Pie menu uses `OwoUIDrawContext.drawRing()` / `drawCircle()` for reliable deferred-GUI rendering.
+- **Minecraft 1.21.9 support** - Fabric API 0.134.1+1.21.9, Fabric Loader 0.19.3.
+- **owo-lib** `0.12.24+1.21.9` — Pie menu uses `OwoUIDrawContext.drawRing()` / `drawCircle()` for reliable deferred-GUI rendering.
 - **Cloth Config 19.0.147** - Full configuration GUI with all options and hover tooltips.
 - **ModMenu 15.0.0** integration.
 
 📦 Requirements
 ---------------
-- Minecraft **1.21.8**
+- Minecraft **1.21.9**
 - Fabric Loader **>=0.19.3**
-- Fabric API **>=0.136.0**
+- Fabric API **>=0.134.1**
 
 The mod bundles owo-lib internally — no separate download needed.
 
