@@ -17,7 +17,7 @@ This version upgrades the mod to Minecraft 1.21.9.
 - **Minecraft 1.21.9 support** - Fabric API 0.134.1+1.21.9, Fabric Loader 0.19.3.
 - **owo-lib** `0.12.24+1.21.9` — Pie menu uses `OwoUIDrawContext.drawRing()` / `drawCircle()` for reliable deferred-GUI rendering.
 - **Cloth Config 19.0.147** - Full configuration GUI with all options and hover tooltips.
-- **ModMenu 15.0.0** integration.
+- **ModMenu 17.0.0** integration.
 
 📦 Requirements
 ---------------
