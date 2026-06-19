@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.2+26.1 (Fabric 26.1)
+- Upgraded to Minecraft 26.1 (first unobfuscated version)
+- Fabric API 0.145.1+26.1, Fabric Loader 0.18.6, Java 25
+- owo-lib 0.13.0+26.1, Cloth Config 26.1.154, ModMenu 18.0.0-alpha.8
+- Switched to net.fabricmc.fabric-loom, no mappings, modImplementation→implementation
+- Fabric API rename: KeyBindingHelper→KeyMappingHelper
+- owo-lib-based pie menu rendering (unchanged from 1.21.7)
+- All prior features: pie menu, K-key capture flow, priority system, conflict detection
+
 ## 1.7.2+1.21.11 (Fabric 1.21.11)
 - Upgraded to Minecraft 1.21.11
 - Fabric API 0.141.4+1.21.11, Fabric Loader 0.19.3

@@ -140,7 +140,7 @@ public class KeybindManager {
         } else {
             screen = new KeybindSelectorScreen(key);
         }
-        Minecraft.getInstance().setScreen(screen);
+        Minecraft.getInstance().gui.setScreen(screen);
     }
 
     /**
@@ -203,7 +203,7 @@ public class KeybindManager {
             KeybindsGalore.LOGGER.info("[KBG DEBUG] Key Input: {} | Pressed: {}", key.getName(), pressed);
         }
 
-        boolean wasSelectorScreenOpen = Minecraft.getInstance().screen instanceof KeybindSelectorScreen || Minecraft.getInstance().screen instanceof KeybindCircularScreen;
+        boolean wasSelectorScreenOpen = Minecraft.getInstance().gui.screen() instanceof KeybindSelectorScreen || Minecraft.getInstance().gui.screen() instanceof KeybindCircularScreen;
 
         if (hasConflicts(key)) {
             if (Configurations.DEBUG) {
@@ -248,7 +248,7 @@ public class KeybindManager {
                                     .append(Component.translatable(priorityKey.getName()).withStyle(ChatFormatting.AQUA))
                                     .append(Component.literal("'."))
                                     .withStyle(ChatFormatting.RED);
-                                client.player.displayClientMessage(warningHeader, false);
+                                client.player.sendSystemMessage(warningHeader);
 
                                 // ADDED: Display other conflicting keybinds
                                 MutableComponent otherKeys = Component.literal("");
@@ -263,11 +263,10 @@ public class KeybindManager {
                                 }
 
                                 if (!otherKeys.getString().isEmpty()) {
-                                     client.player.displayClientMessage(
+                                     client.player.sendSystemMessage(
                                         Component.literal("Other conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
                                         .append(otherKeys)
-                                        .append(Component.literal(". Please rebind them in your controls! If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY)),
-                                        false
+                                        .append(Component.literal(". Please rebind them in your controls! If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY))
                                     );
                                 }
                             }
@@ -287,7 +286,7 @@ public class KeybindManager {
                     } else {
                         // Release logic for menu
                         if (wasSelectorScreenOpen) {
-                            Screen currentScreen = Minecraft.getInstance().screen;
+                            Screen currentScreen = Minecraft.getInstance().gui.screen();
                             if (currentScreen instanceof KeybindSelectorScreen) {
                                 ((KeybindSelectorScreen) currentScreen).onKeyRelease();
                             } else if (currentScreen instanceof KeybindCircularScreen) {
@@ -343,10 +342,10 @@ public class KeybindManager {
         findAllConflicts();
         
         if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.displayClientMessage(
+            Minecraft.getInstance().player.sendSystemMessage(
                 Component.translatable("text.keybindsgalore.action_prioritized", 
                 Component.translatable(selected.getName()), 
-                Component.translatable(key.getName())), false
+                Component.translatable(key.getName()))
             );
         }
     }
@@ -368,9 +367,9 @@ public class KeybindManager {
             findAllConflicts();
             
             if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(
+                Minecraft.getInstance().player.sendSystemMessage(
                     Component.translatable("text.keybindsgalore.priority_removed", 
-                    Component.translatable(key.getName())), false
+                    Component.translatable(key.getName()))
                 );
             }
         }

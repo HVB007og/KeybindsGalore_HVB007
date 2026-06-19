@@ -1,12 +1,10 @@
 package net.hvb007.keybindsgalore;
 
-import io.wispforest.owo.ui.core.Color;
-import io.wispforest.owo.ui.core.OwoUIGraphics;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -46,7 +44,7 @@ public class KeybindCircularScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (Configurations.DARKENED_BACKGROUND) {
             this.renderBackground(context, mouseX, mouseY, delta);
         }
@@ -72,10 +70,9 @@ public class KeybindCircularScreen extends Screen {
         final int colorSelected = Configurations.PIE_MENU_SECTOR_COLOR_SELECTED;
         final int colorLastOddFix = Configurations.PIE_MENU_SECTOR_COLOR_LAST_ODD;
 
-        super.render(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         int segments = Math.max(4, Configurations.CIRCLE_VERTICES);
-        OwoUIGraphics ctx = OwoUIGraphics.of(context);
 
         for (int i = 0; i < numberOfSectors; i++) {
             float startAngleRad = i * sectorAngle;
@@ -92,31 +89,28 @@ public class KeybindCircularScreen extends Screen {
                 }
             }
 
-            // owo-lib drawRing uses degrees; add 180 to account for
-            // owo's internal -cos/-sin vertex convention so sectors
-            // align with our mouse-angle calculation (0 = right).
-            double startDeg = Math.toDegrees(startAngleRad) + 180;
-            double endDeg = Math.toDegrees(endAngleRad) + 180;
+            double startDeg = Math.toDegrees(startAngleRad);
+            double endDeg = Math.toDegrees(endAngleRad);
 
-            ctx.drawRing(this.centreX, this.centreY,
+            RingRenderer.drawRing(context, this.centreX, this.centreY,
                 startDeg, endDeg,
                 segments,
                 this.cancelZoneRadius, this.maxRadius,
-                Color.ofArgb(color), Color.ofArgb(color));
+                color, color);
         }
 
         int cancelZoneColor = mouseDistanceFromCentre <= this.cancelZoneRadius
             ? Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR
             : Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
 
-        ctx.drawCircle(this.centreX, this.centreY, 0, 360,
+        RingRenderer.drawCircle(context, this.centreX, this.centreY, 0, 360,
             segments, this.cancelZoneRadius,
-            Color.ofArgb(cancelZoneColor));
+            cancelZoneColor);
 
         renderLabelTexts(context, numberOfSectors);
     }
 
-    private void renderLabelTexts(GuiGraphics context, int numberOfSectors) {
+    private void renderLabelTexts(GuiGraphicsExtractor context, int numberOfSectors) {
         if (numberOfSectors == 0) return;
 
         Font textRenderer = Minecraft.getInstance().font;
@@ -152,7 +146,7 @@ public class KeybindCircularScreen extends Screen {
                 context.fill((int)xPos - 2, (int)yPos - 2, (int)xPos + textWidth + 2, (int)yPos + textHeight + 2, 0x80E0E0E0);
             }
 
-            context.drawString(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
+            context.text(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
         }
     }
 
@@ -166,7 +160,7 @@ public class KeybindCircularScreen extends Screen {
 
     private void closePieMenu() {
         Minecraft client = Minecraft.getInstance();
-        client.setScreen(null);
+        client.gui.setScreen(null);
 
         if (this.selectedSectorIndex != -1 && this.selectedSectorIndex < this.conflicts.size()) {
             KeyMapping selectedKeyBinding = this.conflicts.get(this.selectedSectorIndex);
@@ -201,8 +195,7 @@ public class KeybindCircularScreen extends Screen {
         return false;
     }
 
-    @Override
-    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void renderBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (Configurations.DARKENED_BACKGROUND) {
             context.fill(0, 0, this.width, this.height, 0x60000000);
         }

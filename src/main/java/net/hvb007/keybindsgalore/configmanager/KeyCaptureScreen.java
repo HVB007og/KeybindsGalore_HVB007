@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.hvb007.keybindsgalore.KeybindManager;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -27,16 +27,16 @@ public class KeyCaptureScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(this.font, Component.translatable("text.keybindsgalore.press_any_key"), this.width / 2, this.height / 2 - 20, 0xFFFFFFFF);
-        context.drawCenteredString(this.font, Component.translatable("text.keybindsgalore.capture_instruction"), this.width / 2, this.height / 2, 0xAAAAAA);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.centeredText(this.font, Component.translatable("text.keybindsgalore.press_any_key"), this.width / 2, this.height / 2 - 20, 0xFFFFFFFF);
+        context.centeredText(this.font, Component.translatable("text.keybindsgalore.capture_instruction"), this.width / 2, this.height / 2, 0xAAAAAA);
     }
 
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (event.key() == 256) { // ESC
-            Minecraft.getInstance().setScreen(parent);
+            Minecraft.getInstance().gui.setScreen(parent);
             return true;
         }
 
@@ -53,7 +53,7 @@ public class KeyCaptureScreen extends Screen {
             callback.accept(key, conflicts);
         } else {
             // No keybinds on this key. Just go back.
-            Minecraft.getInstance().setScreen(parent);
+            Minecraft.getInstance().gui.setScreen(parent);
         }
         
         return true;
@@ -73,13 +73,13 @@ public class KeyCaptureScreen extends Screen {
         if (!conflicts.isEmpty()) {
             callback.accept(key, conflicts);
         } else {
-            Minecraft.getInstance().setScreen(parent);
+            Minecraft.getInstance().gui.setScreen(parent);
         }
         return true;
     }
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(parent);
+        Minecraft.getInstance().gui.setScreen(parent);
     }
 }

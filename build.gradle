@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.15-SNAPSHOT'
+	id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -14,11 +14,8 @@ repositories {
 	maven { url = "https://maven.architectury.dev/" }
 	maven { url = "https://maven.shedaniel.me/" }
 	mavenCentral()
-	maven { url = "https://maven.fabricmc.net/" }
 	maven { url = "https://maven.terraformersmc.com/" }
-	maven { url = "https://maven.wispforest.io/" }
-	// Required for owo-lib >=0.13.0 (kdl4j dependency)
-	maven { url = "https://jitpack.io" }
+
 }
 
 loom {
@@ -44,18 +41,16 @@ sourceSets {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	mappings loom.officialMojangMappings()
-	modImplementation "it.unimi.dsi:fastutil:8.5.12"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	implementation "it.unimi.dsi:fastutil:8.5.12"
 
 	// --- Cloth Config & ModMenu ---
-	modApi "me.shedaniel.cloth:cloth-config-fabric:19.0.147"
-	modImplementation "com.terraformersmc:modmenu:17.0.0"
+	implementation ("me.shedaniel.cloth:cloth-config-fabric:26.1.154") {
+		exclude group: 'net.fabricmc.fabric-api'
+	}
+	implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
-	// --- owo-lib ---
-	modImplementation "io.wispforest:owo-lib:${project.owo_version}"
-	include "io.wispforest:owo-lib:${project.owo_version}"
 }
 
 processResources {
@@ -66,13 +61,13 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	options.release = 21
+	options.release = 25
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {

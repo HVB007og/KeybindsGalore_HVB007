@@ -3,7 +3,7 @@ package net.hvb007.keybindsgalore.configmanager;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -33,30 +33,30 @@ public class ActionSelectionScreen extends Screen {
         // Add a "Remove Priority" button at the top if there are options
         this.addRenderableWidget(Button.builder(Component.translatable("button.keybindsgalore.remove_priority"), button -> {
             removeCallback.run();
-            Minecraft.getInstance().setScreen(parent);
+            Minecraft.getInstance().gui.setScreen(parent);
         }).bounds(this.width / 2 - 100, y - 30, 200, 20).build());
 
         for (KeyMapping kb : options) {
             this.addRenderableWidget(Button.builder(kb.getCategory().label().copy().append(": ").append(Component.translatable(kb.getName())), button -> {
                 callback.accept(kb);
-                Minecraft.getInstance().setScreen(parent);
+                Minecraft.getInstance().gui.setScreen(parent);
             }).bounds(this.width / 2 - 100, y, 200, 20).build());
             y += 25;
         }
         
         this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> {
-            Minecraft.getInstance().setScreen(parent);
+            Minecraft.getInstance().gui.setScreen(parent);
         }).bounds(this.width / 2 - 100, this.height - 30, 200, 20).build());
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFFFF);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.centeredText(this.font, this.title, this.width / 2, 20, 0xFFFFFFFF);
     }
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(parent);
+        Minecraft.getInstance().gui.setScreen(parent);
     }
 }
