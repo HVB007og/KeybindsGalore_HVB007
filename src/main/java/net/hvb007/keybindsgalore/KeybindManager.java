@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import net.fabricmc.loader.api.FabricLoader;
+
 /**
  * Manages the detection and resolution of conflicting keybinds.
  */
@@ -38,9 +40,11 @@ public class KeybindManager {
 
     /**
      * Safely gets the display name of a keybinding's category.
+     * Uses getPath() to strip the namespace (e.g. "minecraft:debug" -> "debug")
+     * so that config values like "Debug" match correctly.
      */
     public static String safeGetCategory(KeyMapping binding) {
-        return binding.getCategory().id().toString();
+        return binding.getCategory().id().getPath();
     }
 
     /**
@@ -48,6 +52,14 @@ public class KeybindManager {
      * This is the core of the conflict detection system.
      */
     public static void findAllConflicts() {
+        // If Amecs (or a fork) is loaded, skip all conflict detection — Amecs
+        // intentionally allows multiple keybindings per key and handles them itself.
+        if (isAmecsLoaded()) {
+            conflictTable.clear();
+            shownConflictWarnings.clear();
+            return;
+        }
+
         KeybindsGalore.LOGGER.info("Scanning for conflicting keybinds...");
         Minecraft client = Minecraft.getInstance();
         
@@ -67,11 +79,30 @@ public class KeybindManager {
                 continue; // Ignore unbound keys.
             }
 
+            // 2. Filter out keys by GLFW key code (IGNORED_KEYS list).
+            if (Configurations.INVERT_IGNORED_KEYS_LIST) {
+                // Whitelist mode: only process keys that ARE in the list
+                if (!Configurations.IGNORED_KEYS.contains(physicalKey.getValue())) {
+                    continue;
+                }
+            } else {
+                // Blacklist mode: skip keys that ARE in the list
+                if (Configurations.IGNORED_KEYS.contains(physicalKey.getValue())) {
+                    continue;
+                }
+            }
+
             conflictTable.computeIfAbsent(physicalKey, k -> new ArrayList<>()).add(keybinding);
         }
 
         // Clean up the table by removing entries with no actual conflicts.
         conflictTable.keySet().removeIf(key -> conflictTable.get(key).size() < 2);
+    }
+
+    public static boolean isAmecsLoaded() {
+        return FabricLoader.getInstance().isModLoaded("amecs")
+            || FabricLoader.getInstance().isModLoaded("amecsapi")
+            || FabricLoader.getInstance().isModLoaded("amecs-fork");
     }
 
     /**
@@ -155,6 +186,9 @@ public class KeybindManager {
      * This stops the game from thinking a "click" happened when we are just opening the menu.
      */
     public static void handleOnKeyPressed(InputConstants.Key key, CallbackInfo ci) {
+        // Let Amecs handle its own key logic when present
+        if (isAmecsLoaded()) return;
+
         if (hasConflicts(key) && !isClickHoldKey(key)) {
             // ALWAYS cancel vanilla click for conflicting keys.
             // Vanilla's `click` method blindly increments the clickCount of whichever KeyMapping 
@@ -199,6 +233,9 @@ public class KeybindManager {
      * This method decides whether to execute a priority action, open the conflict menu, or do nothing.
      */
     public static void handleKeyPress(InputConstants.Key key, boolean pressed, CallbackInfo ci) {
+        // Let Amecs handle its own key logic when present
+        if (isAmecsLoaded()) return;
+
         if (Configurations.DEBUG) {
             KeybindsGalore.LOGGER.info("[KBG DEBUG] Key Input: {} | Pressed: {}", key.getName(), pressed);
         }

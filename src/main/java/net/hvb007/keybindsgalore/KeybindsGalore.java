@@ -82,7 +82,9 @@ public class KeybindsGalore implements ClientModInitializer {
 
         // Find all conflicting keybinds when the player joins a world.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            KeybindManager.findAllConflicts();
+            if (!KeybindManager.isAmecsLoaded()) {
+                KeybindManager.findAllConflicts();
+            }
         });
     }
 

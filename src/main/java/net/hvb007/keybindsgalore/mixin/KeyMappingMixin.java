@@ -10,6 +10,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import net.fabricmc.loader.api.FabricLoader;
+
 /**
  * Mixin to intercept vanilla keybinding logic.
  */
@@ -43,6 +45,13 @@ public abstract class KeyMappingMixin {
      */
     @Inject(at = @At("HEAD"), method = "setDown", cancellable = true)
     public void setPressed(boolean pressed, CallbackInfo ci) {
+        // Let Amecs handle its own key logic when present
+        if (FabricLoader.getInstance().isModLoaded("amecs")
+            || FabricLoader.getInstance().isModLoaded("amecsapi")
+            || FabricLoader.getInstance().isModLoaded("amecs-fork")) {
+            return;
+        }
+
         KeyMapping self = (KeyMapping) (Object) this;
 
         // Block any attempt to press a conflicting key unless it's our chosen target
