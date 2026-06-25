@@ -8,6 +8,8 @@ import net.hvb007.keybindsgalore.KeybindsGalore;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -121,24 +123,53 @@ public class ConfigManager {
         Class<?> type = field.getType();
 
         if (type == short.class) {
-            field.setShort(this.configurableClassInstance, Short.parseShort(value.replace("0x", ""), 16));
+            if (value.startsWith("0x")) {
+                field.setShort(this.configurableClassInstance, Short.parseShort(value.replace("0x", ""), 16));
+            } else {
+                field.setShort(this.configurableClassInstance, Short.parseShort(value));
+            }
         } else if (type == int.class) {
-            field.setInt(this.configurableClassInstance, Integer.parseInt(value.replace("0x", ""), value.startsWith("0x") ? 16 : 10));
+            if (value.startsWith("0x")) {
+                field.setInt(this.configurableClassInstance, (int) Long.parseLong(value.replace("0x", ""), 16));
+            } else {
+                field.setInt(this.configurableClassInstance, Integer.parseInt(value));
+            }
         } else if (type == float.class) {
             field.setFloat(this.configurableClassInstance, Float.parseFloat(value));
         } else if (type == boolean.class) {
             field.setBoolean(this.configurableClassInstance, Boolean.parseBoolean(value));
         } else if (type == ArrayList.class) {
-            ArrayList<Integer> list = new ArrayList<>();
-            String[] values = value.replaceAll("[\\[\\]\\s]+", "").split(",");
-            if (values.length == 1 && values[0].isEmpty()) {
-                // Handle empty list case
-            } else {
-                for (String s : values) {
-                    list.add(Integer.parseInt(s.trim()));
+            // Get the generic type of the ArrayList
+            ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+            Type listType = genericType.getActualTypeArguments()[0];
+
+            String[] values = value.replaceAll("[\\[\\]]+", "").split(",");
+            
+            if (listType == String.class) {
+                ArrayList<String> list = new ArrayList<>();
+                if (!(values.length == 1 && values[0].trim().isEmpty())) {
+                    for (String s : values) {
+                        String clean = s.trim();
+                        if (!clean.isEmpty()) {
+                            list.add(clean);
+                        }
+                    }
                 }
+                field.set(this.configurableClassInstance, list);
+            } else if (listType == Integer.class) {
+                ArrayList<Integer> list = new ArrayList<>();
+                if (!(values.length == 1 && values[0].trim().isEmpty())) {
+                    for (String s : values) {
+                        String clean = s.trim();
+                        if (!clean.isEmpty()) {
+                            list.add(Integer.parseInt(clean));
+                        }
+                    }
+                }
+                field.set(this.configurableClassInstance, list);
+            } else {
+                KeybindsGalore.LOGGER.error("Unrecognized ArrayList type for field: {}", field.getName());
             }
-            field.set(this.configurableClassInstance, list);
         } else {
             KeybindsGalore.LOGGER.error("Unrecognized data type for field: {}", field.getName());
         }
@@ -155,6 +186,36 @@ public class ConfigManager {
                 KeybindsGalore.LOGGER.info("\t{}: {}", f.getName(), f.get(this.configurableClassInstance));
             } catch (IllegalAccessException | NullPointerException ignored) {
             }
+        }
+    }
+
+    /**
+     * Saves the current configuration fields back to the .properties file.
+     */
+    public void saveConfigFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.configFile))) {
+            writer.write("# KeybindsGalore Configuration File\n");
+            writer.write("# This file is automatically updated by the in-game GUI.\n\n");
+
+            for (Field field : this.configurableClass.getDeclaredFields()) {
+                try {
+                    String key = field.getName().toUpperCase(Locale.ROOT);
+                    Object value = field.get(this.configurableClassInstance);
+                    
+                    if (value instanceof Integer && field.getName().contains("COLOR")) {
+                        // Format colors as hex for readability
+                        writer.write(String.format("%s=0x%08X\n", key, (Integer) value));
+                    } else if (value instanceof ArrayList) {
+                        writer.write(String.format("%s=%s\n", key, value.toString()));
+                    } else {
+                        writer.write(String.format("%s=%s\n", key, value.toString()));
+                    }
+                } catch (IllegalAccessException e) {
+                    KeybindsGalore.LOGGER.error("Failed to access field: {}", field.getName(), e);
+                }
+            }
+        } catch (IOException e) {
+            KeybindsGalore.LOGGER.error("IOException while saving config file!", e);
         }
     }
 }

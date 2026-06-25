@@ -4,7 +4,7 @@
     "version": "${version}",
 
     "name": "Keybinds Galore",
-    "description": "Keybind pie menu / QoL mod. Originally by Cael, updated by HVB007.",
+    "description": "Keybinds Galore enhances Minecraft's keybinding system with a pie menu, priority actions, conflict detection, and more.\\nv1.7.2 (Fabric 1.21.7):\\n- Upgraded to Minecraft 1.21.7\\n- owo-lib-based pie menu rendering (OwoUIDrawContext.drawRing/drawCircle)\\n- Custom pipelines via OwoUIPipelines\\n- Full Cloth Config GUI with all options + hover tooltips\\n- All prior features: pie menu, K-key capture flow, priority system",
     "authors": [
        "Blender",
        "HVB007",
@@ -30,14 +30,16 @@
 
     "environment": "client",
     "entrypoints": {
-       "client": [ "net.hvb007.keybindsgalore.KeybindsGalore" ]
+       "client": [ "net.hvb007.keybindsgalore.KeybindsGalore" ],
+       "modmenu": [ "net.hvb007.keybindsgalore.configmanager.ModMenuIntegration" ]
     },
     "mixins": [
       "keybindsgalore.mixins.json"
     ],
     "depends": {
-       "fabricloader": ">=0.16.0",
-       "minecraft": ">=1.21.11",
-       "java": ">=21"
+        "fabricloader": ">=0.19.3",
+        "minecraft": "1.21.7",
+       "java": ">=21",
+        "owo-lib": ">=0.12.21+1.21.6"
     }
 }

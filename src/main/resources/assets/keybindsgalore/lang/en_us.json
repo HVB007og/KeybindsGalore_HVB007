@@ -1,0 +1,125 @@
+{
+  "key.keybindsgalore.open_capture": "Open Key Capture",
+  "category.keybindsgaloreplus.keybinds": "Keybinds Galore",
+  "title.keybindsgalore.capture": "Capture Key",
+  "title.keybindsgalore.select_action": "Select Action",
+  "title.keybindsgalore.config": "Keybinds Galore Configuration",
+  "text.keybindsgalore.press_any_key": "Press any key or click any mouse button...",
+  "text.keybindsgalore.capture_instruction": "Press a key to see its conflicts and set a priority.",
+  "text.keybindsgalore.action_prioritized": "%s has been prioritized on %s",
+  "text.keybindsgalore.priority_removed": "Priority removed for %s",
+  "button.keybindsgalore.remove_priority": "Remove Priority",
+  "button.keybindsgalore.save": "Save",
+
+  "category.keybindsgalore.general": "General Settings",
+  "category.keybindsgalore.behaviour": "Behaviour Settings",
+  "category.keybindsgalore.visual": "Visual Settings (Pie Menu)",
+
+  "option.keybindsgalore.debug": "Enable Debug Logging",
+  "option.keybindsgalore.debug.tooltip": "Logs every keypress and prioritization check to the console. Produces huge log output!",
+
+  "option.keybindsgalore.verbose_debug": "Enable Verbose Debug Logging",
+  "option.keybindsgalore.verbose_debug.tooltip": "Logs even more detailed debug information, including conflict resolution internals.",
+
+  "option.keybindsgalore.lazy_conflict_check": "Lazy Conflict Check",
+  "option.keybindsgalore.lazy_conflict_check.tooltip": "Only checks key conflicts when a key changes rather than every tick. Reduces overhead.",
+
+  "option.keybindsgalore.circle_vertices": "Circle Vertices",
+  "option.keybindsgalore.circle_vertices.tooltip": "Number of vertices used to render the pie menu circle. Higher values look smoother but use more performance. Range: 6-360.",
+
+  "option.keybindsgalore.pulse_timer_duration": "Pulse Timer Duration",
+  "option.keybindsgalore.pulse_timer_duration.tooltip": "How long the key pulse visualisation lasts in ticks (20 ticks = 1 second). Range: 0-200.",
+
+  "option.keybindsgalore.use_keybind_fix": "Use Keybind Fix",
+  "option.keybindsgalore.use_keybind_fix.tooltip": "Applies a fix for vanilla keybind behaviour in certain scenarios. Disable only if it causes issues.",
+
+  "option.keybindsgalore.enable_attack_workaround": "Enable Attack Workaround",
+  "option.keybindsgalore.enable_attack_workaround.tooltip": "Workaround for the vanilla attack key holding behaviour. Keeps attack consistent during priority changes.",
+
+  "option.keybindsgalore.use_circular_menu": "Use Pie Menu (Circular)",
+  "option.keybindsgalore.use_circular_menu.tooltip": "Enables the circular pie menu for keybind selection instead of the default list.",
+
+  "option.keybindsgalore.show_conflict_warnings": "Show Conflict Warnings",
+  "option.keybindsgalore.show_conflict_warnings.tooltip": "Shows a warning in chat when key conflicts are detected.",
+
+  "option.keybindsgalore.filtered_categories": "Filtered Categories",
+  "option.keybindsgalore.filtered_categories.tooltip": "Key categories to exclude from conflict detection. Each entry should match a category name (e.g. 'Debug').",
+
+  "option.keybindsgalore.priority_categories": "Priority Categories",
+  "option.keybindsgalore.priority_categories.tooltip": "Entire key categories whose bindings take priority when conflicts occur (e.g. 'Movement').",
+
+  "option.keybindsgalore.priority_keybinds": "Priority Actions",
+  "option.keybindsgalore.priority_keybinds.tooltip": "Specific keybind-action pairs that always win conflicts. Format: actionID:keyName (e.g. key.jump:key.keyboard.space).",
+
+  "option.keybindsgalore.ignored_keys": "Ignored Keys",
+  "option.keybindsgalore.ignored_keys.tooltip": "GLFW key codes to skip during conflict detection. Useful for keys that are frequently rebound.",
+
+  "option.keybindsgalore.invert_ignored_keys_list": "Invert Ignored List",
+  "option.keybindsgalore.invert_ignored_keys_list.tooltip": "When enabled, the ignored keys list becomes an allowed list - only those keys will be checked for conflicts.",
+
+  "option.keybindsgalore.expansion_factor_when_selected": "Expansion Factor (Selected)",
+  "option.keybindsgalore.expansion_factor_when_selected.tooltip": "How much the selected pie menu sector expands outward. 0 = no expansion.",
+
+  "option.keybindsgalore.pie_menu_margin": "Pie Menu Margin",
+  "option.keybindsgalore.pie_menu_margin.tooltip": "Empty space around the pie menu in pixels. Range: 0-200.",
+
+  "option.keybindsgalore.pie_scale": "Pie Menu Scale",
+  "option.keybindsgalore.pie_scale.tooltip": "Overall scale of the pie menu. Values below 1 shrink it, above 1 enlarge it.",
+
+  "option.keybindsgalore.cancel_zone_scale": "Cancel Zone Scale",
+  "option.keybindsgalore.cancel_zone_scale.tooltip": "Size of the cancel zone at the centre of the pie menu, as a fraction of the total radius.",
+
+  "option.keybindsgalore.darkened_background": "Darken Background",
+  "option.keybindsgalore.darkened_background.tooltip": "Darkens the screen behind the pie menu for better visibility of sectors.",
+
+  "option.keybindsgalore.pie_menu_blend": "Pie Menu Blend",
+  "option.keybindsgalore.pie_menu_blend.tooltip": "Enables blending/transparency effects on the pie menu for a smoother look.",
+
+  "option.keybindsgalore.label_text_shadow": "Label Text Shadow",
+  "option.keybindsgalore.label_text_shadow.tooltip": "Renders a shadow behind action labels in the pie menu for improved readability.",
+
+  "option.keybindsgalore.use_software_rendering": "Software Rendering",
+  "option.keybindsgalore.use_software_rendering.tooltip": "Uses software rendering for the pie menu instead of the GPU. Useful for troubleshooting.",
+
+  "option.keybindsgalore.sector_gradation": "Sector Gradation",
+  "option.keybindsgalore.sector_gradation.tooltip": "Enables a smooth gradient across pie menu sectors for a more polished look.",
+
+  "option.keybindsgalore.animate_pie_menu": "Animate Pie Menu",
+  "option.keybindsgalore.animate_pie_menu.tooltip": "Enables opening and closing animations for the pie menu.",
+
+  "option.keybindsgalore.color": "Pie Menu Color",
+  "option.keybindsgalore.color.tooltip": "Base background colour of the pie menu.",
+
+  "option.keybindsgalore.color_select": "Selection Color",
+  "option.keybindsgalore.color_select.tooltip": "Colour used when a pie menu sector is selected.",
+
+  "option.keybindsgalore.color_highlight": "Highlight Color",
+  "option.keybindsgalore.color_highlight.tooltip": "Colour used to highlight elements in the pie menu.",
+
+  "option.keybindsgalore.color_even": "Sector Color (Even)",
+  "option.keybindsgalore.color_even.tooltip": "Colour for even-numbered pie menu sectors.",
+
+  "option.keybindsgalore.color_odd": "Sector Color (Odd)",
+  "option.keybindsgalore.color_odd.tooltip": "Colour for odd-numbered pie menu sectors.",
+
+  "option.keybindsgalore.color_selected": "Selected Sector Color",
+  "option.keybindsgalore.color_selected.tooltip": "Colour of the currently selected pie menu sector.",
+
+  "option.keybindsgalore.color_last_odd": "Last Odd Sector Color",
+  "option.keybindsgalore.color_last_odd.tooltip": "Colour for the last odd-numbered sector (used when the sector count is uneven).",
+
+  "option.keybindsgalore.color_cancel": "Cancel Zone Color",
+  "option.keybindsgalore.color_cancel.tooltip": "Colour of the cancel zone at the centre of the pie menu.",
+
+  "option.keybindsgalore.color_cancel_hover": "Cancel Zone Hover Color",
+  "option.keybindsgalore.color_cancel_hover.tooltip": "Colour of the cancel zone when the mouse hovers over it.",
+
+  "option.keybindsgalore.color_lighten_factor": "Color Lighten Factor",
+  "option.keybindsgalore.color_lighten_factor.tooltip": "RGB value used to lighten sector colours for visual effects. Range: 0-16777215.",
+
+  "option.keybindsgalore.pie_menu_alpha": "Pie Menu Alpha",
+  "option.keybindsgalore.pie_menu_alpha.tooltip": "Overall opacity of the pie menu. 0 = fully transparent, 255 = fully opaque.",
+
+  "option.keybindsgalore.label_text_inset": "Label Text Inset",
+  "option.keybindsgalore.label_text_inset.tooltip": "Distance of action labels from the outer edge of pie menu sectors, in pixels."
+}

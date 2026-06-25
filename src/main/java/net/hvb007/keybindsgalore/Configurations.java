@@ -10,6 +10,7 @@ import java.util.Arrays;
 public class Configurations {
     // --- General ---
     public static boolean DEBUG = false;
+    public static boolean VERBOSE_DEBUG = false;
 
     // --- Performance ---
     public static boolean LAZY_CONFLICT_CHECK = true;
@@ -19,8 +20,12 @@ public class Configurations {
     public static boolean LABEL_TEXT_SHADOW = false;
 
     // --- Behaviour ---
-    public static boolean USE_CIRCULAR_MENU = false;
-    public static boolean USE_SOFTWARE_RENDERING = false; // Default to false to test Owo rendering
+    public static boolean USE_CIRCULAR_MENU = true;
+    // Deprecated in 1.21.5 — Tesselator/BufferUploader removed by Mojang.
+    // All GUI rendering now goes through BufferSource.getBuffer() with a RenderType layer.
+    // This flag is kept for config compatibility but has no runtime effect.
+    public static boolean USE_SOFTWARE_RENDERING = true;
+    public static boolean SHOW_CONFLICT_WARNINGS = true; // Show conflict warnings in chat
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>(Arrays.asList("Debug"));
     public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>(Arrays.asList(340, 341, 87, 65, 83, 68, 32));
@@ -28,7 +33,15 @@ public class Configurations {
     public static boolean USE_KEYBIND_FIX = true;
     public static int PULSE_TIMER_DURATION = 5;
     public static ArrayList<String> PRIORITY_CATEGORIES = new ArrayList<>(Arrays.asList("Movement"));
-    public static ArrayList<String> PRIORITY_KEYBINDS = new ArrayList<>(Arrays.asList("key.attack", "key.use"));
+    public static ArrayList<String> PRIORITY_KEYBINDS = new ArrayList<>(Arrays.asList(
+            "key.forward:key.keyboard.w",
+            "key.left:key.keyboard.a",
+            "key.back:key.keyboard.s",
+            "key.right:key.keyboard.d",
+            "key.jump:key.keyboard.space",
+            "key.sneak:key.keyboard.left.shift",
+            "key.sprint:key.keyboard.left.control"
+    ));
 
     // --- Pie Menu Customisation ---
     public static float EXPANSION_FACTOR_WHEN_SELECTED = 0;
@@ -41,7 +54,7 @@ public class Configurations {
     public static int PIE_MENU_SELECT_COLOR = 0x00FFFFFF;
     public static int PIE_MENU_HIGHLIGHT_COLOR = 0x00EED202;
     
-    // New Configurable Colors (Defaults with ~75% opacity 0xC0)
+    // New Configurable Colors (Defaults with ~75% opacity C0)
     public static int PIE_MENU_SECTOR_COLOR_EVEN = 0xC0606060;
     public static int PIE_MENU_SECTOR_COLOR_ODD = 0xC0808080;
     public static int PIE_MENU_SECTOR_COLOR_SELECTED = 0xC0E0E0E0;
