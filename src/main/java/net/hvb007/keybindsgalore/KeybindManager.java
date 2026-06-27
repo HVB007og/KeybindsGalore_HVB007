@@ -1,5 +1,6 @@
 package net.hvb007.keybindsgalore;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -40,7 +41,17 @@ public class KeybindManager {
      * Safely gets the display name of a keybinding's category.
      */
     public static String safeGetCategory(KeyMapping binding) {
-        return binding.getCategory().id().toString();
+        return binding.getCategory().id().getPath();
+    }
+
+    /**
+     * Checks if Amecs (or a fork) is loaded. When true, we bail out of all conflict logic
+     * to avoid interfering with Amecs' own handling.
+     */
+    public static boolean isAmecsLoaded() {
+        return FabricLoader.getInstance().isModLoaded("amecs")
+            || FabricLoader.getInstance().isModLoaded("amecsapi")
+            || FabricLoader.getInstance().isModLoaded("amecs-fork");
     }
 
     /**
@@ -155,6 +166,7 @@ public class KeybindManager {
      * This stops the game from thinking a "click" happened when we are just opening the menu.
      */
     public static void handleOnKeyPressed(InputConstants.Key key, CallbackInfo ci) {
+        if (isAmecsLoaded()) return;
         if (hasConflicts(key) && !isClickHoldKey(key)) {
             // ALWAYS cancel vanilla click for conflicting keys.
             // Vanilla's `click` method blindly increments the clickCount of whichever KeyMapping 
@@ -199,6 +211,8 @@ public class KeybindManager {
      * This method decides whether to execute a priority action, open the conflict menu, or do nothing.
      */
     public static void handleKeyPress(InputConstants.Key key, boolean pressed, CallbackInfo ci) {
+        if (isAmecsLoaded()) return;
+
         if (Configurations.DEBUG) {
             KeybindsGalore.LOGGER.info("[KBG DEBUG] Key Input: {} | Pressed: {}", key.getName(), pressed);
         }
@@ -237,6 +251,13 @@ public class KeybindManager {
 
                     // Cancel the original event so we don't accidentally trigger the non-priority conflicting keys
                     ci.cancel();
+
+                    // Explicitly force-release all non-priority conflicting keys so they don't fire
+                    for (KeyMapping kb : getConflicts(key)) {
+                        if (kb == priorityKey) continue;
+                        ((KeyMappingAccessor) kb).setIsDown(false);
+                        ((KeyMappingAccessor) kb).setClickCount(0);
+                    }
 
                     if (pressed && !shownConflictWarnings.contains(key)) {
                         if (Configurations.SHOW_CONFLICT_WARNINGS) {

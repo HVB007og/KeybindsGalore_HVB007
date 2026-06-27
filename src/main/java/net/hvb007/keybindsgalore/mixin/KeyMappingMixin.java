@@ -43,6 +43,8 @@ public abstract class KeyMappingMixin {
      */
     @Inject(at = @At("HEAD"), method = "setDown", cancellable = true)
     public void setPressed(boolean pressed, CallbackInfo ci) {
+        if (KeybindManager.isAmecsLoaded()) return;
+
         KeyMapping self = (KeyMapping) (Object) this;
 
         // Block any attempt to press a conflicting key unless it's our chosen target
