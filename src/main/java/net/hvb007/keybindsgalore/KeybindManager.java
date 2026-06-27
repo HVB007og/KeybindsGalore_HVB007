@@ -258,6 +258,18 @@ public class KeybindManager {
                     // Manually force the pressed state for hold actions (like moving)
                     ((KeyMappingAccessor) priorityKey).setIsDown(pressed);
 
+                    // Force all non-priority conflicting keys to unpressed state so they
+                    // never activate even if a different code path tries to set them.
+                    List<KeyMapping> conflicts = getConflicts(key);
+                    if (conflicts != null) {
+                        for (KeyMapping kb : conflicts) {
+                            if (!kb.getName().equals(priorityKey.getName())) {
+                                ((KeyMappingAccessor) kb).setIsDown(false);
+                                ((KeyMappingAccessor) kb).setClickCount(0);
+                            }
+                        }
+                    }
+
                     if (pressed) {
                         // Manually increment the click count for click-based actions (like hotbar slots)
                         int currentClicks = ((KeyMappingAccessor) priorityKey).getClickCount();
