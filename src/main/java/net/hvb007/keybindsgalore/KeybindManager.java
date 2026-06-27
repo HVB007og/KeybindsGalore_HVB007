@@ -79,19 +79,6 @@ public class KeybindManager {
                 continue; // Ignore unbound keys.
             }
 
-            // 2. Filter out keys by GLFW key code (IGNORED_KEYS list).
-            if (Configurations.INVERT_IGNORED_KEYS_LIST) {
-                // Whitelist mode: only process keys that ARE in the list
-                if (!Configurations.IGNORED_KEYS.contains(physicalKey.getValue())) {
-                    continue;
-                }
-            } else {
-                // Blacklist mode: skip keys that ARE in the list
-                if (Configurations.IGNORED_KEYS.contains(physicalKey.getValue())) {
-                    continue;
-                }
-            }
-
             conflictTable.computeIfAbsent(physicalKey, k -> new ArrayList<>()).add(keybinding);
         }
 
