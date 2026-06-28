@@ -45,6 +45,9 @@ public abstract class KeyMappingMixin {
     public void setPressed(boolean pressed, CallbackInfo ci) {
         KeyMapping self = (KeyMapping) (Object) this;
 
+        // When Amecs is loaded, don't block any key state — let Amecs handle dispatch.
+        if (KeybindManager.isAmecsLoaded()) return;
+
         // Block any attempt to press a conflicting key unless it's our chosen target
         // or the special-cased 'toggleGui' key.
         if (pressed && KeybindManager.hasConflicts(this.key)) {

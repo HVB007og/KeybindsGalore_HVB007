@@ -1,5 +1,6 @@
 package net.hvb007.keybindsgalore;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -41,6 +42,12 @@ public class KeybindManager {
      */
     public static String safeGetCategory(KeyMapping binding) {
         return binding.getCategory();
+    }
+
+    public static boolean isAmecsLoaded() {
+        return FabricLoader.getInstance().isModLoaded("amecs")
+            || FabricLoader.getInstance().isModLoaded("amecsapi")
+            || FabricLoader.getInstance().isModLoaded("amecs-fork");
     }
 
     /**
@@ -155,6 +162,7 @@ public class KeybindManager {
      * This stops the game from thinking a "click" happened when we are just opening the menu.
      */
     public static void handleOnKeyPressed(InputConstants.Key key, CallbackInfo ci) {
+        if (isAmecsLoaded()) return;
         if (hasConflicts(key) && !isClickHoldKey(key)) {
             // ALWAYS cancel vanilla click for conflicting keys.
             // Vanilla's `click` method blindly increments the clickCount of whichever KeyMapping 
@@ -210,6 +218,23 @@ public class KeybindManager {
                 KeybindsGalore.LOGGER.info("[KBG DEBUG] Conflict detected for key: {}", key.getName());
             }
 
+            // --- Advisory mode for Amecs ---
+            // When Amecs is loaded, don't cancel events or manage key state.
+            // Let Amecs dispatch all actions. KBG only shows warnings and the conflict menu.
+            if (isAmecsLoaded()) {
+                if (pressed && !shownConflictWarnings.contains(key)) {
+                    KeyMapping priorityKey = getPriorityKey(key);
+                    if (priorityKey != null) {
+                        showConflictWarning(key, priorityKey);
+                    }
+                    if (priorityKey == null) {
+                        KeybindsGalore.LOGGER.info("[KBG] Amecs detected: conflict advisory for key '{}' — no priority set.", key.getName());
+                        openConflictMenu(key);
+                    }
+                }
+                return;
+            }
+
             if (!isClickHoldKey(key)) {
                 KeyMapping priorityKey = getPriorityKey(key);
 
@@ -239,39 +264,7 @@ public class KeybindManager {
                     ci.cancel();
 
                     if (pressed && !shownConflictWarnings.contains(key)) {
-                        if (Configurations.SHOW_CONFLICT_WARNINGS) {
-                            Minecraft client = Minecraft.getInstance();
-                            if (client.player != null) {
-                                MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Key '")
-                                    .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
-                                    .append(Component.literal("' has conflicts. Prioritizing '"))
-                                    .append(Component.translatable(priorityKey.getName()).withStyle(ChatFormatting.AQUA))
-                                    .append(Component.literal("'."))
-                                    .withStyle(ChatFormatting.RED);
-                                client.player.displayClientMessage(warningHeader, false);
-
-                                // ADDED: Display other conflicting keybinds
-                                MutableComponent otherKeys = Component.literal("");
-                                boolean first = true;
-                                for (KeyMapping otherKb : getConflicts(key)) {
-                                    if (otherKb == priorityKey) continue;
-                                    if (!first) {
-                                        otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
-                                    }
-                                    otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
-                                    first = false;
-                                }
-
-                                if (!otherKeys.getString().isEmpty()) {
-                                     client.player.displayClientMessage(
-                                        Component.literal("Other conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
-                                        .append(otherKeys)
-                                        .append(Component.literal(". Please rebind them in your controls! If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY)),
-                                        false
-                                    );
-                                }
-                            }
-                        }
+                        showConflictWarning(key, priorityKey);
                         shownConflictWarnings.add(key);
                     }
                     return; // Return immediately, letting vanilla take over
@@ -320,6 +313,43 @@ public class KeybindManager {
                     ci.cancel();
                 }
             }
+        }
+    }
+
+    /**
+     * Shows the conflict warning chat message for a given key and its priority binding.
+     */
+    private static void showConflictWarning(InputConstants.Key key, KeyMapping priorityKey) {
+        if (!Configurations.SHOW_CONFLICT_WARNINGS) return;
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null) return;
+
+        MutableComponent warningHeader = Component.literal("KeybindsGalore Warning: Key '")
+            .append(Component.literal(key.getDisplayName().getString()).withStyle(ChatFormatting.GOLD))
+            .append(Component.literal("' has conflicts. Prioritizing '"))
+            .append(Component.translatable(priorityKey.getName()).withStyle(ChatFormatting.AQUA))
+            .append(Component.literal("'."))
+            .withStyle(ChatFormatting.RED);
+        client.player.displayClientMessage(warningHeader, false);
+
+        MutableComponent otherKeys = Component.literal("");
+        boolean first = true;
+        for (KeyMapping otherKb : getConflicts(key)) {
+            if (otherKb == priorityKey) continue;
+            if (!first) {
+                otherKeys.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
+            }
+            otherKeys.append(Component.translatable(otherKb.getName()).withStyle(ChatFormatting.YELLOW));
+            first = false;
+        }
+
+        if (!otherKeys.getString().isEmpty()) {
+            client.player.displayClientMessage(
+                Component.literal("Other conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
+                .append(otherKeys)
+                .append(Component.literal(". Please rebind them in your controls! If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY)),
+                false
+            );
         }
     }
 
