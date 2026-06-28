@@ -1,6 +1,6 @@
 package net.hvb007.keybindsgalore;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /**
  * @deprecated Replaced by TriangleStripRenderer (1.21.5 GPU-batched approach).
@@ -27,7 +27,7 @@ public class KBRenderer {
      * @param y3 Y coordinate of the third vertex
      * @param color The ARGB color value
      */
-    public static void fillTriangle(GuiGraphics drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
+    public static void fillTriangle(GuiGraphicsExtractor drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
         // Sort vertices by y coordinate
         if (y1 > y2) {
             int tx = x1; x1 = x2; x2 = tx;
@@ -64,7 +64,7 @@ public class KBRenderer {
         }
     }
 
-    public static void drawTriangle(GuiGraphics drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
+    public static void drawTriangle(GuiGraphicsExtractor drawContext, int x1, int y1, int x2, int y2, int x3, int y3, int color) {
         // Use software rendering as it is the most reliable method for GUI in this version
         fillTriangle(drawContext, x1, y1, x2, y2, x3, y3, color);
     }

@@ -3,7 +3,7 @@ package net.hvb007.keybindsgalore;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.KeyMapping;
 
@@ -34,7 +34,7 @@ public class KeybindsGalore implements ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("KeybindsGalore initialising...");
 
-        openCaptureKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        openCaptureKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.keybindsgalore.open_capture",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_K,

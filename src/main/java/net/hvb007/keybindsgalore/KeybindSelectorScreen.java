@@ -7,7 +7,7 @@ import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -48,7 +48,7 @@ public class KeybindSelectorScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float delta) {
         renderBackground(ctx, mouseX, mouseY, delta);
         if (firstFrame) {
             widthCenter = width / 2;
@@ -127,7 +127,7 @@ public class KeybindSelectorScreen extends Screen {
     /**
      * Renders the background boxes for each keybinding in the list.
      */
-    private void renderMenu(GuiGraphics ctx) {
+    private void renderMenu(GuiGraphicsExtractor ctx) {
         for (int i = 0; i < topList.size(); i++) {
             BoxDimensions dim = cachedBoxes.get(i);
             int x = widthCenter - (dim.finalWidth / 2);
@@ -145,7 +145,7 @@ public class KeybindSelectorScreen extends Screen {
     /**
      * Renders the text labels for each keybinding.
      */
-    private void renderLabels(GuiGraphics ctx) {
+    private void renderLabels(GuiGraphicsExtractor ctx) {
         for (int i = 0; i < conflicts.size(); i++) {
             BoxDimensions dim = cachedBoxes.get(i);
             int baseY = (i < halfCount)
@@ -162,14 +162,14 @@ public class KeybindSelectorScreen extends Screen {
                 name = ChatFormatting.UNDERLINE + name;
             }
             int tw = font.width(name);
-            ctx.drawString(font, name,
+            ctx.text(font, name,
                     x + (dim.finalWidth - tw) / 2,
                     y + (dim.height - font.lineHeight) / 2,
                     0xFFFFFFFF, true);
         }
     }
 
-    private void drawBox(GuiGraphics ctx, int x, int y, int w, int h, int idx) {
+    private void drawBox(GuiGraphicsExtractor ctx, int x, int y, int w, int h, int idx) {
         int bg = Configurations.PIE_MENU_COLOR;
         if (customDataManager.hasCustomData) {
             try {
@@ -234,8 +234,7 @@ public class KeybindSelectorScreen extends Screen {
         return false;
     }
 
-    @Override
-    public void renderBackground(GuiGraphics ctx, int mx, int my, float d) {
+    public void renderBackground(GuiGraphicsExtractor ctx, int mx, int my, float d) {
         if (Configurations.DARKENED_BACKGROUND) {
             ctx.fill(0, 0, width, height, 0x60000000);
         }

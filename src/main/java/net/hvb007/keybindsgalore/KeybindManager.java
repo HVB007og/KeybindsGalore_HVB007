@@ -1,6 +1,5 @@
 package net.hvb007.keybindsgalore;
 
-import net.fabricmc.loader.api.FabricLoader;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -18,6 +17,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * Manages the detection and resolution of conflicting keybinds.
@@ -39,19 +40,11 @@ public class KeybindManager {
 
     /**
      * Safely gets the display name of a keybinding's category.
+     * Uses getPath() to strip the namespace (e.g. "minecraft:debug" -> "debug")
+     * so that config values like "Debug" match correctly.
      */
     public static String safeGetCategory(KeyMapping binding) {
         return binding.getCategory().id().getPath();
-    }
-
-    /**
-     * Checks if Amecs (or a fork) is loaded. When true, we bail out of all conflict logic
-     * to avoid interfering with Amecs' own handling.
-     */
-    public static boolean isAmecsLoaded() {
-        return FabricLoader.getInstance().isModLoaded("amecs")
-            || FabricLoader.getInstance().isModLoaded("amecsapi")
-            || FabricLoader.getInstance().isModLoaded("amecs-fork");
     }
 
     /**
@@ -59,6 +52,14 @@ public class KeybindManager {
      * This is the core of the conflict detection system.
      */
     public static void findAllConflicts() {
+        // If Amecs (or a fork) is loaded, skip all conflict detection — Amecs
+        // intentionally allows multiple keybindings per key and handles them itself.
+        if (isAmecsLoaded()) {
+            conflictTable.clear();
+            shownConflictWarnings.clear();
+            return;
+        }
+
         KeybindsGalore.LOGGER.info("Scanning for conflicting keybinds...");
         Minecraft client = Minecraft.getInstance();
         
@@ -83,6 +84,12 @@ public class KeybindManager {
 
         // Clean up the table by removing entries with no actual conflicts.
         conflictTable.keySet().removeIf(key -> conflictTable.get(key).size() < 2);
+    }
+
+    public static boolean isAmecsLoaded() {
+        return FabricLoader.getInstance().isModLoaded("amecs")
+            || FabricLoader.getInstance().isModLoaded("amecsapi")
+            || FabricLoader.getInstance().isModLoaded("amecs-fork");
     }
 
     /**
@@ -166,7 +173,9 @@ public class KeybindManager {
      * This stops the game from thinking a "click" happened when we are just opening the menu.
      */
     public static void handleOnKeyPressed(InputConstants.Key key, CallbackInfo ci) {
+        // Let Amecs handle its own key logic when present
         if (isAmecsLoaded()) return;
+
         if (hasConflicts(key) && !isClickHoldKey(key)) {
             // ALWAYS cancel vanilla click for conflicting keys.
             // Vanilla's `click` method blindly increments the clickCount of whichever KeyMapping 
@@ -211,6 +220,7 @@ public class KeybindManager {
      * This method decides whether to execute a priority action, open the conflict menu, or do nothing.
      */
     public static void handleKeyPress(InputConstants.Key key, boolean pressed, CallbackInfo ci) {
+        // Let Amecs handle its own key logic when present
         if (isAmecsLoaded()) return;
 
         if (Configurations.DEBUG) {
@@ -235,6 +245,18 @@ public class KeybindManager {
                     // Manually force the pressed state for hold actions (like moving)
                     ((KeyMappingAccessor) priorityKey).setIsDown(pressed);
 
+                    // Force all non-priority conflicting keys to unpressed state so they
+                    // never activate even if a different code path tries to set them.
+                    List<KeyMapping> conflicts = getConflicts(key);
+                    if (conflicts != null) {
+                        for (KeyMapping kb : conflicts) {
+                            if (!kb.getName().equals(priorityKey.getName())) {
+                                ((KeyMappingAccessor) kb).setIsDown(false);
+                                ((KeyMappingAccessor) kb).setClickCount(0);
+                            }
+                        }
+                    }
+
                     if (pressed) {
                         // Manually increment the click count for click-based actions (like hotbar slots)
                         int currentClicks = ((KeyMappingAccessor) priorityKey).getClickCount();
@@ -252,13 +274,6 @@ public class KeybindManager {
                     // Cancel the original event so we don't accidentally trigger the non-priority conflicting keys
                     ci.cancel();
 
-                    // Explicitly force-release all non-priority conflicting keys so they don't fire
-                    for (KeyMapping kb : getConflicts(key)) {
-                        if (kb == priorityKey) continue;
-                        ((KeyMappingAccessor) kb).setIsDown(false);
-                        ((KeyMappingAccessor) kb).setClickCount(0);
-                    }
-
                     if (pressed && !shownConflictWarnings.contains(key)) {
                         if (Configurations.SHOW_CONFLICT_WARNINGS) {
                             Minecraft client = Minecraft.getInstance();
@@ -269,7 +284,7 @@ public class KeybindManager {
                                     .append(Component.translatable(priorityKey.getName()).withStyle(ChatFormatting.AQUA))
                                     .append(Component.literal("'."))
                                     .withStyle(ChatFormatting.RED);
-                                client.player.displayClientMessage(warningHeader, false);
+                                client.player.sendSystemMessage(warningHeader);
 
                                 // ADDED: Display other conflicting keybinds
                                 MutableComponent otherKeys = Component.literal("");
@@ -284,11 +299,10 @@ public class KeybindManager {
                                 }
 
                                 if (!otherKeys.getString().isEmpty()) {
-                                     client.player.displayClientMessage(
+                                     client.player.sendSystemMessage(
                                         Component.literal("Other conflicting keybinds: ").withStyle(ChatFormatting.GRAY)
                                         .append(otherKeys)
-                                        .append(Component.literal(". Please rebind them in your controls! If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY)),
-                                        false
+                                        .append(Component.literal(". Please rebind them in your controls! If you do not want to see these error Messages in Chat, Set SHOW_CONFLICT_WARNINGS=false in keybindsgalore.properties file in your config folder.").withStyle(ChatFormatting.GRAY))
                                     );
                                 }
                             }
@@ -364,10 +378,10 @@ public class KeybindManager {
         findAllConflicts();
         
         if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.displayClientMessage(
+            Minecraft.getInstance().player.sendSystemMessage(
                 Component.translatable("text.keybindsgalore.action_prioritized", 
                 Component.translatable(selected.getName()), 
-                Component.translatable(key.getName())), false
+                Component.translatable(key.getName()))
             );
         }
     }
@@ -389,9 +403,9 @@ public class KeybindManager {
             findAllConflicts();
             
             if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(
+                Minecraft.getInstance().player.sendSystemMessage(
                     Component.translatable("text.keybindsgalore.priority_removed", 
-                    Component.translatable(key.getName())), false
+                    Component.translatable(key.getName()))
                 );
             }
         }
