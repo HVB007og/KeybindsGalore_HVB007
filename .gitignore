@@ -42,3 +42,6 @@ replay_*.log
 
 
 jars/
+
+.slim/deepwork/
+
