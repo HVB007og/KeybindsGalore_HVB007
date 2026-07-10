@@ -1,6 +1,6 @@
-modLoader="javafml"
+﻿modLoader="javafml"
 loaderVersion="[1,)"
-license="MIT"
+license="LGPL-3.0-only"
 issueTrackerURL=""
 
 [[mixins]]
