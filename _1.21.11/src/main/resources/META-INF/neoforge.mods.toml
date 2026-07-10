@@ -30,6 +30,6 @@ v1.7.2:
 [[dependencies.keybindsgalore]]
     modId="minecraft"
     type="required"
-    versionRange="[1.21.5,1.22)"
+    versionRange="[1.21.11,1.22)"
     ordering="NONE"
     side="BOTH"

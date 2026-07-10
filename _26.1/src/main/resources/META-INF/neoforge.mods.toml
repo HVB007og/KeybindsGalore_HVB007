@@ -24,12 +24,12 @@ v1.7.2:
 [[dependencies.keybindsgalore]]
     modId="neoforge"
     type="required"
-    versionRange="[21,)"
+    versionRange="[26.1,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.keybindsgalore]]
     modId="minecraft"
     type="required"
-    versionRange="[1.21.5,1.22)"
+    versionRange="[26.1,26.2)"
     ordering="NONE"
     side="BOTH"
