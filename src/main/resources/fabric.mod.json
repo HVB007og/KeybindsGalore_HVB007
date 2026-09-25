@@ -4,7 +4,7 @@
     "version": "${version}",
 
     "name": "Keybinds Galore",
-    "description": "Keybinds Galore enhances Minecraft's keybinding system with a pie menu, priority actions, conflict detection, and more.\\nv1.7.2 (Fabric 1.21.7):\\n- Upgraded to Minecraft 1.21.7\\n- owo-lib-based pie menu rendering (OwoUIDrawContext.drawRing/drawCircle)\\n- Custom pipelines via OwoUIPipelines\\n- Full Cloth Config GUI with all options + hover tooltips\\n- All prior features: pie menu, K-key capture flow, priority system",
+    "description": "Keybinds Galore enhances Minecraft's keybinding system with a pie menu, priority actions, conflict detection, and more.\\nv1.7.2 (Fabric 26.2):\\n- Upgraded to Minecraft 26.2 (unobfuscated)\\n- Fabric API 0.152.1+26.2, Loom 1.17, Loader 0.19.3\\n- All prior features: pie menu, K-key capture flow, priority system",
     "authors": [
        "Blender",
        "HVB007",
@@ -38,8 +38,12 @@
     ],
     "depends": {
         "fabricloader": ">=0.19.3",
-        "minecraft": "1.21.7",
-       "java": ">=21",
-        "owo-lib": ">=0.12.21+1.21.6"
+        "minecraft": "26.2",
+        "java": ">=25",
+        "fabric-api": ">=0.152.1+26.2"
+    },
+    "recommends": {
+        "cloth-config": ">=26.2.155",
+        "modmenu": ">=20.0.2"
     }
 }

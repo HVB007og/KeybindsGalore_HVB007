@@ -1,5 +1,7 @@
 package net.hvb007.keybindsgalore;
 
+import net.hvb007.keybindsgalore.config.ConfigurationSnapshot;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -67,4 +69,84 @@ public class Configurations {
     public static boolean SECTOR_GRADATION = true;
     public static int LABEL_TEXT_INSET = 6;
     public static boolean ANIMATE_PIE_MENU = true;
+
+    public static ConfigurationSnapshot snapshot() {
+        return new ConfigurationSnapshot(
+                DEBUG,
+                VERBOSE_DEBUG,
+                LAZY_CONFLICT_CHECK,
+                CIRCLE_VERTICES,
+                PIE_MENU_BLEND,
+                DARKENED_BACKGROUND,
+                LABEL_TEXT_SHADOW,
+                USE_CIRCULAR_MENU,
+                USE_SOFTWARE_RENDERING,
+                SHOW_CONFLICT_WARNINGS,
+                ENABLE_ATTACK_WORKAROUND,
+                FILTERED_CATEGORY_KEYS,
+                IGNORED_KEYS,
+                INVERT_IGNORED_KEYS_LIST,
+                USE_KEYBIND_FIX,
+                PULSE_TIMER_DURATION,
+                PRIORITY_CATEGORIES,
+                PRIORITY_KEYBINDS,
+                EXPANSION_FACTOR_WHEN_SELECTED,
+                PIE_MENU_MARGIN,
+                PIE_MENU_SCALE,
+                CANCEL_ZONE_SCALE,
+                PIE_MENU_COLOR,
+                PIE_MENU_SELECT_COLOR,
+                PIE_MENU_HIGHLIGHT_COLOR,
+                PIE_MENU_SECTOR_COLOR_EVEN,
+                PIE_MENU_SECTOR_COLOR_ODD,
+                PIE_MENU_SECTOR_COLOR_SELECTED,
+                PIE_MENU_SECTOR_COLOR_LAST_ODD,
+                PIE_MENU_CANCEL_ZONE_COLOR,
+                PIE_MENU_CANCEL_ZONE_HOVER_COLOR,
+                PIE_MENU_COLOR_LIGHTEN_FACTOR,
+                PIE_MENU_ALPHA,
+                SECTOR_GRADATION,
+                LABEL_TEXT_INSET,
+                ANIMATE_PIE_MENU
+        );
+    }
+
+    public static void apply(ConfigurationSnapshot snapshot) {
+        DEBUG = snapshot.debug();
+        VERBOSE_DEBUG = snapshot.verboseDebug();
+        LAZY_CONFLICT_CHECK = snapshot.lazyConflictCheck();
+        CIRCLE_VERTICES = snapshot.circleVertices();
+        PIE_MENU_BLEND = snapshot.pieMenuBlend();
+        DARKENED_BACKGROUND = snapshot.darkenedBackground();
+        LABEL_TEXT_SHADOW = snapshot.labelTextShadow();
+        USE_CIRCULAR_MENU = snapshot.useCircularMenu();
+        USE_SOFTWARE_RENDERING = snapshot.useSoftwareRendering();
+        SHOW_CONFLICT_WARNINGS = snapshot.showConflictWarnings();
+        ENABLE_ATTACK_WORKAROUND = snapshot.enableAttackWorkaround();
+        FILTERED_CATEGORY_KEYS = new ArrayList<>(snapshot.filteredCategoryKeys());
+        IGNORED_KEYS = new ArrayList<>(snapshot.ignoredKeys());
+        INVERT_IGNORED_KEYS_LIST = snapshot.invertIgnoredKeysList();
+        USE_KEYBIND_FIX = snapshot.useKeybindFix();
+        PULSE_TIMER_DURATION = snapshot.pulseTimerDuration();
+        PRIORITY_CATEGORIES = new ArrayList<>(snapshot.priorityCategories());
+        PRIORITY_KEYBINDS = new ArrayList<>(snapshot.priorityKeybinds());
+        EXPANSION_FACTOR_WHEN_SELECTED = snapshot.expansionFactorWhenSelected();
+        PIE_MENU_MARGIN = snapshot.pieMenuMargin();
+        PIE_MENU_SCALE = snapshot.pieMenuScale();
+        CANCEL_ZONE_SCALE = snapshot.cancelZoneScale();
+        PIE_MENU_COLOR = snapshot.pieMenuColor();
+        PIE_MENU_SELECT_COLOR = snapshot.pieMenuSelectColor();
+        PIE_MENU_HIGHLIGHT_COLOR = snapshot.pieMenuHighlightColor();
+        PIE_MENU_SECTOR_COLOR_EVEN = snapshot.pieMenuSectorColorEven();
+        PIE_MENU_SECTOR_COLOR_ODD = snapshot.pieMenuSectorColorOdd();
+        PIE_MENU_SECTOR_COLOR_SELECTED = snapshot.pieMenuSectorColorSelected();
+        PIE_MENU_SECTOR_COLOR_LAST_ODD = snapshot.pieMenuSectorColorLastOdd();
+        PIE_MENU_CANCEL_ZONE_COLOR = snapshot.pieMenuCancelZoneColor();
+        PIE_MENU_CANCEL_ZONE_HOVER_COLOR = snapshot.pieMenuCancelZoneHoverColor();
+        PIE_MENU_COLOR_LIGHTEN_FACTOR = snapshot.pieMenuColorLightenFactor();
+        PIE_MENU_ALPHA = snapshot.pieMenuAlpha();
+        SECTOR_GRADATION = snapshot.sectorGradation();
+        LABEL_TEXT_INSET = snapshot.labelTextInset();
+        ANIMATE_PIE_MENU = snapshot.animatePieMenu();
+    }
 }

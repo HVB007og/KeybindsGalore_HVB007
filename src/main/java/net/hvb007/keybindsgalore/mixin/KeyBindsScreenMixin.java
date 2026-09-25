@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.Mixin;
  */
 @Mixin(KeyBindsScreen.class)
 public abstract class KeyBindsScreenMixin extends OptionsSubScreen {
-    public KeyBindsScreenMixin(Screen parent, Options gameOptions, Component title) {
-        super(parent, gameOptions, title);
+    public KeyBindsScreenMixin(Screen parent, Options gameOptions) {
+        super(parent, gameOptions, Component.translatable("options.controls"));
     }
 
     /**

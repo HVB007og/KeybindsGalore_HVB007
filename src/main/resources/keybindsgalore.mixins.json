@@ -1,12 +1,13 @@
 {
 	"required": true,
 	"package": "net.hvb007.keybindsgalore.mixin",
-	"compatibilityLevel": "JAVA_21",
+	"compatibilityLevel": "JAVA_25",
 	"mixins": [
       "KeyMappingMixin",
       "KeyMappingAccessor",
       "KeyBindsScreenMixin",
-      "MinecraftAccessor"
+      "MinecraftAccessor",
+      "GuiGraphicsExtractorAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

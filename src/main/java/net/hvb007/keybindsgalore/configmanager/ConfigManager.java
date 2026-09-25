@@ -4,15 +4,20 @@
  */
 package net.hvb007.keybindsgalore.configmanager;
 
+import net.hvb007.keybindsgalore.Configurations;
 import net.hvb007.keybindsgalore.KeybindsGalore;
+import net.hvb007.keybindsgalore.config.ConfigurationCodec;
+import net.hvb007.keybindsgalore.config.ConfigurationDocument;
+import net.hvb007.keybindsgalore.config.ConfigurationMigrator;
+import net.hvb007.keybindsgalore.config.ConfigurationPersistence;
+import net.hvb007.keybindsgalore.config.ConfigurationSnapshotCodec;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Locale;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Manages reading the .properties config file and applying its values
@@ -87,26 +92,41 @@ public class ConfigManager {
         this.errorFlag = false;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(this.configFile))) {
-            for (String line : reader.lines().toArray(String[]::new)) {
-                if (line.trim().startsWith("#") || line.isBlank()) {
-                    continue;
-                }
+            ConfigurationDocument.ParseResult parsed = ConfigurationDocument.parse(reader.lines().toList());
+            for (String error : parsed.errors()) {
+                KeybindsGalore.LOGGER.error(error);
+                this.errorFlag = true;
+            }
 
-                String[] entry = line.split("=", 2);
-                if (entry.length < 2) {
-                    continue;
+            Map<String, String> migrated = ConfigurationMigrator.migrate(parsed.values());
+            if (isActiveConfigurations()) {
+                for (String key : migrated.keySet()) {
+                    if (!ConfigurationSnapshotCodec.isKnownKey(key)) {
+                        KeybindsGalore.LOGGER.error("No matching config field found for entry: {}", key);
+                        this.errorFlag = true;
+                    }
                 }
-
                 try {
-                    String key = entry[0].trim().toUpperCase(Locale.ROOT);
-                    String value = entry[1].trim();
-                    Field field = this.configurableClass.getDeclaredField(key);
-                    setField(field, value);
+                    Configurations.apply(ConfigurationSnapshotCodec.fromMap(migrated, Configurations.snapshot()));
+                    return;
+                } catch (RuntimeException e) {
+                    KeybindsGalore.LOGGER.error("Malformed configuration snapshot", e);
+                    this.errorFlag = true;
+                }
+            }
+
+            for (var entry : migrated.entrySet()) {
+                if (isActiveConfigurations() && !ConfigurationSnapshotCodec.isKnownKey(entry.getKey())) {
+                    continue;
+                }
+                try {
+                    Field field = this.configurableClass.getDeclaredField(entry.getKey());
+                    setField(field, entry.getValue());
                 } catch (NoSuchFieldException e) {
-                    KeybindsGalore.LOGGER.error("No matching config field found for entry: {}", entry[0].trim());
+                    KeybindsGalore.LOGGER.error("No matching config field found for entry: {}", entry.getKey());
                     this.errorFlag = true;
                 } catch (Exception e) {
-                    KeybindsGalore.LOGGER.error("Malformed config entry: {}", line, e);
+                    KeybindsGalore.LOGGER.error("Malformed config entry: {}", entry.getKey() + "=" + entry.getValue(), e);
                     this.errorFlag = true;
                 }
             }
@@ -120,59 +140,8 @@ public class ConfigManager {
      * Sets a field's value based on its type.
      */
     private void setField(Field field, String value) throws IllegalAccessException {
-        Class<?> type = field.getType();
-
-        if (type == short.class) {
-            if (value.startsWith("0x")) {
-                field.setShort(this.configurableClassInstance, Short.parseShort(value.replace("0x", ""), 16));
-            } else {
-                field.setShort(this.configurableClassInstance, Short.parseShort(value));
-            }
-        } else if (type == int.class) {
-            if (value.startsWith("0x")) {
-                field.setInt(this.configurableClassInstance, (int) Long.parseLong(value.replace("0x", ""), 16));
-            } else {
-                field.setInt(this.configurableClassInstance, Integer.parseInt(value));
-            }
-        } else if (type == float.class) {
-            field.setFloat(this.configurableClassInstance, Float.parseFloat(value));
-        } else if (type == boolean.class) {
-            field.setBoolean(this.configurableClassInstance, Boolean.parseBoolean(value));
-        } else if (type == ArrayList.class) {
-            // Get the generic type of the ArrayList
-            ParameterizedType genericType = (ParameterizedType) field.getGenericType();
-            Type listType = genericType.getActualTypeArguments()[0];
-
-            String[] values = value.replaceAll("[\\[\\]]+", "").split(",");
-            
-            if (listType == String.class) {
-                ArrayList<String> list = new ArrayList<>();
-                if (!(values.length == 1 && values[0].trim().isEmpty())) {
-                    for (String s : values) {
-                        String clean = s.trim();
-                        if (!clean.isEmpty()) {
-                            list.add(clean);
-                        }
-                    }
-                }
-                field.set(this.configurableClassInstance, list);
-            } else if (listType == Integer.class) {
-                ArrayList<Integer> list = new ArrayList<>();
-                if (!(values.length == 1 && values[0].trim().isEmpty())) {
-                    for (String s : values) {
-                        String clean = s.trim();
-                        if (!clean.isEmpty()) {
-                            list.add(Integer.parseInt(clean));
-                        }
-                    }
-                }
-                field.set(this.configurableClassInstance, list);
-            } else {
-                KeybindsGalore.LOGGER.error("Unrecognized ArrayList type for field: {}", field.getName());
-            }
-        } else {
-            KeybindsGalore.LOGGER.error("Unrecognized data type for field: {}", field.getName());
-        }
+        Object parsedValue = ConfigurationCodec.parseValue(field.getType(), field.getGenericType(), value);
+        field.set(this.configurableClassInstance, parsedValue);
     }
 
     /**
@@ -193,29 +162,32 @@ public class ConfigManager {
      * Saves the current configuration fields back to the .properties file.
      */
     public void saveConfigFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.configFile))) {
-            writer.write("# KeybindsGalore Configuration File\n");
-            writer.write("# This file is automatically updated by the in-game GUI.\n\n");
+        List<String> lines = new ArrayList<>();
+        lines.add("# KeybindsGalore Configuration File");
+        lines.add("# This file is automatically updated by the in-game GUI.");
+        lines.add("");
 
+        if (isActiveConfigurations()) {
+            lines.addAll(ConfigurationSnapshotCodec.toLines(Configurations.snapshot()));
+        } else {
             for (Field field : this.configurableClass.getDeclaredFields()) {
                 try {
-                    String key = field.getName().toUpperCase(Locale.ROOT);
                     Object value = field.get(this.configurableClassInstance);
-                    
-                    if (value instanceof Integer && field.getName().contains("COLOR")) {
-                        // Format colors as hex for readability
-                        writer.write(String.format("%s=0x%08X\n", key, (Integer) value));
-                    } else if (value instanceof ArrayList) {
-                        writer.write(String.format("%s=%s\n", key, value.toString()));
-                    } else {
-                        writer.write(String.format("%s=%s\n", key, value.toString()));
-                    }
+                    lines.add(ConfigurationCodec.formatValue(field.getName(), value));
                 } catch (IllegalAccessException e) {
                     KeybindsGalore.LOGGER.error("Failed to access field: {}", field.getName(), e);
                 }
             }
+        }
+
+        try {
+            ConfigurationPersistence.write(this.configFile.toPath(), lines);
         } catch (IOException e) {
             KeybindsGalore.LOGGER.error("IOException while saving config file!", e);
         }
+    }
+
+    private boolean isActiveConfigurations() {
+        return this.configurableClass == Configurations.class && this.configurableClassInstance == null;
     }
 }

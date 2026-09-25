@@ -3,9 +3,10 @@ package net.hvb007.keybindsgalore;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
@@ -13,32 +14,135 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
+import net.hvb007.keybindsgalore.api.BindingRegistry;
+import net.hvb007.keybindsgalore.api.KeybindApi;
 import net.hvb007.keybindsgalore.configmanager.ConfigManager;
 import net.hvb007.keybindsgalore.customdata.DataManager;
+import net.hvb007.keybindsgalore.integrations.minecraft.MinecraftBindingSource;
+import net.hvb007.keybindsgalore.input.minecraft.PulseController;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 
 public class KeybindsGalore implements ClientModInitializer {
     public static ConfigManager configManager;
     public static DataManager customDataManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("keybindsgalore");
+    private static final BindingRegistry BINDING_REGISTRY = new BindingRegistry();
+    private static boolean minecraftSourceRegistered;
+
+    public static KeybindApi getApi() {
+        return BINDING_REGISTRY;
+    }
 
     // The keybinding we want to force-press after a menu selection.
     public static KeyMapping activePulseTarget = null;
     // Ticks remaining to hold the activePulseTarget as pressed.
     public static int pulseTimer = 0;
+    public static KeyMapping activePriorityTarget = null;
+    private static final Set<KeyMapping> ACTIVE_PRIORITY_TARGETS =
+            Collections.newSetFromMap(new IdentityHashMap<>());
+    private static final PulseController PULSE_CONTROLLER = new PulseController();
 
     public static KeyMapping openCaptureKey;
+    private static InputConstants.Key captureCooldownKey;
+    private static int captureCooldownTicks;
+
+    public static void startPulse(KeyMapping target) {
+        PULSE_CONTROLLER.start(target, Configurations.PULSE_TIMER_DURATION);
+    }
+
+    public static void tickPulse() {
+        PULSE_CONTROLLER.tick();
+    }
+
+    public static void clearPulseIf(KeyMapping target) {
+        PULSE_CONTROLLER.clearIf(target);
+    }
+
+    public static boolean isPriorityTarget(KeyMapping target) {
+        return ACTIVE_PRIORITY_TARGETS.contains(target);
+    }
+
+    public static void addPriorityTarget(KeyMapping target) {
+        if (target != null) {
+            ACTIVE_PRIORITY_TARGETS.add(target);
+            activePriorityTarget = target;
+        }
+    }
+
+    public static void removePriorityTarget(KeyMapping target) {
+        if (target != null) {
+            ACTIVE_PRIORITY_TARGETS.remove(target);
+        }
+        if (activePriorityTarget == target) {
+            activePriorityTarget = ACTIVE_PRIORITY_TARGETS.isEmpty()
+                    ? null
+                    : ACTIVE_PRIORITY_TARGETS.iterator().next();
+        }
+    }
+
+    public static void resetInputOwnership() {
+        PULSE_CONTROLLER.reset();
+        for (KeyMapping target : ACTIVE_PRIORITY_TARGETS) {
+            ((KeyMappingAccessor) target).setIsDown(false);
+        }
+        ACTIVE_PRIORITY_TARGETS.clear();
+        activePriorityTarget = null;
+    }
+
+    public static void beginCaptureCooldown(InputConstants.Key key) {
+        captureCooldownKey = key;
+        captureCooldownTicks = 5;
+    }
+
+    public static boolean shouldBlockCapturedKey(InputConstants.Key key) {
+        return captureCooldownTicks > 0 && captureCooldownKey != null && captureCooldownKey.equals(key);
+    }
+
+    public static boolean isCaptureKey(InputConstants.Key key) {
+        return openCaptureKey != null && ((KeyMappingAccessor) openCaptureKey).getKey().equals(key);
+    }
+
+    public static boolean tryOpenCaptureScreen(InputConstants.Key key) {
+        if (!isCaptureKey(key) || captureCooldownTicks > 0) {
+            return false;
+        }
+        if (Minecraft.getInstance().gui.screen() instanceof net.hvb007.keybindsgalore.configmanager.KeyCaptureScreen) {
+            return true;
+        }
+        if (Minecraft.getInstance().gui.screen() != null) {
+            return false;
+        }
+        openCaptureScreen();
+        return true;
+    }
+
+    private static void openCaptureScreen() {
+        Minecraft client = Minecraft.getInstance();
+        beginCaptureCooldown(((KeyMappingAccessor) openCaptureKey).getKey());
+        client.gui.setScreen(new net.hvb007.keybindsgalore.configmanager.KeyCaptureScreen(null, (capturedKey, conflicts) -> {
+            beginCaptureCooldown(capturedKey);
+            client.gui.setScreen(new net.hvb007.keybindsgalore.configmanager.ActionSelectionScreen(
+                    null,
+                    conflicts,
+                    selected -> KeybindManager.prioritizeAction(selected, capturedKey),
+                    () -> KeybindManager.removePriority(capturedKey)
+            ));
+        }));
+    }
 
     @Override
     public void onInitializeClient() {
         LOGGER.info("KeybindsGalore initialising...");
 
-        openCaptureKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        openCaptureKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.keybindsgalore.open_capture",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_K,
-                "category.keybindsgaloreplus.keybinds"
+                KeyMapping.Category.MISC
         ));
 
         try {
@@ -51,29 +155,26 @@ public class KeybindsGalore implements ClientModInitializer {
 
             // Register a client tick event to manage the pulse timer.
             ClientTickEvents.END_CLIENT_TICK.register(client -> {
-                while (openCaptureKey.consumeClick()) {
-                    client.setScreen(new net.hvb007.keybindsgalore.configmanager.KeyCaptureScreen(null, (capturedKey, conflicts) -> {
-                        client.setScreen(new net.hvb007.keybindsgalore.configmanager.ActionSelectionScreen(
-                            null, 
-                            conflicts, 
-                            selected -> {
-                                KeybindManager.prioritizeAction(selected, capturedKey);
-                            },
-                            () -> {
-                                KeybindManager.removePriority(capturedKey);
-                            }
-                        ));
-                    }));
+                if (!minecraftSourceRegistered && client.options != null) {
+                    BINDING_REGISTRY.registerSource(new MinecraftBindingSource(client.options.keyMappings));
+                    minecraftSourceRegistered = true;
+                }
+                if (client.gui.screen() != null) {
+                    resetInputOwnership();
+                    while (openCaptureKey.consumeClick()) {
+                    }
+                } else {
+                    while (openCaptureKey.consumeClick()) {
+                        if (client.gui.screen() != null || captureCooldownTicks > 0 || openCaptureKey.isDown()) {
+                            continue;
+                        }
+                        openCaptureScreen();
+                    }
                 }
 
-                // Decrement the pulse timer each tick.
-                if (pulseTimer > 0) {
-                    pulseTimer--;
-                    // When the timer expires, release the key and clear the target.
-                    if (pulseTimer == 0 && activePulseTarget != null) {
-                        ((KeyMappingAccessor) activePulseTarget).setIsDown(false);
-                        activePulseTarget = null;
-                    }
+                tickPulse();
+                if (captureCooldownTicks > 0) {
+                    captureCooldownTicks--;
                 }
             });
         } catch (IOException ioe) {
@@ -83,6 +184,9 @@ public class KeybindsGalore implements ClientModInitializer {
         // Find all conflicting keybinds when the player joins a world.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             KeybindManager.findAllConflicts();
+        });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            resetInputOwnership();
         });
     }
 

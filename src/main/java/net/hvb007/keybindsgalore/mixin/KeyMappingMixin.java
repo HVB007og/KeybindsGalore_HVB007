@@ -1,7 +1,7 @@
 package net.hvb007.keybindsgalore.mixin;
 
 import net.hvb007.keybindsgalore.KeybindManager;
-import net.hvb007.keybindsgalore.KeybindsGalore;
+import net.hvb007.keybindsgalore.input.minecraft.MinecraftInputController;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,23 +45,8 @@ public abstract class KeyMappingMixin {
     public void setPressed(boolean pressed, CallbackInfo ci) {
         KeyMapping self = (KeyMapping) (Object) this;
 
-        // Block any attempt to press a conflicting key unless it's our chosen target
-        // or the special-cased 'toggleGui' key.
-        if (pressed && KeybindManager.hasConflicts(this.key)) {
-            KeyMapping priority = KeybindManager.getPriorityKey(this.key);
-            
-            // Allow if this IS the priority key (by name), or if it's the pulse target, or toggleGui
-            if (priority != null && self.getName().equals(priority.getName())) {
-                return; // Let the priority key pass
-            }
-            if (KeybindsGalore.activePulseTarget != null && self.getName().equals(KeybindsGalore.activePulseTarget.getName())) {
-                return; // Let the pulse target pass
-            }
-            if (self.getName().equals("key.toggleGui")) {
-                return;
-            }
-            
-            ci.cancel(); // Block non-priority conflicting keys
+        if (MinecraftInputController.shouldBlockSetDown(self, this.key, pressed)) {
+            ci.cancel();
         }
     }
 }

@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.15-SNAPSHOT'
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
@@ -43,18 +43,12 @@ sourceSets {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	mappings loom.officialMojangMappings()
-	modImplementation "it.unimi.dsi:fastutil:8.5.12"
-
-	// --- Cloth Config & ModMenu ---
-	modApi "me.shedaniel.cloth:cloth-config-fabric:19.0.147"
-	modImplementation "com.terraformersmc:modmenu:15.0.0"
-
-	// --- owo-lib ---
-	modImplementation "io.wispforest:owo-lib:${project.owo_version}"
-	include "io.wispforest:owo-lib:${project.owo_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	implementation "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_version}"
+	implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+	testImplementation "org.junit.jupiter:junit-jupiter:5.13.4"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.13.4"
 }
 
 processResources {
@@ -65,13 +59,17 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	options.release = 21
+	options.release = 25
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+test {
+	useJUnitPlatform()
 }
 
 jar {

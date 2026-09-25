@@ -1,13 +1,15 @@
 package net.hvb007.keybindsgalore;
 
-import io.wispforest.owo.ui.core.Color;
-import io.wispforest.owo.ui.core.OwoUIDrawContext;
-import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
-import net.hvb007.keybindsgalore.mixin.MinecraftAccessor;
+import net.hvb007.keybindsgalore.ui.model.CircularMenuGeometry;
+import net.hvb007.keybindsgalore.ui.model.ConflictSelectionModel;
+import net.hvb007.keybindsgalore.input.minecraft.SelectionActivationService;
+import net.hvb007.keybindsgalore.ui.minecraft.ConflictActionPresentation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.network.chat.Component;
@@ -16,7 +18,6 @@ import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static net.hvb007.keybindsgalore.KeybindsGalore.customDataManager;
 
@@ -24,7 +25,8 @@ public class KeybindCircularScreen extends Screen {
 
     private final InputConstants.Key conflictedKey;
     private final List<KeyMapping> conflicts = new ArrayList<>();
-    private int selectedSectorIndex = -1;
+    private final ConflictActionPresentation presentation;
+    private final ConflictSelectionModel<KeyMapping> selection;
 
     private int centreX = 0, centreY = 0;
     private float maxRadius = 0;
@@ -34,6 +36,8 @@ public class KeybindCircularScreen extends Screen {
         super(Component.empty());
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
+        this.presentation = new ConflictActionPresentation(this.conflicts, customDataManager);
+        this.selection = new ConflictSelectionModel<>(this.conflicts);
     }
 
     @Override
@@ -46,43 +50,41 @@ public class KeybindCircularScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (Configurations.DARKENED_BACKGROUND) {
             this.renderBackground(context, mouseX, mouseY, delta);
         }
 
-        double mouseAngle = mouseAngle(this.centreX, this.centreY, mouseX, mouseY);
         float mouseDistanceFromCentre = Mth.sqrt((float) ((mouseX - this.centreX) * (mouseX - this.centreX) + (mouseY - this.centreY) * (mouseY - this.centreY)));
 
         int numberOfSectors = this.conflicts.size();
         if (numberOfSectors == 0) return;
 
+        CircularMenuGeometry.Selection geometrySelection = CircularMenuGeometry.select(
+                mouseX - this.centreX,
+                mouseY - this.centreY,
+                this.cancelZoneRadius,
+                numberOfSectors
+        );
+        this.selection.select(geometrySelection.sectorIndex());
+
         float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
-
-        this.selectedSectorIndex = (int) (mouseAngle / sectorAngle);
-        if (this.selectedSectorIndex >= numberOfSectors) this.selectedSectorIndex = numberOfSectors - 1;
-        if (this.selectedSectorIndex < 0) this.selectedSectorIndex = 0;
-
-        if (mouseDistanceFromCentre <= this.cancelZoneRadius) {
-            this.selectedSectorIndex = -1;
-        }
 
         final int colorEven = Configurations.PIE_MENU_SECTOR_COLOR_EVEN;
         final int colorOdd = Configurations.PIE_MENU_SECTOR_COLOR_ODD;
         final int colorSelected = Configurations.PIE_MENU_SECTOR_COLOR_SELECTED;
         final int colorLastOddFix = Configurations.PIE_MENU_SECTOR_COLOR_LAST_ODD;
 
-        super.render(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         int segments = Math.max(4, Configurations.CIRCLE_VERTICES);
-        OwoUIDrawContext ctx = OwoUIDrawContext.of(context);
 
         for (int i = 0; i < numberOfSectors; i++) {
             float startAngleRad = i * sectorAngle;
             float endAngleRad = (i + 1) * sectorAngle;
 
             int color;
-            if (i == this.selectedSectorIndex) {
+            if (i == selection.selectedIndex()) {
                 color = colorSelected;
             } else {
                 if (numberOfSectors % 2 != 0 && i == numberOfSectors - 1) {
@@ -92,31 +94,28 @@ public class KeybindCircularScreen extends Screen {
                 }
             }
 
-            // owo-lib drawRing uses degrees; add 180 to account for
-            // owo's internal -cos/-sin vertex convention so sectors
-            // align with our mouse-angle calculation (0 = right).
-            double startDeg = Math.toDegrees(startAngleRad) + 180;
-            double endDeg = Math.toDegrees(endAngleRad) + 180;
+            double startDeg = Math.toDegrees(startAngleRad);
+            double endDeg = Math.toDegrees(endAngleRad);
 
-            ctx.drawRing(this.centreX, this.centreY,
+            RingRenderer.drawRing(context, this.centreX, this.centreY,
                 startDeg, endDeg,
                 segments,
                 this.cancelZoneRadius, this.maxRadius,
-                Color.ofArgb(color), Color.ofArgb(color));
+                color, color);
         }
 
         int cancelZoneColor = mouseDistanceFromCentre <= this.cancelZoneRadius
             ? Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR
             : Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
 
-        ctx.drawCircle(this.centreX, this.centreY, 0, 360,
+        RingRenderer.drawCircle(context, this.centreX, this.centreY, 0, 360,
             segments, this.cancelZoneRadius,
-            Color.ofArgb(cancelZoneColor));
+            cancelZoneColor);
 
         renderLabelTexts(context, numberOfSectors);
     }
 
-    private void renderLabelTexts(GuiGraphics context, int numberOfSectors) {
+    private void renderLabelTexts(GuiGraphicsExtractor context, int numberOfSectors) {
         if (numberOfSectors == 0) return;
 
         Font textRenderer = Minecraft.getInstance().font;
@@ -131,8 +130,7 @@ public class KeybindCircularScreen extends Screen {
             float xPos = this.centreX + Mth.cos(angle) * textRadius;
             float yPos = this.centreY + Mth.sin(angle) * textRadius;
 
-            KeyMapping action = this.conflicts.get(sectorIndex);
-            String actionName = formatName(action).getString();
+            String actionName = presentation.label(sectorIndex);
 
             int textWidth = textRenderer.width(actionName);
             int textHeight = textRenderer.lineHeight;
@@ -147,53 +145,64 @@ public class KeybindCircularScreen extends Screen {
             }
             yPos -= Configurations.LABEL_TEXT_INSET;
 
-            if (this.selectedSectorIndex == sectorIndex) {
+            if (selection.selectedIndex() == sectorIndex) {
                 actionName = ChatFormatting.UNDERLINE + actionName;
                 context.fill((int)xPos - 2, (int)yPos - 2, (int)xPos + textWidth + 2, (int)yPos + textHeight + 2, 0x80E0E0E0);
             }
 
-            context.drawString(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
+            context.text(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
         }
     }
 
-    private static double mouseAngle(int x, int y, int mx, int my) {
-        return (Mth.atan2(my - y, mx - x) + Math.PI * 2) % (Math.PI * 2);
+    public boolean ownsKey(InputConstants.Key key) {
+        return conflictedKey.equals(key);
     }
 
     public void onKeyRelease() {
-        closePieMenu();
+        onKeyRelease(conflictedKey);
     }
 
-    private void closePieMenu() {
-        Minecraft client = Minecraft.getInstance();
-        client.setScreen(null);
-
-        if (this.selectedSectorIndex != -1 && this.selectedSectorIndex < this.conflicts.size()) {
-            KeyMapping selectedKeyBinding = this.conflicts.get(this.selectedSectorIndex);
-            KeybindsGalore.activePulseTarget = selectedKeyBinding;
-            KeybindsGalore.pulseTimer = 5;
-            ((KeyMappingAccessor) selectedKeyBinding).setIsDown(true);
-            ((KeyMappingAccessor) selectedKeyBinding).setClickCount(1);
-
-            if (selectedKeyBinding.same(client.options.keyAttack) && Configurations.ENABLE_ATTACK_WORKAROUND) {
-                ((MinecraftAccessor) client).setMissTime(0);
-            }
-        }
+    public void onKeyRelease(InputConstants.Key key) {
+        tryFinalize(key);
     }
 
-    private Component formatName(KeyMapping kb) {
-        String id = KeybindManager.safeGetTranslationKey(kb);
-        String cat = KeybindManager.safeGetCategory(kb);
-        String nameStr = Component.translatable(cat).getString() + ": " + Component.translatable(id).getString();
-        if (customDataManager.hasCustomData) {
-            try {
-                if (customDataManager.customData.get(id).hideCategory)
-                    nameStr = Component.translatable(id).getString();
-                nameStr = Objects.requireNonNull(customDataManager.customData.get(id).displayName);
-            } catch (Exception ignored) {
-            }
+    public boolean tryFinalize(InputConstants.Key key) {
+        if (selection.isFinalized() || !ownsKey(key)) {
+            return false;
         }
-        return Component.literal(nameStr);
+
+        selection.beginFinalization();
+        KeyMapping selected = selection.selected();
+        Minecraft.getInstance().gui.setScreen(null);
+        SelectionActivationService.activate(conflicts, selected);
+        return true;
+    }
+
+    @Override
+    public boolean keyReleased(KeyEvent event) {
+        return tryFinalize(InputConstants.getKey(event));
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        return tryFinalize(InputConstants.Type.MOUSE.getOrCreate(event.button()));
+    }
+
+    @Override
+    public void onClose() {
+        if (!selection.isFinalized()) {
+            selection.cancel();
+            SelectionActivationService.cancel(conflicts);
+        }
+        Minecraft.getInstance().gui.setScreen(null);
+    }
+
+    @Override
+    public void removed() {
+        if (!selection.isFinalized()) {
+            selection.cancel();
+            SelectionActivationService.cancel(conflicts);
+        }
     }
 
     @Override
@@ -201,8 +210,7 @@ public class KeybindCircularScreen extends Screen {
         return false;
     }
 
-    @Override
-    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void renderBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (Configurations.DARKENED_BACKGROUND) {
             context.fill(0, 0, this.width, this.height, 0x60000000);
         }
