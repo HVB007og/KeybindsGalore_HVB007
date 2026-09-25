@@ -59,7 +59,7 @@ public record ConfigurationSnapshot(
                 true,
                 true,
                 true,
-                List.of("Debug"),
+                List.of(),
                 List.of(340, 341, 87, 65, 83, 68, 32),
                 false,
                 true,

@@ -26,8 +26,6 @@ import java.util.OptionalInt;
 public class KeybindManager {
     // Maps a physical key to a list of all KeyBinding objects bound to it.
     public static final Map<InputConstants.Key, List<KeyMapping>> conflictTable = new HashMap<>();
-    // Tracks keys that are in "click and hold" mode. This is a placeholder for a future feature.
-    public static final HashMap<Integer, KeyMapping> clickHoldKeys = new HashMap<>();
     // Tracks which conflict warnings have been shown to the player in this session.
     public static final HashSet<InputConstants.Key> shownConflictWarnings = new HashSet<>();
     private static final PriorityResolver PRIORITY_RESOLVER = new PriorityResolver();
@@ -115,13 +113,6 @@ public class KeybindManager {
             Configurations.PRIORITY_KEYBINDS.addAll(newPriorities);
             KeybindsGalore.configManager.saveConfigFile();
         }
-    }
-
-    /**
-     * Checks if a key is currently in "click and hold" mode.
-     */
-    public static boolean isClickHoldKey(InputConstants.Key key) {
-        return clickHoldKeys.containsKey(key.getValue());
     }
 
     /**

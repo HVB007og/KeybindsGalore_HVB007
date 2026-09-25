@@ -12,7 +12,7 @@ class ConfigurationSnapshotTest {
     void exposesImmutableDefaults() {
         ConfigurationSnapshot defaults = ConfigurationSnapshot.defaults();
 
-        assertEquals(List.of("Debug"), defaults.filteredCategoryKeys());
+        assertEquals(List.of(), defaults.filteredCategoryKeys());
         assertEquals(List.of("Movement"), defaults.priorityCategories());
         assertEquals(7, defaults.priorityKeybinds().size());
         assertEquals((short) 0x40, defaults.pieMenuAlpha());

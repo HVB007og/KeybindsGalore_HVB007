@@ -11,13 +11,10 @@ base {
 }
 
 repositories {
-	maven { url = "https://maven.architectury.dev/" }
 	maven { url = "https://maven.shedaniel.me/" }
 	mavenCentral()
 	maven { url = "https://maven.fabricmc.net/" }
 	maven { url = "https://maven.terraformersmc.com/" }
-	maven { url = "https://maven.wispforest.io/" }
-	maven { url = "https://jitpack.io" }
 }
 
 loom {

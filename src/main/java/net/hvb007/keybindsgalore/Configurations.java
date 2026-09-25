@@ -3,11 +3,14 @@ package net.hvb007.keybindsgalore;
 import net.hvb007.keybindsgalore.config.ConfigurationSnapshot;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
- * Holds all the configuration fields for the mod.
- * These fields are populated by the ConfigManager from the .properties file.
+ * Mutable runtime view of the mod configuration.
+ *
+ * <p>Defaults come from {@link ConfigurationSnapshot#defaults()} so that the shipped
+ * properties file, the Cloth Config reset values, and the class initialisers cannot
+ * drift apart. Use {@link #apply(ConfigurationSnapshot)} to load and
+ * {@link #snapshot()} to save.
  */
 public class Configurations {
     // --- General ---
@@ -23,52 +26,45 @@ public class Configurations {
 
     // --- Behaviour ---
     public static boolean USE_CIRCULAR_MENU = true;
-    // Deprecated in 1.21.5 — Tesselator/BufferUploader removed by Mojang.
-    // All GUI rendering now goes through BufferSource.getBuffer() with a RenderType layer.
-    // This flag is kept for config compatibility but has no runtime effect.
+    /**
+     * Legacy compatibility flag. Minecraft 26.2 renders through {@code RingRenderer}
+     * and the old Tesselator path no longer exists, so this has no runtime effect.
+     * TODO(P0): remove once the migration window for old config files has passed.
+     */
     public static boolean USE_SOFTWARE_RENDERING = true;
-    public static boolean SHOW_CONFLICT_WARNINGS = true; // Show conflict warnings in chat
+    public static boolean SHOW_CONFLICT_WARNINGS = true;
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
-    public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>(Arrays.asList("Debug"));
-    public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>(Arrays.asList(340, 341, 87, 65, 83, 68, 32));
+    public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>();
+    public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>();
     public static boolean INVERT_IGNORED_KEYS_LIST = false;
     public static boolean USE_KEYBIND_FIX = true;
     public static int PULSE_TIMER_DURATION = 5;
-    public static ArrayList<String> PRIORITY_CATEGORIES = new ArrayList<>(Arrays.asList("Movement"));
-    public static ArrayList<String> PRIORITY_KEYBINDS = new ArrayList<>(Arrays.asList(
-            "key.forward:key.keyboard.w",
-            "key.left:key.keyboard.a",
-            "key.back:key.keyboard.s",
-            "key.right:key.keyboard.d",
-            "key.jump:key.keyboard.space",
-            "key.sneak:key.keyboard.left.shift",
-            "key.sprint:key.keyboard.left.control"
-    ));
+    public static ArrayList<String> PRIORITY_CATEGORIES = new ArrayList<>();
+    public static ArrayList<String> PRIORITY_KEYBINDS = new ArrayList<>();
 
     // --- Pie Menu Customisation ---
     public static float EXPANSION_FACTOR_WHEN_SELECTED = 0;
     public static int PIE_MENU_MARGIN = 0;
     public static float PIE_MENU_SCALE = 0.6f;
     public static float CANCEL_ZONE_SCALE = 0.25f;
-    
-    // Deprecated/Unused colors (kept for compatibility if needed, but we use specific ones now)
-    public static int PIE_MENU_COLOR = 0x00404040; 
+    public static int PIE_MENU_COLOR = 0x00404040;
     public static int PIE_MENU_SELECT_COLOR = 0x00FFFFFF;
     public static int PIE_MENU_HIGHLIGHT_COLOR = 0x00EED202;
-    
-    // New Configurable Colors (Defaults with ~75% opacity C0)
     public static int PIE_MENU_SECTOR_COLOR_EVEN = 0xC0606060;
     public static int PIE_MENU_SECTOR_COLOR_ODD = 0xC0808080;
     public static int PIE_MENU_SECTOR_COLOR_SELECTED = 0xC0E0E0E0;
     public static int PIE_MENU_SECTOR_COLOR_LAST_ODD = 0xC0A0A0A0;
     public static int PIE_MENU_CANCEL_ZONE_COLOR = 0xC0000000;
     public static int PIE_MENU_CANCEL_ZONE_HOVER_COLOR = 0xC0B04232;
-
     public static int PIE_MENU_COLOR_LIGHTEN_FACTOR = 0x191919;
     public static short PIE_MENU_ALPHA = 0x40;
     public static boolean SECTOR_GRADATION = true;
     public static int LABEL_TEXT_INSET = 6;
     public static boolean ANIMATE_PIE_MENU = true;
+
+    static {
+        apply(ConfigurationSnapshot.defaults());
+    }
 
     public static ConfigurationSnapshot snapshot() {
         return new ConfigurationSnapshot(
