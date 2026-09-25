@@ -5,41 +5,63 @@ import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.minecraft.client.KeyMapping;
 
 public final class PulseController {
+    private KeyMapping target;
+    private int ticksRemaining;
+
     public void start(KeyMapping target, int durationTicks) {
-        release(KeybindsGalore.activePulseTarget);
-        KeybindsGalore.activePulseTarget = target;
-        KeybindsGalore.pulseTimer = Math.max(0, durationTicks);
+        release(this.target);
+        this.target = target;
+        this.ticksRemaining = Math.max(0, durationTicks);
+        syncLegacyState();
     }
 
     public void tick() {
-        if (KeybindsGalore.pulseTimer > 0) {
-            KeybindsGalore.pulseTimer--;
+        if (ticksRemaining > 0) {
+            ticksRemaining--;
         }
-        if (KeybindsGalore.pulseTimer == 0) {
-            release(KeybindsGalore.activePulseTarget);
-            KeybindsGalore.activePulseTarget = null;
+        if (ticksRemaining == 0) {
+            release(target);
+            target = null;
+            KeybindsGalore.inputState().released();
         }
+        syncLegacyState();
     }
 
-    public void clearIf(KeyMapping target) {
-        if (KeybindsGalore.activePulseTarget == target) {
+    public void clearIf(KeyMapping candidate) {
+        if (target == candidate) {
             release(target);
-            KeybindsGalore.activePulseTarget = null;
-            KeybindsGalore.pulseTimer = 0;
+            target = null;
+            ticksRemaining = 0;
+            KeybindsGalore.inputState().released();
+            syncLegacyState();
         }
     }
 
     public void reset() {
-        release(KeybindsGalore.activePulseTarget);
-        KeybindsGalore.activePulseTarget = null;
-        KeybindsGalore.pulseTimer = 0;
+        release(target);
+        target = null;
+        ticksRemaining = 0;
         release(KeybindsGalore.activePriorityTarget);
         KeybindsGalore.activePriorityTarget = null;
+        syncLegacyState();
     }
 
-    private void release(KeyMapping target) {
-        if (target != null) {
-            ((KeyMappingAccessor) target).setIsDown(false);
+    public KeyMapping target() {
+        return target;
+    }
+
+    public int ticksRemaining() {
+        return ticksRemaining;
+    }
+
+    private void syncLegacyState() {
+        KeybindsGalore.activePulseTarget = target;
+        KeybindsGalore.pulseTimer = ticksRemaining;
+    }
+
+    private void release(KeyMapping mapping) {
+        if (mapping != null) {
+            ((KeyMappingAccessor) mapping).setIsDown(false);
         }
     }
 }

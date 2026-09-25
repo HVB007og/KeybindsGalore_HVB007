@@ -1,11 +1,9 @@
 package net.hvb007.keybindsgalore;
 
-import net.hvb007.keybindsgalore.core.BindingSnapshot;
-import net.hvb007.keybindsgalore.core.ConflictGroup;
-import net.hvb007.keybindsgalore.core.ConflictIndexBuilder;
 import net.hvb007.keybindsgalore.core.PriorityCandidate;
 import net.hvb007.keybindsgalore.core.PriorityResolver;
 import net.hvb007.keybindsgalore.input.minecraft.MinecraftBindingCatalog;
+import net.hvb007.keybindsgalore.input.minecraft.MinecraftConflictIndex;
 import net.hvb007.keybindsgalore.input.minecraft.MinecraftInputController;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.minecraft.client.Minecraft;
@@ -33,8 +31,7 @@ public class KeybindManager {
     // Tracks which conflict warnings have been shown to the player in this session.
     public static final HashSet<InputConstants.Key> shownConflictWarnings = new HashSet<>();
     private static final PriorityResolver PRIORITY_RESOLVER = new PriorityResolver();
-    private static final ConflictIndexBuilder CONFLICT_INDEX_BUILDER = new ConflictIndexBuilder();
-    private static final MinecraftBindingCatalog BINDING_CATALOG = new MinecraftBindingCatalog();
+    private static final MinecraftConflictIndex CONFLICT_INDEX = new MinecraftConflictIndex(conflictTable);
 
     /**
      * Safely gets the translation key (ID) of a keybinding.
@@ -59,31 +56,23 @@ public class KeybindManager {
      * This is the core of the conflict detection system.
      */
     public static void findAllConflicts() {
-        KeybindsGalore.LOGGER.info("Scanning for conflicting keybinds...");
+        refreshConflicts(MinecraftConflictIndex.RefreshReason.MANUAL);
+    }
+
+    public static void refreshConflicts(MinecraftConflictIndex.RefreshReason reason) {
+        KeybindsGalore.LOGGER.info("Scanning for conflicting keybinds ({})...", reason);
         Minecraft client = Minecraft.getInstance();
+        if (client.options == null) {
+            return;
+        }
 
         validateAndMigratePriorityKeybinds(client);
-
-        conflictTable.clear();
         shownConflictWarnings.clear();
-
-        List<MinecraftBindingCatalog.Entry> entries = BINDING_CATALOG.collect(client.options.keyMappings);
-        List<BindingSnapshot> bindingSnapshots = new ArrayList<>(entries.size());
-        for (MinecraftBindingCatalog.Entry entry : entries) {
-            bindingSnapshots.add(entry.snapshot());
-        }
-
-        for (ConflictGroup group : CONFLICT_INDEX_BUILDER.build(
-                bindingSnapshots,
-                Configurations.FILTERED_CATEGORY_KEYS
-        )) {
-            List<KeyMapping> groupBindings = new ArrayList<>(group.bindingIndexes().size());
-            for (int bindingIndex : group.bindingIndexes()) {
-                groupBindings.add(entries.get(bindingIndex).mapping());
-            }
-            KeyMapping firstBinding = groupBindings.get(0);
-            conflictTable.put(((KeyMappingAccessor) firstBinding).getKey(), groupBindings);
-        }
+        CONFLICT_INDEX.refresh(
+                client.options.keyMappings,
+                Configurations.FILTERED_CATEGORY_KEYS,
+                reason
+        );
     }
 
     /**
@@ -146,6 +135,7 @@ public class KeybindManager {
      * Opens the conflict resolution screen (the selection menu).
      */
     public static void openConflictMenu(InputConstants.Key key) {
+        KeybindsGalore.inputState().selectorOpened();
         Screen screen;
         if (Configurations.USE_CIRCULAR_MENU) {
             screen = new KeybindCircularScreen(key);
@@ -222,8 +212,7 @@ public class KeybindManager {
         });
 
         Configurations.PRIORITY_KEYBINDS.add(newPair);
-        KeybindsGalore.configManager.saveConfigFile();
-        findAllConflicts();
+        KeybindsGalore.saveConfigAndRefresh();
         
         if (Minecraft.getInstance().player != null) {
             Minecraft.getInstance().player.sendSystemMessage(
@@ -247,8 +236,7 @@ public class KeybindManager {
         });
 
         if (removed) {
-            KeybindsGalore.configManager.saveConfigFile();
-            findAllConflicts();
+            KeybindsGalore.saveConfigAndRefresh();
             
             if (Minecraft.getInstance().player != null) {
                 Minecraft.getInstance().player.sendSystemMessage(

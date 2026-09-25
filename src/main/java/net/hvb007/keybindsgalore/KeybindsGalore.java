@@ -21,8 +21,10 @@ import java.util.Set;
 import net.hvb007.keybindsgalore.api.BindingRegistry;
 import net.hvb007.keybindsgalore.api.KeybindApi;
 import net.hvb007.keybindsgalore.configmanager.ConfigManager;
+import net.hvb007.keybindsgalore.core.InputOwnershipStateMachine;
 import net.hvb007.keybindsgalore.customdata.DataManager;
 import net.hvb007.keybindsgalore.integrations.minecraft.MinecraftBindingSource;
+import net.hvb007.keybindsgalore.input.minecraft.MinecraftConflictIndex;
 import net.hvb007.keybindsgalore.input.minecraft.PulseController;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 
@@ -31,10 +33,24 @@ public class KeybindsGalore implements ClientModInitializer {
     public static DataManager customDataManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("keybindsgalore");
     private static final BindingRegistry BINDING_REGISTRY = new BindingRegistry();
+    private static final InputOwnershipStateMachine INPUT_STATE = new InputOwnershipStateMachine();
     private static boolean minecraftSourceRegistered;
+    private static boolean conflictsInitialized;
 
     public static KeybindApi getApi() {
         return BINDING_REGISTRY;
+    }
+
+    public static InputOwnershipStateMachine inputState() {
+        return INPUT_STATE;
+    }
+
+    public static void saveConfigAndRefresh() {
+        if (configManager == null) {
+            return;
+        }
+        configManager.saveConfigFile();
+        KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.CONFIG_SAVED);
     }
 
     // The keybinding we want to force-press after a menu selection.
@@ -51,6 +67,7 @@ public class KeybindsGalore implements ClientModInitializer {
     private static int captureCooldownTicks;
 
     public static void startPulse(KeyMapping target) {
+        INPUT_STATE.selectionMade();
         PULSE_CONTROLLER.start(target, Configurations.PULSE_TIMER_DURATION);
     }
 
@@ -70,12 +87,16 @@ public class KeybindsGalore implements ClientModInitializer {
         if (target != null) {
             ACTIVE_PRIORITY_TARGETS.add(target);
             activePriorityTarget = target;
+            INPUT_STATE.priorityActivated();
         }
     }
 
     public static void removePriorityTarget(KeyMapping target) {
         if (target != null) {
             ACTIVE_PRIORITY_TARGETS.remove(target);
+        }
+        if (ACTIVE_PRIORITY_TARGETS.isEmpty()) {
+            INPUT_STATE.released();
         }
         if (activePriorityTarget == target) {
             activePriorityTarget = ACTIVE_PRIORITY_TARGETS.isEmpty()
@@ -91,6 +112,7 @@ public class KeybindsGalore implements ClientModInitializer {
         }
         ACTIVE_PRIORITY_TARGETS.clear();
         activePriorityTarget = null;
+        INPUT_STATE.reset();
     }
 
     public static void beginCaptureCooldown(InputConstants.Key key) {
@@ -159,6 +181,10 @@ public class KeybindsGalore implements ClientModInitializer {
                     BINDING_REGISTRY.registerSource(new MinecraftBindingSource(client.options.keyMappings));
                     minecraftSourceRegistered = true;
                 }
+                if (!conflictsInitialized && client.options != null) {
+                    KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.STARTUP);
+                    conflictsInitialized = true;
+                }
                 if (client.gui.screen() != null) {
                     resetInputOwnership();
                     while (openCaptureKey.consumeClick()) {
@@ -183,7 +209,7 @@ public class KeybindsGalore implements ClientModInitializer {
 
         // Find all conflicting keybinds when the player joins a world.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            KeybindManager.findAllConflicts();
+            KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.WORLD_JOIN);
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             resetInputOwnership();
@@ -196,6 +222,16 @@ public class KeybindsGalore implements ClientModInitializer {
     public static void debugLog(String message, Object... args) {
         if (Configurations.DEBUG) {
             LOGGER.info("(KBG DEBUG) " + message, args);
+        }
+    }
+
+    /**
+     * Logs a high-volume message if both debug mode and verbose debug mode are enabled.
+     * Used for per-frame and per-selection tracing such as selector hover changes.
+     */
+    public static void verboseLog(String message, Object... args) {
+        if (Configurations.DEBUG && Configurations.VERBOSE_DEBUG) {
+            LOGGER.info("(KBG VERBOSE) " + message, args);
         }
     }
 }

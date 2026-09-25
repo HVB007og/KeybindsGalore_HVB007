@@ -1,6 +1,7 @@
 package net.hvb007.keybindsgalore.mixin;
 
 import net.hvb007.keybindsgalore.KeybindManager;
+import net.hvb007.keybindsgalore.input.minecraft.MinecraftConflictIndex;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
 import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
@@ -24,6 +25,6 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen {
     @Override
     public void onClose() {
         super.onClose();
-        KeybindManager.findAllConflicts();
+        KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.KEYBINDS_SCREEN_CLOSED);
     }
 }

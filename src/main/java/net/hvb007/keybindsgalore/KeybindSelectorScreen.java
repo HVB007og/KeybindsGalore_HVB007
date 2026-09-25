@@ -81,6 +81,12 @@ public class KeybindSelectorScreen extends Screen {
 
         selection.beginFinalization();
         KeyMapping selected = selection.selected();
+        if (selected == null) {
+            KeybindsGalore.verboseLog("List selection CANCELLED for key {}: no row was hovered", key.getName());
+        } else {
+            KeybindsGalore.verboseLog("List selection FINALISED for key {}: chose row {} -> {}",
+                    key.getName(), selection.selectedIndex(), selected.getName());
+        }
         closeMenu();
         SelectionActivationService.activate(conflicts, selected);
         return true;
@@ -99,6 +105,7 @@ public class KeybindSelectorScreen extends Screen {
     @Override
     public void onClose() {
         if (!selection.isFinalized()) {
+            KeybindsGalore.verboseLog("List selection CANCELLED for key {}: selector closed before finalisation", conflictedKey.getName());
             selection.cancel();
             SelectionActivationService.cancel(conflicts);
         }

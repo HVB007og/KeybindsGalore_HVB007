@@ -16,7 +16,7 @@ public class ConfigScreenBuilder {
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
                 .setTitle(Component.translatable("title.keybindsgalore.config"))
-                .setSavingRunnable(() -> KeybindsGalore.configManager.saveConfigFile());
+                .setSavingRunnable(KeybindsGalore::saveConfigAndRefresh);
 
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("category.keybindsgalore.general"));
         ConfigCategory behavior = builder.getOrCreateCategory(Component.translatable("category.keybindsgalore.behaviour"));

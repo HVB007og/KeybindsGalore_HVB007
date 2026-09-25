@@ -16,6 +16,7 @@ public final class SelectionActivationService {
     public static void activate(List<KeyMapping> conflicts, KeyMapping selected) {
         if (selected == null) {
             releaseAll(conflicts);
+            KeybindsGalore.inputState().cancelled();
             return;
         }
 
@@ -32,6 +33,7 @@ public final class SelectionActivationService {
 
     public static void cancel(List<KeyMapping> conflicts) {
         releaseAll(conflicts);
+        KeybindsGalore.inputState().cancelled();
     }
 
     private static void releaseAll(List<KeyMapping> conflicts) {

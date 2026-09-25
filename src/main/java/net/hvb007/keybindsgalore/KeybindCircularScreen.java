@@ -31,6 +31,7 @@ public class KeybindCircularScreen extends Screen {
     private int centreX = 0, centreY = 0;
     private float maxRadius = 0;
     private float cancelZoneRadius = 0;
+    private int lastHoveredSector = Integer.MIN_VALUE;
 
     public KeybindCircularScreen(InputConstants.Key key) {
         super(Component.empty());
@@ -67,6 +68,15 @@ public class KeybindCircularScreen extends Screen {
                 numberOfSectors
         );
         this.selection.select(geometrySelection.sectorIndex());
+        if (geometrySelection.sectorIndex() != this.lastHoveredSector) {
+            this.lastHoveredSector = geometrySelection.sectorIndex();
+            if (geometrySelection.sectorIndex() < 0) {
+                KeybindsGalore.verboseLog("Pie hover: cancel zone for key {}", this.conflictedKey.getName());
+            } else {
+                KeybindsGalore.verboseLog("Pie hover: sector {} -> {}",
+                        geometrySelection.sectorIndex(), this.presentation.label(geometrySelection.sectorIndex()));
+            }
+        }
 
         float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
 
@@ -173,6 +183,12 @@ public class KeybindCircularScreen extends Screen {
 
         selection.beginFinalization();
         KeyMapping selected = selection.selected();
+        if (selected == null) {
+            KeybindsGalore.verboseLog("Pie selection CANCELLED for key {}: cursor was inside the cancel zone or over no sector", key.getName());
+        } else {
+            KeybindsGalore.verboseLog("Pie selection FINALISED for key {}: chose sector {} -> {}",
+                    key.getName(), selection.selectedIndex(), selected.getName());
+        }
         Minecraft.getInstance().gui.setScreen(null);
         SelectionActivationService.activate(conflicts, selected);
         return true;
@@ -191,6 +207,7 @@ public class KeybindCircularScreen extends Screen {
     @Override
     public void onClose() {
         if (!selection.isFinalized()) {
+            KeybindsGalore.verboseLog("Pie selection CANCELLED for key {}: selector closed without releasing over a sector", conflictedKey.getName());
             selection.cancel();
             SelectionActivationService.cancel(conflicts);
         }
@@ -200,6 +217,7 @@ public class KeybindCircularScreen extends Screen {
     @Override
     public void removed() {
         if (!selection.isFinalized()) {
+            KeybindsGalore.verboseLog("Pie selection CANCELLED for key {}: selector removed before finalisation", conflictedKey.getName());
             selection.cancel();
             SelectionActivationService.cancel(conflicts);
         }
