@@ -18,7 +18,6 @@ public class Configurations {
     public static boolean VERBOSE_DEBUG = false;
 
     // --- Performance ---
-    public static boolean LAZY_CONFLICT_CHECK = true;
     public static int CIRCLE_VERTICES = 120;
     public static boolean DARKENED_BACKGROUND = true;
     public static int DARKENED_BACKGROUND_STRENGTH = 0x60;
@@ -31,11 +30,9 @@ public class Configurations {
      * and the old Tesselator path no longer exists, so this has no runtime effect.
      * TODO(P0): remove once the migration window for old config files has passed.
      */
-    public static boolean USE_SOFTWARE_RENDERING = true;
     public static boolean SHOW_CONFLICT_WARNINGS = true;
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>();
-    public static boolean USE_KEYBIND_FIX = true;
     public static int PULSE_TIMER_DURATION = 5;
     public static ArrayList<String> PRIORITY_CATEGORIES = new ArrayList<>();
     public static ArrayList<String> PRIORITY_KEYBINDS = new ArrayList<>();
@@ -55,7 +52,9 @@ public class Configurations {
     public static int PIE_MENU_CANCEL_ZONE_HOVER_COLOR = 0xC0B04232;
     public static short PIE_MENU_ALPHA = 0x40;
     public static boolean SECTOR_GRADATION = true;
+    public static int GRADATION_INTENSITY = 12;
     public static boolean ANIMATE_PIE_MENU = true;
+    public static int ANIMATION_DURATION = 180;
 
     static {
         apply(ConfigurationSnapshot.defaults());
@@ -65,17 +64,14 @@ public class Configurations {
         return new ConfigurationSnapshot(
                 DEBUG,
                 VERBOSE_DEBUG,
-                LAZY_CONFLICT_CHECK,
                 CIRCLE_VERTICES,
                 DARKENED_BACKGROUND,
                 DARKENED_BACKGROUND_STRENGTH,
                 LABEL_TEXT_SHADOW,
                 USE_CIRCULAR_MENU,
-                USE_SOFTWARE_RENDERING,
                 SHOW_CONFLICT_WARNINGS,
                 ENABLE_ATTACK_WORKAROUND,
                 FILTERED_CATEGORY_KEYS,
-                USE_KEYBIND_FIX,
                 PULSE_TIMER_DURATION,
                 PRIORITY_CATEGORIES,
                 PRIORITY_KEYBINDS,
@@ -93,24 +89,23 @@ public class Configurations {
         PIE_MENU_CANCEL_ZONE_HOVER_COLOR,
         PIE_MENU_ALPHA,
                 SECTOR_GRADATION,
-                ANIMATE_PIE_MENU
+                GRADATION_INTENSITY,
+                ANIMATE_PIE_MENU,
+                ANIMATION_DURATION
         );
     }
 
     public static void apply(ConfigurationSnapshot snapshot) {
         DEBUG = snapshot.debug();
         VERBOSE_DEBUG = snapshot.verboseDebug();
-        LAZY_CONFLICT_CHECK = snapshot.lazyConflictCheck();
         CIRCLE_VERTICES = snapshot.circleVertices();
         DARKENED_BACKGROUND = snapshot.darkenedBackground();
         DARKENED_BACKGROUND_STRENGTH = snapshot.darkenedBackgroundStrength();
         LABEL_TEXT_SHADOW = snapshot.labelTextShadow();
         USE_CIRCULAR_MENU = snapshot.useCircularMenu();
-        USE_SOFTWARE_RENDERING = snapshot.useSoftwareRendering();
         SHOW_CONFLICT_WARNINGS = snapshot.showConflictWarnings();
         ENABLE_ATTACK_WORKAROUND = snapshot.enableAttackWorkaround();
         FILTERED_CATEGORY_KEYS = new ArrayList<>(snapshot.filteredCategoryKeys());
-        USE_KEYBIND_FIX = snapshot.useKeybindFix();
         PULSE_TIMER_DURATION = snapshot.pulseTimerDuration();
         PRIORITY_CATEGORIES = new ArrayList<>(snapshot.priorityCategories());
         PRIORITY_KEYBINDS = new ArrayList<>(snapshot.priorityKeybinds());
@@ -128,6 +123,8 @@ public class Configurations {
         PIE_MENU_CANCEL_ZONE_HOVER_COLOR = snapshot.pieMenuCancelZoneHoverColor();
         PIE_MENU_ALPHA = snapshot.pieMenuAlpha();
         SECTOR_GRADATION = snapshot.sectorGradation();
+        GRADATION_INTENSITY = snapshot.gradationIntensity();
         ANIMATE_PIE_MENU = snapshot.animatePieMenu();
+        ANIMATION_DURATION = snapshot.animationDuration();
     }
 }

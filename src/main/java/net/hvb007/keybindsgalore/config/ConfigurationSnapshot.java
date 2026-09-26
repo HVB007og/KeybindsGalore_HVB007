@@ -5,17 +5,14 @@ import java.util.List;
 public record ConfigurationSnapshot(
         boolean debug,
         boolean verboseDebug,
-        boolean lazyConflictCheck,
         int circleVertices,
         boolean darkenedBackground,
         int darkenedBackgroundStrength,
         boolean labelTextShadow,
         boolean useCircularMenu,
-        boolean useSoftwareRendering,
         boolean showConflictWarnings,
         boolean enableAttackWorkaround,
         List<String> filteredCategoryKeys,
-        boolean useKeybindFix,
         int pulseTimerDuration,
         List<String> priorityCategories,
         List<String> priorityKeybinds,
@@ -33,7 +30,9 @@ public record ConfigurationSnapshot(
         int pieMenuCancelZoneHoverColor,
         short pieMenuAlpha,
         boolean sectorGradation,
-        boolean animatePieMenu) {
+        int gradationIntensity,
+        boolean animatePieMenu,
+        int animationDuration) {
     public ConfigurationSnapshot {
         filteredCategoryKeys = List.copyOf(filteredCategoryKeys);
         priorityCategories = List.copyOf(priorityCategories);
@@ -44,7 +43,6 @@ public record ConfigurationSnapshot(
         return new ConfigurationSnapshot(
                 false,
                 false,
-                true,
                 120,
                 true,
                 0x60,
@@ -52,9 +50,7 @@ public record ConfigurationSnapshot(
                 true,
                 true,
                 true,
-                true,
                 List.of(),
-                true,
                 5,
                 List.of("Movement"),
                 List.of(
@@ -80,7 +76,9 @@ public record ConfigurationSnapshot(
                 0xC0B04232,
                 (short) 0x40,
                 true,
-                true
+                12,
+                true,
+                180
         );
     }
 }

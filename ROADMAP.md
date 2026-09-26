@@ -48,11 +48,17 @@ Wired and verified in game:
 - [x] `DARKENED_BACKGROUND_STRENGTH` — new 0-255 slider. **Pie menu only**; the list
       menu keeps its own fixed dimming because the two layouts have different contrast
       problems
-- [x] `SECTOR_GRADATION` — shades each wedge from a lighter inner edge outward. Free to
-      draw, because `RingRenderer.drawRing` already took separate inner and outer colours
-- [x] `ANIMATE_PIE_MENU` — 180 ms eased open animation. **Open only**; closing stays
-      immediate because delaying teardown would hold input after the selection is
-      already committed, and that is the most delicate path in the mod
+- [x] `SECTOR_GRADATION` + `GRADATION_INTENSITY` — shades each wedge from a lighter
+      inner edge outward. Nearly free to draw, because `RingRenderer.drawRing` already
+      took separate inner and outer colours. Intensity is a 0-100% blend toward white
+      rather than a flat channel offset, so the slider means the same thing for a dark
+      wedge as for a pale one and saturates instead of clipping
+- [x] `ANIMATE_PIE_MENU` + `ANIMATION_DURATION` — 0-1000 ms eased open animation, where
+      0 appears instantly. **Open only**; closing stays immediate because delaying
+      teardown would hold input after the selection is already committed, and that is
+      the most delicate path in the mod. Labels appear only once the animation finishes,
+      because fading them in with it looked wrong — the text slid outward while its wedge
+      was still growing
 - [x] `PIE_MENU_ALPHA`, `PIE_MENU_COLOR`, `PIE_MENU_HIGHLIGHT_COLOR` — moved to a
       dedicated "Visual Settings (List Menu)" tab, since they are read only by the list
       screen and appeared broken when tested in pie mode
@@ -70,16 +76,14 @@ cleaned on load instead of raising an unknown-key error:
 - [-] `IGNORED_KEYS`, `INVERT_IGNORED_KEYS_LIST` — a suppress-these-keys feature that
       conflict detection never consulted. Prioritising those keys already stops them
       hijacking movement and mouse actions, which is what the list was for
+- [-] `USE_SOFTWARE_RENDERING`, `LAZY_CONFLICT_CHECK`, `USE_KEYBIND_FIX` — all 1.21.x
+      leftovers that lost their meaning as the renderer, the refresh triggers, and the
+      old keybind fix changed
 
-Still exposed but unwired, with tooltips that say so:
-
-- [ ] `USE_SOFTWARE_RENDERING` — no runtime effect since the 1.21.5 renderer rewrite
-- [ ] `LAZY_CONFLICT_CHECK` — no effect; conflicts are always refreshed
-- [ ] `USE_KEYBIND_FIX` — legacy 1.21.x fix, no longer referenced
-
-All three are 1.21.x leftovers and the next thing to retire. `VERBOSE_DEBUG` is wired
-but is currently just a higher-verbosity subset of `DEBUG`; give it a distinct meaning
-or document the relationship.
+**Every option is now either wired or retired.** The config screen, the properties file,
+the codec, and `en_us.json` all agree on the same 30 options, with no orphaned
+translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset of
+`DEBUG`; give it its own meaning or document the relationship.
 
 ### P0.2 Non-vanilla rebinding notification
 
@@ -234,10 +238,14 @@ Decisions that need a human answer before the work can start.
 - [x] The three pie cosmetics? **`SECTOR_GRADATION` and `ANIMATE_PIE_MENU` implemented.**
       `PIE_MENU_BLEND` retired, since it duplicated the per-sector colours
 - [x] Commit `ROADMAP.md`? **Yes** — it is project documentation, not agent memory
-- [ ] The three remaining unwired 1.21.x options (`USE_SOFTWARE_RENDERING`,
-      `LAZY_CONFLICT_CHECK`, `USE_KEYBIND_FIX`) — retire them as part of release prep?
+- [x] The three remaining unwired 1.21.x options? **Retired.**
+- [x] Commit `ROADMAP.md`? **Yes** — it is project documentation, not agent memory
 - [ ] `VERBOSE_DEBUG` currently only means "more `DEBUG` lines". Give it its own meaning,
       or document it as an alias?
+- [ ] **Further pie options, if wanted.** Candidates that were considered and not added
+      unprompted, since each is a design decision rather than an obvious win:
+      wedge outline colour and width, a rotation offset for the starting wedge, and a
+      maximum label width that truncates with an ellipsis
 - [ ] Profiles: per-world, per-server, or global?
 - [ ] Is the `debug` category ever going to get a real English label in 26.2? If not, the
       legacy `FILTER_DEBUG_KEYS → [Debug]` migration should be retired

@@ -20,17 +20,11 @@
   "option.keybindsgalore.verbose_debug": "Enable Verbose Debug Logging",
   "option.keybindsgalore.verbose_debug.tooltip": "Logs even more detailed debug information, including conflict resolution internals.",
 
-  "option.keybindsgalore.lazy_conflict_check": "Lazy Conflict Check",
-  "option.keybindsgalore.lazy_conflict_check.tooltip": "Only checks key conflicts when a key changes rather than every tick. Reduces overhead.",
-
   "option.keybindsgalore.circle_vertices": "Circle Vertices",
   "option.keybindsgalore.circle_vertices.tooltip": "Number of vertices used to render the pie menu circle. Higher values look smoother but use more performance. Range: 6-360.",
 
   "option.keybindsgalore.pulse_timer_duration": "Pulse Timer Duration",
   "option.keybindsgalore.pulse_timer_duration.tooltip": "How long the key pulse visualisation lasts in ticks (20 ticks = 1 second). Range: 0-200.",
-
-  "option.keybindsgalore.use_keybind_fix": "Use Keybind Fix",
-  "option.keybindsgalore.use_keybind_fix.tooltip": "Applies a fix for vanilla keybind behaviour in certain scenarios. Disable only if it causes issues.",
 
   "option.keybindsgalore.enable_attack_workaround": "Enable Attack Workaround",
   "option.keybindsgalore.enable_attack_workaround.tooltip": "Workaround for the vanilla attack key holding behaviour. Keeps attack consistent during priority changes.",
@@ -71,14 +65,15 @@
   "option.keybindsgalore.label_text_shadow": "Label Text Shadow",
   "option.keybindsgalore.label_text_shadow.tooltip": "Renders a shadow behind action labels in the pie menu for improved readability.",
 
-  "option.keybindsgalore.use_software_rendering": "Software Rendering",
-  "option.keybindsgalore.use_software_rendering.tooltip": "Legacy 1.21.x option with no effect on this version. The pie menu always renders on the GPU. Kept only so older config files still load.",
-
   "option.keybindsgalore.sector_gradation": "Sector Gradation",
   "option.keybindsgalore.sector_gradation.tooltip": "Shades each wedge from a lighter inner edge to its outer colour, so the wedges look slightly rounded. Turn off for flat colours.",
+  "option.keybindsgalore.gradation_intensity": "Gradient Intensity",
+  "option.keybindsgalore.gradation_intensity.tooltip": "How strong the inner-edge shading is, as a percentage toward white. 0 is flat, 100 is a white inner edge. Only applies when Sector Gradation is on.",
 
   "option.keybindsgalore.animate_pie_menu": "Animate Pie Menu",
-  "option.keybindsgalore.animate_pie_menu.tooltip": "Plays a short open animation when the pie menu appears. Closing is always immediate so input is never delayed.",
+  "option.keybindsgalore.animate_pie_menu.tooltip": "Plays an open animation when the pie menu appears. Labels appear once it finishes, and closing is always immediate so input is never delayed.",
+  "option.keybindsgalore.animation_duration": "Animation Duration",
+  "option.keybindsgalore.animation_duration.tooltip": "Length of the opening animation in milliseconds. 0 makes the menu appear instantly. Only applies when Animate Pie Menu is on.",
 
   "option.keybindsgalore.color": "List Menu Background",
   "option.keybindsgalore.color.tooltip": "Background colour behind the list menu rows. This affects the list menu only, not the pie menu.",

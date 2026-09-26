@@ -19,17 +19,14 @@ public final class ConfigurationSnapshotCodec {
         return new ConfigurationSnapshot(
                 booleanValue(merged, "DEBUG"),
                 booleanValue(merged, "VERBOSE_DEBUG"),
-                booleanValue(merged, "LAZY_CONFLICT_CHECK"),
                 intValue(merged, "CIRCLE_VERTICES"),
                 booleanValue(merged, "DARKENED_BACKGROUND"),
                 intValue(merged, "DARKENED_BACKGROUND_STRENGTH"),
                 booleanValue(merged, "LABEL_TEXT_SHADOW"),
                 booleanValue(merged, "USE_CIRCULAR_MENU"),
-                booleanValue(merged, "USE_SOFTWARE_RENDERING"),
                 booleanValue(merged, "SHOW_CONFLICT_WARNINGS"),
                 booleanValue(merged, "ENABLE_ATTACK_WORKAROUND"),
                 stringList(merged, "FILTERED_CATEGORY_KEYS"),
-                booleanValue(merged, "USE_KEYBIND_FIX"),
                 intValue(merged, "PULSE_TIMER_DURATION"),
                 stringList(merged, "PRIORITY_CATEGORIES"),
                 stringList(merged, "PRIORITY_KEYBINDS"),
@@ -47,7 +44,9 @@ public final class ConfigurationSnapshotCodec {
                 intValue(merged, "PIE_MENU_CANCEL_ZONE_HOVER_COLOR"),
                 shortValue(merged, "PIE_MENU_ALPHA"),
                 booleanValue(merged, "SECTOR_GRADATION"),
-                booleanValue(merged, "ANIMATE_PIE_MENU")
+                intValue(merged, "GRADATION_INTENSITY"),
+                booleanValue(merged, "ANIMATE_PIE_MENU"),
+                intValue(merged, "ANIMATION_DURATION")
         );
     }
 
@@ -55,17 +54,14 @@ public final class ConfigurationSnapshotCodec {
         Map<String, String> values = new LinkedHashMap<>();
         put(values, "DEBUG", snapshot.debug());
         put(values, "VERBOSE_DEBUG", snapshot.verboseDebug());
-        put(values, "LAZY_CONFLICT_CHECK", snapshot.lazyConflictCheck());
         put(values, "CIRCLE_VERTICES", snapshot.circleVertices());
         put(values, "DARKENED_BACKGROUND", snapshot.darkenedBackground());
         put(values, "DARKENED_BACKGROUND_STRENGTH", snapshot.darkenedBackgroundStrength());
         put(values, "LABEL_TEXT_SHADOW", snapshot.labelTextShadow());
         put(values, "USE_CIRCULAR_MENU", snapshot.useCircularMenu());
-        put(values, "USE_SOFTWARE_RENDERING", snapshot.useSoftwareRendering());
         put(values, "SHOW_CONFLICT_WARNINGS", snapshot.showConflictWarnings());
         put(values, "ENABLE_ATTACK_WORKAROUND", snapshot.enableAttackWorkaround());
         put(values, "FILTERED_CATEGORY_KEYS", snapshot.filteredCategoryKeys());
-        put(values, "USE_KEYBIND_FIX", snapshot.useKeybindFix());
         put(values, "PULSE_TIMER_DURATION", snapshot.pulseTimerDuration());
         put(values, "PRIORITY_CATEGORIES", snapshot.priorityCategories());
         put(values, "PRIORITY_KEYBINDS", snapshot.priorityKeybinds());
@@ -83,7 +79,9 @@ public final class ConfigurationSnapshotCodec {
         put(values, "PIE_MENU_CANCEL_ZONE_HOVER_COLOR", snapshot.pieMenuCancelZoneHoverColor());
         put(values, "PIE_MENU_ALPHA", snapshot.pieMenuAlpha());
         put(values, "SECTOR_GRADATION", snapshot.sectorGradation());
+        put(values, "GRADATION_INTENSITY", snapshot.gradationIntensity());
         put(values, "ANIMATE_PIE_MENU", snapshot.animatePieMenu());
+        put(values, "ANIMATION_DURATION", snapshot.animationDuration());
         return values;
     }
 

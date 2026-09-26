@@ -55,22 +55,10 @@ public class ConfigScreenBuilder {
                 .setSaveConsumer(v -> Configurations.VERBOSE_DEBUG = v)
                 .build());
 
-        general.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.lazy_conflict_check"), Configurations.LAZY_CONFLICT_CHECK)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.keybindsgalore.lazy_conflict_check.tooltip"))
-                .setSaveConsumer(v -> Configurations.LAZY_CONFLICT_CHECK = v)
-                .build());
-
         general.addEntry(eb.startIntSlider(Component.translatable("option.keybindsgalore.pulse_timer_duration"), Configurations.PULSE_TIMER_DURATION, 0, 60)
                 .setDefaultValue(5)
                 .setTooltip(Component.translatable("option.keybindsgalore.pulse_timer_duration.tooltip"))
                 .setSaveConsumer(v -> Configurations.PULSE_TIMER_DURATION = v)
-                .build());
-
-        general.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.use_keybind_fix"), Configurations.USE_KEYBIND_FIX)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.keybindsgalore.use_keybind_fix.tooltip"))
-                .setSaveConsumer(v -> Configurations.USE_KEYBIND_FIX = v)
                 .build());
 
         general.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.enable_attack_workaround"), Configurations.ENABLE_ATTACK_WORKAROUND)
@@ -213,16 +201,22 @@ public class ConfigScreenBuilder {
                 .setSaveConsumer(v -> Configurations.SECTOR_GRADATION = v)
                 .build());
 
+        visual.addEntry(eb.startIntSlider(Component.translatable("option.keybindsgalore.gradation_intensity"), Configurations.GRADATION_INTENSITY, 0, 100)
+                .setDefaultValue(12)
+                .setTooltip(Component.translatable("option.keybindsgalore.gradation_intensity.tooltip"))
+                .setSaveConsumer(v -> Configurations.GRADATION_INTENSITY = v)
+                .build());
+
         visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.animate_pie_menu"), Configurations.ANIMATE_PIE_MENU)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.keybindsgalore.animate_pie_menu.tooltip"))
                 .setSaveConsumer(v -> Configurations.ANIMATE_PIE_MENU = v)
                 .build());
 
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.use_software_rendering"), Configurations.USE_SOFTWARE_RENDERING)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.keybindsgalore.use_software_rendering.tooltip"))
-                .setSaveConsumer(v -> Configurations.USE_SOFTWARE_RENDERING = v)
+        visual.addEntry(eb.startIntSlider(Component.translatable("option.keybindsgalore.animation_duration"), Configurations.ANIMATION_DURATION, 0, 1000)
+                .setDefaultValue(180)
+                .setTooltip(Component.translatable("option.keybindsgalore.animation_duration.tooltip"))
+                .setSaveConsumer(v -> Configurations.ANIMATION_DURATION = v)
                 .build());
     }
 

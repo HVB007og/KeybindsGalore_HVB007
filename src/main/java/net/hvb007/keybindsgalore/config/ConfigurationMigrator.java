@@ -23,6 +23,12 @@ public final class ConfigurationMigrator {
      * <p>{@code IGNORED_KEYS} and {@code INVERT_IGNORED_KEYS_LIST} were a
      * suppress-these-keys feature that conflict detection never consulted; prioritising
      * those keys achieves the same goal for the player, so the list is redundant.
+     *
+     * <p>The last three are 1.21.x leftovers. {@code USE_SOFTWARE_RENDERING} lost its
+     * meaning when the renderer moved to {@code RingRenderer},
+     * {@code LAZY_CONFLICT_CHECK} when the conflict index began refreshing on every
+     * relevant trigger, and {@code USE_KEYBIND_FIX} when the keybind fix it referred to
+     * was removed.
      */
     private static final Set<String> RETIRED_KEYS = Set.of(
             "PIE_MENU_COLOR_LIGHTEN_FACTOR",
@@ -30,7 +36,10 @@ public final class ConfigurationMigrator {
             "PIE_MENU_BLEND",
             "LABEL_TEXT_INSET",
             "IGNORED_KEYS",
-            "INVERT_IGNORED_KEYS_LIST"
+            "INVERT_IGNORED_KEYS_LIST",
+            "USE_SOFTWARE_RENDERING",
+            "LAZY_CONFLICT_CHECK",
+            "USE_KEYBIND_FIX"
     );
 
     private ConfigurationMigrator() {

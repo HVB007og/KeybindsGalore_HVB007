@@ -27,10 +27,8 @@ public class KeybindCircularScreen extends Screen {
     private static final float LABEL_GAP = 4.0f;
     private static final int SHADOW_OFFSET = 1;
     private static final int SHADOW_COLOR = 0x40000000;
-    // How much each channel is lifted at the inner edge of a wedge when gradation is on.
-    private static final int GRADATION_LIFT = 0x18;
-    // Open animation length in milliseconds.
-    private static final long OPEN_ANIMATION_MILLIS = 180L;
+    // Longest open animation accepted, in milliseconds.
+    private static final int MAX_ANIMATION_MILLIS = 2000;
 
     private final InputConstants.Key conflictedKey;
     private final List<KeyMapping> conflicts = new ArrayList<>();
@@ -73,14 +71,15 @@ public class KeybindCircularScreen extends Screen {
      * has already been committed, and that is the most delicate path in the mod.
      */
     private float openProgress() {
-        if (!Configurations.ANIMATE_PIE_MENU) {
+        long duration = Math.max(0, Math.min(MAX_ANIMATION_MILLIS, Configurations.ANIMATION_DURATION));
+        if (!Configurations.ANIMATE_PIE_MENU || duration == 0L) {
             return 1.0f;
         }
         long elapsed = (System.nanoTime() - this.openedAtNanos) / 1_000_000L;
-        if (elapsed >= OPEN_ANIMATION_MILLIS) {
+        if (elapsed >= duration) {
             return 1.0f;
         }
-        float t = (float) elapsed / (float) OPEN_ANIMATION_MILLIS;
+        float t = (float) elapsed / (float) duration;
         float eased = 1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t);
         return Math.max(0.0f, eased);
     }
@@ -187,22 +186,31 @@ public class KeybindCircularScreen extends Screen {
      * this costs nothing extra to draw.
      */
     private static int innerColorFor(int outerColor) {
-        if (!Configurations.SECTOR_GRADATION) {
+        if (!Configurations.SECTOR_GRADATION || Configurations.GRADATION_INTENSITY <= 0) {
             return outerColor;
         }
+        // Blend toward white rather than adding a flat offset, so the intensity slider
+        // means the same thing for a dark wedge as for a pale one and saturates cleanly
+        // instead of clipping one channel at a time.
+        float amount = Math.min(1.0f, Configurations.GRADATION_INTENSITY / 100.0f);
         int alpha = (outerColor >>> 24) & 0xFF;
-        int red = Math.min(255, ((outerColor >> 16) & 0xFF) + GRADATION_LIFT);
-        int green = Math.min(255, ((outerColor >> 8) & 0xFF) + GRADATION_LIFT);
-        int blue = Math.min(255, (outerColor & 0xFF) + GRADATION_LIFT);
-        return (alpha << 24) | (red << 16) | (green << 8) | blue;
+        int red = Math.round(((outerColor >> 16) & 0xFF) + (255 - ((outerColor >> 16) & 0xFF)) * amount);
+        int green = Math.round(((outerColor >> 8) & 0xFF) + (255 - ((outerColor >> 8) & 0xFF)) * amount);
+        int blue = Math.round((outerColor & 0xFF) + (255 - (outerColor & 0xFF)) * amount);
+        return (alpha << 24) | (clampChannel(red) << 16) | (clampChannel(green) << 8) | clampChannel(blue);
+    }
+
+    private static int clampChannel(int value) {
+        return Math.max(0, Math.min(255, value));
     }
 
     private void renderLabelTexts(GuiGraphicsExtractor context, int numberOfSectors, float progress) {
         if (numberOfSectors == 0) return;
 
-        // Labels only appear once the pie is most of the way open, so they do not pile up
-        // on the centre while it is still growing.
-        if (progress < 0.6f) {
+        // Labels appear only once the pie has finished opening. Fading them in with the
+        // animation looked wrong, because the text slides outward while the wedge it
+        // belongs to is still growing.
+        if (progress < 1.0f) {
             return;
         }
 
