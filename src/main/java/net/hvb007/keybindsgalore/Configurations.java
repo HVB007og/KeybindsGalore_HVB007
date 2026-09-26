@@ -22,6 +22,7 @@ public class Configurations {
     public static int CIRCLE_VERTICES = 120;
     public static boolean PIE_MENU_BLEND = false;
     public static boolean DARKENED_BACKGROUND = true;
+    public static int DARKENED_BACKGROUND_STRENGTH = 0x60;
     public static boolean LABEL_TEXT_SHADOW = false;
 
     // --- Behaviour ---
@@ -74,6 +75,7 @@ public class Configurations {
                 CIRCLE_VERTICES,
                 PIE_MENU_BLEND,
                 DARKENED_BACKGROUND,
+                DARKENED_BACKGROUND_STRENGTH,
                 LABEL_TEXT_SHADOW,
                 USE_CIRCULAR_MENU,
                 USE_SOFTWARE_RENDERING,
@@ -114,6 +116,7 @@ public class Configurations {
         CIRCLE_VERTICES = snapshot.circleVertices();
         PIE_MENU_BLEND = snapshot.pieMenuBlend();
         DARKENED_BACKGROUND = snapshot.darkenedBackground();
+        DARKENED_BACKGROUND_STRENGTH = snapshot.darkenedBackgroundStrength();
         LABEL_TEXT_SHADOW = snapshot.labelTextShadow();
         USE_CIRCULAR_MENU = snapshot.useCircularMenu();
         USE_SOFTWARE_RENDERING = snapshot.useSoftwareRendering();

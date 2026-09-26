@@ -23,6 +23,7 @@ public final class ConfigurationSnapshotCodec {
                 intValue(merged, "CIRCLE_VERTICES"),
                 booleanValue(merged, "PIE_MENU_BLEND"),
                 booleanValue(merged, "DARKENED_BACKGROUND"),
+                intValue(merged, "DARKENED_BACKGROUND_STRENGTH"),
                 booleanValue(merged, "LABEL_TEXT_SHADOW"),
                 booleanValue(merged, "USE_CIRCULAR_MENU"),
                 booleanValue(merged, "USE_SOFTWARE_RENDERING"),
@@ -64,6 +65,7 @@ public final class ConfigurationSnapshotCodec {
         put(values, "CIRCLE_VERTICES", snapshot.circleVertices());
         put(values, "PIE_MENU_BLEND", snapshot.pieMenuBlend());
         put(values, "DARKENED_BACKGROUND", snapshot.darkenedBackground());
+        put(values, "DARKENED_BACKGROUND_STRENGTH", snapshot.darkenedBackgroundStrength());
         put(values, "LABEL_TEXT_SHADOW", snapshot.labelTextShadow());
         put(values, "USE_CIRCULAR_MENU", snapshot.useCircularMenu());
         put(values, "USE_SOFTWARE_RENDERING", snapshot.useSoftwareRendering());

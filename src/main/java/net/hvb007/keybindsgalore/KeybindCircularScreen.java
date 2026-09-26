@@ -93,7 +93,11 @@ public class KeybindCircularScreen extends Screen {
 
         super.extractRenderState(context, mouseX, mouseY, delta);
 
-        int segments = Math.max(4, Configurations.CIRCLE_VERTICES);
+        int totalSegments = Math.max(12, Configurations.CIRCLE_VERTICES);
+        // Split the vertex budget across the wedges so a wedge is only as smooth as it
+        // needs to be. Previously every wedge got the full budget, so the cancel circle
+        // visibly polygonalised long before the pie did.
+        int segmentsPerSector = Math.max(4, Math.round((float) totalSegments / numberOfSectors));
 
         for (int i = 0; i < numberOfSectors; i++) {
             float startAngleRad = i * sectorAngle;
@@ -113,10 +117,15 @@ public class KeybindCircularScreen extends Screen {
             double startDeg = Math.toDegrees(startAngleRad);
             double endDeg = Math.toDegrees(endAngleRad);
 
+            float outerRadius = this.maxRadius;
+            if (i == selection.selectedIndex() && Configurations.EXPANSION_FACTOR_WHEN_SELECTED > 0) {
+                outerRadius = this.maxRadius * (1.0f + Configurations.EXPANSION_FACTOR_WHEN_SELECTED);
+            }
+
             RingRenderer.drawRing(context, this.centreX, this.centreY,
                 startDeg, endDeg,
-                segments,
-                this.cancelZoneRadius, this.maxRadius,
+                segmentsPerSector,
+                this.cancelZoneRadius, outerRadius,
                 color, color);
         }
 
@@ -125,7 +134,7 @@ public class KeybindCircularScreen extends Screen {
             : Configurations.PIE_MENU_CANCEL_ZONE_COLOR;
 
         RingRenderer.drawCircle(context, this.centreX, this.centreY, 0, 360,
-            segments, this.cancelZoneRadius,
+            totalSegments, this.cancelZoneRadius,
             cancelZoneColor);
 
         renderLabelTexts(context, numberOfSectors);
@@ -135,12 +144,14 @@ public class KeybindCircularScreen extends Screen {
         if (numberOfSectors == 0) return;
 
         Font textRenderer = Minecraft.getInstance().font;
+        int screenMargin = Math.max(2, Configurations.LABEL_TEXT_INSET);
 
         for (int sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++) {
             float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
-            float radius = this.maxRadius;
 
-            float textRadius = radius * 1.1f;
+            // The inset moves the label outward along its own angle. Applying it to x/y
+            // instead pushed every label upwards regardless of which wedge it belonged to.
+            float textRadius = this.maxRadius * 1.1f + Configurations.LABEL_TEXT_INSET;
             float angle = (sectorIndex + 0.5f) * sectorAngle;
 
             float xPos = this.centreX + Mth.cos(angle) * textRadius;
@@ -152,21 +163,25 @@ public class KeybindCircularScreen extends Screen {
             int textHeight = textRenderer.lineHeight;
 
             if (xPos > this.centreX) {
-                xPos -= Configurations.LABEL_TEXT_INSET;
-                if (this.width - xPos < textWidth)
-                    xPos -= textWidth - this.width + xPos;
+                xPos -= screenMargin;
+                if (this.width - xPos < textWidth) {
+                    xPos = this.width - textWidth - screenMargin;
+                }
             } else {
-                xPos -= textWidth - Configurations.LABEL_TEXT_INSET;
-                if (xPos < 0) xPos = Configurations.LABEL_TEXT_INSET;
+                xPos -= textWidth - screenMargin;
+                if (xPos < screenMargin) {
+                    xPos = screenMargin;
+                }
             }
-            yPos -= Configurations.LABEL_TEXT_INSET;
+            yPos -= textHeight / 2.0f;
 
             if (selection.selectedIndex() == sectorIndex) {
                 actionName = ChatFormatting.UNDERLINE + actionName;
-                context.fill((int)xPos - 2, (int)yPos - 2, (int)xPos + textWidth + 2, (int)yPos + textHeight + 2, 0x80E0E0E0);
+                context.fill((int) xPos - 2, (int) yPos - 2, (int) xPos + textWidth + 2, (int) yPos + textHeight + 2, 0x80E0E0E0);
             }
 
-            context.text(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF, true);
+            context.text(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF,
+                    Configurations.LABEL_TEXT_SHADOW);
         }
     }
 
@@ -236,7 +251,7 @@ public class KeybindCircularScreen extends Screen {
 
     public void renderBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (Configurations.DARKENED_BACKGROUND) {
-            context.fill(0, 0, this.width, this.height, 0x60000000);
+            context.fill(0, 0, this.width, this.height, Configurations.DARKENED_BACKGROUND_STRENGTH << 24);
         }
     }
 }
