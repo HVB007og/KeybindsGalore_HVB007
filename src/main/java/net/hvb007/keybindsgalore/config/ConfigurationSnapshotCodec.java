@@ -49,7 +49,6 @@ public final class ConfigurationSnapshotCodec {
                 intValue(merged, "PIE_MENU_SECTOR_COLOR_LAST_ODD"),
                 intValue(merged, "PIE_MENU_CANCEL_ZONE_COLOR"),
                 intValue(merged, "PIE_MENU_CANCEL_ZONE_HOVER_COLOR"),
-                intValue(merged, "PIE_MENU_COLOR_LIGHTEN_FACTOR"),
                 shortValue(merged, "PIE_MENU_ALPHA"),
                 booleanValue(merged, "SECTOR_GRADATION"),
                 intValue(merged, "LABEL_TEXT_INSET"),
@@ -91,7 +90,6 @@ public final class ConfigurationSnapshotCodec {
         put(values, "PIE_MENU_SECTOR_COLOR_LAST_ODD", snapshot.pieMenuSectorColorLastOdd());
         put(values, "PIE_MENU_CANCEL_ZONE_COLOR", snapshot.pieMenuCancelZoneColor());
         put(values, "PIE_MENU_CANCEL_ZONE_HOVER_COLOR", snapshot.pieMenuCancelZoneHoverColor());
-        put(values, "PIE_MENU_COLOR_LIGHTEN_FACTOR", snapshot.pieMenuColorLightenFactor());
         put(values, "PIE_MENU_ALPHA", snapshot.pieMenuAlpha());
         put(values, "SECTOR_GRADATION", snapshot.sectorGradation());
         put(values, "LABEL_TEXT_INSET", snapshot.labelTextInset());

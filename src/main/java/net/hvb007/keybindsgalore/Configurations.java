@@ -57,7 +57,6 @@ public class Configurations {
     public static int PIE_MENU_SECTOR_COLOR_LAST_ODD = 0xC0A0A0A0;
     public static int PIE_MENU_CANCEL_ZONE_COLOR = 0xC0000000;
     public static int PIE_MENU_CANCEL_ZONE_HOVER_COLOR = 0xC0B04232;
-    public static int PIE_MENU_COLOR_LIGHTEN_FACTOR = 0x191919;
     public static short PIE_MENU_ALPHA = 0x40;
     public static boolean SECTOR_GRADATION = true;
     public static int LABEL_TEXT_INSET = 6;
@@ -100,9 +99,8 @@ public class Configurations {
                 PIE_MENU_SECTOR_COLOR_SELECTED,
                 PIE_MENU_SECTOR_COLOR_LAST_ODD,
                 PIE_MENU_CANCEL_ZONE_COLOR,
-                PIE_MENU_CANCEL_ZONE_HOVER_COLOR,
-                PIE_MENU_COLOR_LIGHTEN_FACTOR,
-                PIE_MENU_ALPHA,
+        PIE_MENU_CANCEL_ZONE_HOVER_COLOR,
+        PIE_MENU_ALPHA,
                 SECTOR_GRADATION,
                 LABEL_TEXT_INSET,
                 ANIMATE_PIE_MENU
@@ -142,7 +140,6 @@ public class Configurations {
         PIE_MENU_SECTOR_COLOR_LAST_ODD = snapshot.pieMenuSectorColorLastOdd();
         PIE_MENU_CANCEL_ZONE_COLOR = snapshot.pieMenuCancelZoneColor();
         PIE_MENU_CANCEL_ZONE_HOVER_COLOR = snapshot.pieMenuCancelZoneHoverColor();
-        PIE_MENU_COLOR_LIGHTEN_FACTOR = snapshot.pieMenuColorLightenFactor();
         PIE_MENU_ALPHA = snapshot.pieMenuAlpha();
         SECTOR_GRADATION = snapshot.sectorGradation();
         LABEL_TEXT_INSET = snapshot.labelTextInset();
