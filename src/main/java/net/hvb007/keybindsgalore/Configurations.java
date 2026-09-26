@@ -45,8 +45,8 @@ public class Configurations {
     // --- Pie Menu Customisation ---
     public static float EXPANSION_FACTOR_WHEN_SELECTED = 0;
     public static int PIE_MENU_MARGIN = 0;
-    public static float PIE_MENU_SCALE = 0.6f;
-    public static float CANCEL_ZONE_SCALE = 0.25f;
+    public static float PIE_MENU_SCALE = 0.8f;
+    public static float CANCEL_ZONE_SCALE = 0.2f;
     public static int PIE_MENU_COLOR = 0x00404040;
     public static int PIE_MENU_SELECT_COLOR = 0x00FFFFFF;
     public static int PIE_MENU_HIGHLIGHT_COLOR = 0x00EED202;

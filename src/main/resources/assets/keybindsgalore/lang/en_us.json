@@ -43,7 +43,7 @@
   "option.keybindsgalore.show_conflict_warnings.tooltip": "Shows a warning in chat when key conflicts are detected.",
 
   "option.keybindsgalore.filtered_categories": "Filtered Categories",
-  "option.keybindsgalore.filtered_categories.tooltip": "Key categories to exclude from conflict detection. Each entry should match a category name (e.g. 'Debug').",
+  "option.keybindsgalore.filtered_categories.tooltip": "Key categories to exclude from conflict detection. Matches a category label or id exactly, ignoring case. The 26.2 labels are: Creative Mode, Gameplay, Inventory, Miscellaneous, Movement, Multiplayer, Spectator, Game Interface. Leave empty to check every category.",
 
   "option.keybindsgalore.priority_categories": "Priority Categories",
   "option.keybindsgalore.priority_categories.tooltip": "Entire key categories whose bindings take priority when conflicts occur (e.g. 'Movement').",
@@ -61,13 +61,13 @@
   "option.keybindsgalore.expansion_factor_when_selected.tooltip": "How much the selected pie menu sector expands outward. 0 = no expansion.",
 
   "option.keybindsgalore.pie_menu_margin": "Pie Menu Margin",
-  "option.keybindsgalore.pie_menu_margin.tooltip": "Empty space around the pie menu in pixels. Range: 0-200.",
+  "option.keybindsgalore.pie_menu_margin.tooltip": "Empty space between the pie menu and the screen edge, in pixels. Larger values shrink the available space. Range: 0-200.",
 
   "option.keybindsgalore.pie_scale": "Pie Menu Scale",
-  "option.keybindsgalore.pie_scale.tooltip": "Overall scale of the pie menu. Values below 1 shrink it, above 1 enlarge it.",
+  "option.keybindsgalore.pie_scale.tooltip": "Pie radius as a fraction of half the shorter screen dimension, after the margin. 0.8 is the default. Range: 0.1-1.0.",
 
   "option.keybindsgalore.cancel_zone_scale": "Cancel Zone Scale",
-  "option.keybindsgalore.cancel_zone_scale.tooltip": "Size of the cancel zone at the centre of the pie menu, as a fraction of the total radius.",
+  "option.keybindsgalore.cancel_zone_scale.tooltip": "Radius of the central cancel zone as a fraction of the pie radius. Releasing the key while the cursor is inside cancels the selection. 0.2 is the default. Range: 0.05-0.9.",
 
   "option.keybindsgalore.darkened_background": "Darken Background",
   "option.keybindsgalore.darkened_background.tooltip": "Darkens the screen behind the pie menu for better visibility of sectors.",

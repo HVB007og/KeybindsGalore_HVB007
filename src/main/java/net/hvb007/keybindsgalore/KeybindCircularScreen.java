@@ -46,8 +46,14 @@ public class KeybindCircularScreen extends Screen {
         super.init();
         this.centreX = this.width / 2;
         this.centreY = this.height / 2;
-        this.maxRadius = Math.min(this.width, this.height) / 2.0f * 0.8f;
-        this.cancelZoneRadius = maxRadius * 0.2f;
+
+        // PIE_MENU_MARGIN shrinks the available area, PIE_MENU_SCALE then takes a
+        // fraction of what is left, and CANCEL_ZONE_SCALE is a fraction of the pie.
+        // The option defaults were raised to the values this code previously
+        // hardcoded (0.8 and 0.2) so that wiring them up does not resize the pie.
+        float available = Math.max(0, Math.min(this.width, this.height) / 2.0f - Configurations.PIE_MENU_MARGIN);
+        this.maxRadius = available * Configurations.PIE_MENU_SCALE;
+        this.cancelZoneRadius = maxRadius * Configurations.CANCEL_ZONE_SCALE;
     }
 
     @Override

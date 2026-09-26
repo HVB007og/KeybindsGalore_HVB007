@@ -128,13 +128,15 @@ public class ConfigScreenBuilder {
                 .build());
 
         behavior.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.pie_scale"), Configurations.PIE_MENU_SCALE)
-                .setDefaultValue(0.6f)
+                .setDefaultValue(0.8f)
+                .setMin(0.1f).setMax(1.0f)
                 .setTooltip(Component.translatable("option.keybindsgalore.pie_scale.tooltip"))
                 .setSaveConsumer(v -> Configurations.PIE_MENU_SCALE = v)
                 .build());
 
         behavior.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.cancel_zone_scale"), Configurations.CANCEL_ZONE_SCALE)
-                .setDefaultValue(0.25f)
+                .setDefaultValue(0.2f)
+                .setMin(0.05f).setMax(0.9f)
                 .setTooltip(Component.translatable("option.keybindsgalore.cancel_zone_scale.tooltip"))
                 .setSaveConsumer(v -> Configurations.CANCEL_ZONE_SCALE = v)
                 .build());
