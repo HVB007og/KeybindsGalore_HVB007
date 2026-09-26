@@ -10,6 +10,13 @@ import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 
+/**
+ * Builds the ModMenu and Cloth Config settings screen.
+ *
+ * <p>Entries are grouped into three tabs. Anything that only changes how the pie menu
+ * looks or feels belongs in the Visual tab, including its geometry and text options;
+ * anything that changes conflict detection or priority resolution belongs in Behaviour.
+ */
 public class ConfigScreenBuilder {
 
     public static Screen buildConfigScreen(Screen parent) {
@@ -24,8 +31,18 @@ public class ConfigScreenBuilder {
 
         ConfigEntryBuilder eb = builder.entryBuilder();
 
-        // ========== GENERAL ==========
+        addGeneral(eb, general);
+        addBehavior(eb, behavior);
+        addPieLayout(eb, visual);
+        addPieColors(eb, visual);
+        addPieEffects(eb, visual);
+        addPieLabels(eb, visual);
+        addPieBackground(eb, visual);
 
+        return builder.build();
+    }
+
+    private static void addGeneral(ConfigEntryBuilder eb, ConfigCategory general) {
         general.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.debug"), Configurations.DEBUG)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.keybindsgalore.debug.tooltip"))
@@ -42,13 +59,6 @@ public class ConfigScreenBuilder {
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.keybindsgalore.lazy_conflict_check.tooltip"))
                 .setSaveConsumer(v -> Configurations.LAZY_CONFLICT_CHECK = v)
-                .build());
-
-        general.addEntry(eb.startIntField(Component.translatable("option.keybindsgalore.circle_vertices"), Configurations.CIRCLE_VERTICES)
-                .setDefaultValue(120)
-                .setMin(6).setMax(360)
-                .setTooltip(Component.translatable("option.keybindsgalore.circle_vertices.tooltip"))
-                .setSaveConsumer(v -> Configurations.CIRCLE_VERTICES = v)
                 .build());
 
         general.addEntry(eb.startIntField(Component.translatable("option.keybindsgalore.pulse_timer_duration"), Configurations.PULSE_TIMER_DURATION)
@@ -69,9 +79,9 @@ public class ConfigScreenBuilder {
                 .setTooltip(Component.translatable("option.keybindsgalore.enable_attack_workaround.tooltip"))
                 .setSaveConsumer(v -> Configurations.ENABLE_ATTACK_WORKAROUND = v)
                 .build());
+    }
 
-        // ========== BEHAVIOUR ==========
-
+    private static void addBehavior(ConfigEntryBuilder eb, ConfigCategory behavior) {
         behavior.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.use_circular_menu"), Configurations.USE_CIRCULAR_MENU)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.keybindsgalore.use_circular_menu.tooltip"))
@@ -113,70 +123,51 @@ public class ConfigScreenBuilder {
                 .setTooltip(Component.translatable("option.keybindsgalore.invert_ignored_keys_list.tooltip"))
                 .setSaveConsumer(v -> Configurations.INVERT_IGNORED_KEYS_LIST = v)
                 .build());
+    }
 
-        behavior.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.expansion_factor_when_selected"), Configurations.EXPANSION_FACTOR_WHEN_SELECTED)
-                .setDefaultValue(0.0f)
-                .setTooltip(Component.translatable("option.keybindsgalore.expansion_factor_when_selected.tooltip"))
-                .setSaveConsumer(v -> Configurations.EXPANSION_FACTOR_WHEN_SELECTED = v)
+    private static void addPieLayout(ConfigEntryBuilder eb, ConfigCategory visual) {
+        visual.addEntry(eb.startIntField(Component.translatable("option.keybindsgalore.circle_vertices"), Configurations.CIRCLE_VERTICES)
+                .setDefaultValue(120)
+                .setMin(6).setMax(360)
+                .setTooltip(Component.translatable("option.keybindsgalore.circle_vertices.tooltip"))
+                .setSaveConsumer(v -> Configurations.CIRCLE_VERTICES = v)
                 .build());
 
-        behavior.addEntry(eb.startIntField(Component.translatable("option.keybindsgalore.pie_menu_margin"), Configurations.PIE_MENU_MARGIN)
+        visual.addEntry(eb.startIntField(Component.translatable("option.keybindsgalore.pie_menu_margin"), Configurations.PIE_MENU_MARGIN)
                 .setDefaultValue(0)
                 .setMin(0).setMax(200)
                 .setTooltip(Component.translatable("option.keybindsgalore.pie_menu_margin.tooltip"))
                 .setSaveConsumer(v -> Configurations.PIE_MENU_MARGIN = v)
                 .build());
 
-        behavior.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.pie_scale"), Configurations.PIE_MENU_SCALE)
+        visual.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.pie_scale"), Configurations.PIE_MENU_SCALE)
                 .setDefaultValue(0.8f)
                 .setMin(0.1f).setMax(1.0f)
                 .setTooltip(Component.translatable("option.keybindsgalore.pie_scale.tooltip"))
                 .setSaveConsumer(v -> Configurations.PIE_MENU_SCALE = v)
                 .build());
 
-        behavior.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.cancel_zone_scale"), Configurations.CANCEL_ZONE_SCALE)
+        visual.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.cancel_zone_scale"), Configurations.CANCEL_ZONE_SCALE)
                 .setDefaultValue(0.2f)
                 .setMin(0.05f).setMax(0.9f)
                 .setTooltip(Component.translatable("option.keybindsgalore.cancel_zone_scale.tooltip"))
                 .setSaveConsumer(v -> Configurations.CANCEL_ZONE_SCALE = v)
                 .build());
 
-        // ========== VISUAL (PIE MENU) ==========
-
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.darkened_background"), Configurations.DARKENED_BACKGROUND)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.keybindsgalore.darkened_background.tooltip"))
-                .setSaveConsumer(v -> Configurations.DARKENED_BACKGROUND = v)
+        visual.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.expansion_factor_when_selected"), Configurations.EXPANSION_FACTOR_WHEN_SELECTED)
+                .setDefaultValue(0.0f)
+                .setMin(0.0f).setMax(2.0f)
+                .setTooltip(Component.translatable("option.keybindsgalore.expansion_factor_when_selected.tooltip"))
+                .setSaveConsumer(v -> Configurations.EXPANSION_FACTOR_WHEN_SELECTED = v)
                 .build());
+    }
 
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.pie_menu_blend"), Configurations.PIE_MENU_BLEND)
-                .setDefaultValue(false)
-                .setTooltip(Component.translatable("option.keybindsgalore.pie_menu_blend.tooltip"))
-                .setSaveConsumer(v -> Configurations.PIE_MENU_BLEND = v)
-                .build());
-
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.label_text_shadow"), Configurations.LABEL_TEXT_SHADOW)
-                .setDefaultValue(false)
-                .setTooltip(Component.translatable("option.keybindsgalore.label_text_shadow.tooltip"))
-                .setSaveConsumer(v -> Configurations.LABEL_TEXT_SHADOW = v)
-                .build());
-
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.use_software_rendering"), Configurations.USE_SOFTWARE_RENDERING)
-                .setDefaultValue(false)
-                .setTooltip(Component.translatable("option.keybindsgalore.use_software_rendering.tooltip"))
-                .setSaveConsumer(v -> Configurations.USE_SOFTWARE_RENDERING = v)
-                .build());
-
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.sector_gradation"), Configurations.SECTOR_GRADATION)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.keybindsgalore.sector_gradation.tooltip"))
-                .setSaveConsumer(v -> Configurations.SECTOR_GRADATION = v)
-                .build());
-
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.animate_pie_menu"), Configurations.ANIMATE_PIE_MENU)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.keybindsgalore.animate_pie_menu.tooltip"))
-                .setSaveConsumer(v -> Configurations.ANIMATE_PIE_MENU = v)
+    private static void addPieColors(ConfigEntryBuilder eb, ConfigCategory visual) {
+        visual.addEntry(eb.startIntField(Component.translatable("option.keybindsgalore.pie_menu_alpha"), Configurations.PIE_MENU_ALPHA)
+                .setDefaultValue(64)
+                .setMin(0).setMax(255)
+                .setTooltip(Component.translatable("option.keybindsgalore.pie_menu_alpha.tooltip"))
+                .setSaveConsumer(v -> Configurations.PIE_MENU_ALPHA = (short) (int) v)
                 .build());
 
         visual.addEntry(eb.startAlphaColorField(Component.translatable("option.keybindsgalore.color"), Configurations.PIE_MENU_COLOR)
@@ -239,14 +230,29 @@ public class ConfigScreenBuilder {
                 .setTooltip(Component.translatable("option.keybindsgalore.color_lighten_factor.tooltip"))
                 .setSaveConsumer(v -> Configurations.PIE_MENU_COLOR_LIGHTEN_FACTOR = v)
                 .build());
+    }
 
-        visual.addEntry(eb.startIntField(Component.translatable("option.keybindsgalore.pie_menu_alpha"), Configurations.PIE_MENU_ALPHA)
-                .setDefaultValue(64)
-                .setMin(0).setMax(255)
-                .setTooltip(Component.translatable("option.keybindsgalore.pie_menu_alpha.tooltip"))
-                .setSaveConsumer(v -> Configurations.PIE_MENU_ALPHA = (short) (int) v)
+    private static void addPieEffects(ConfigEntryBuilder eb, ConfigCategory visual) {
+        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.sector_gradation"), Configurations.SECTOR_GRADATION)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.keybindsgalore.sector_gradation.tooltip"))
+                .setSaveConsumer(v -> Configurations.SECTOR_GRADATION = v)
                 .build());
 
+        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.animate_pie_menu"), Configurations.ANIMATE_PIE_MENU)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.keybindsgalore.animate_pie_menu.tooltip"))
+                .setSaveConsumer(v -> Configurations.ANIMATE_PIE_MENU = v)
+                .build());
+
+        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.pie_menu_blend"), Configurations.PIE_MENU_BLEND)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.keybindsgalore.pie_menu_blend.tooltip"))
+                .setSaveConsumer(v -> Configurations.PIE_MENU_BLEND = v)
+                .build());
+    }
+
+    private static void addPieLabels(ConfigEntryBuilder eb, ConfigCategory visual) {
         visual.addEntry(eb.startIntField(Component.translatable("option.keybindsgalore.label_text_inset"), Configurations.LABEL_TEXT_INSET)
                 .setDefaultValue(6)
                 .setMin(0).setMax(50)
@@ -254,6 +260,24 @@ public class ConfigScreenBuilder {
                 .setSaveConsumer(v -> Configurations.LABEL_TEXT_INSET = v)
                 .build());
 
-        return builder.build();
+        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.label_text_shadow"), Configurations.LABEL_TEXT_SHADOW)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.keybindsgalore.label_text_shadow.tooltip"))
+                .setSaveConsumer(v -> Configurations.LABEL_TEXT_SHADOW = v)
+                .build());
+    }
+
+    private static void addPieBackground(ConfigEntryBuilder eb, ConfigCategory visual) {
+        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.darkened_background"), Configurations.DARKENED_BACKGROUND)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.keybindsgalore.darkened_background.tooltip"))
+                .setSaveConsumer(v -> Configurations.DARKENED_BACKGROUND = v)
+                .build());
+
+        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.use_software_rendering"), Configurations.USE_SOFTWARE_RENDERING)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.keybindsgalore.use_software_rendering.tooltip"))
+                .setSaveConsumer(v -> Configurations.USE_SOFTWARE_RENDERING = v)
+                .build());
     }
 }

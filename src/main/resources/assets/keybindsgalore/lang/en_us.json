@@ -57,8 +57,8 @@
   "option.keybindsgalore.invert_ignored_keys_list": "Invert Ignored List",
   "option.keybindsgalore.invert_ignored_keys_list.tooltip": "When enabled, the ignored keys list becomes an allowed list - only those keys will be checked for conflicts.",
 
-  "option.keybindsgalore.expansion_factor_when_selected": "Expansion Factor (Selected)",
-  "option.keybindsgalore.expansion_factor_when_selected.tooltip": "How much the selected pie menu sector expands outward. 0 = no expansion.",
+  "option.keybindsgalore.expansion_factor_when_selected": "Selected Sector Expansion",
+  "option.keybindsgalore.expansion_factor_when_selected.tooltip": "How far the hovered sector grows outward from the pie, as a fraction of the pie radius. 0 = no expansion.",
 
   "option.keybindsgalore.pie_menu_margin": "Pie Menu Margin",
   "option.keybindsgalore.pie_menu_margin.tooltip": "Empty space between the pie menu and the screen edge, in pixels. Larger values shrink the available space. Range: 0-200.",
@@ -72,14 +72,14 @@
   "option.keybindsgalore.darkened_background": "Darken Background",
   "option.keybindsgalore.darkened_background.tooltip": "Darkens the screen behind the pie menu for better visibility of sectors.",
 
-  "option.keybindsgalore.pie_menu_blend": "Pie Menu Blend",
-  "option.keybindsgalore.pie_menu_blend.tooltip": "Enables blending/transparency effects on the pie menu for a smoother look.",
+  "option.keybindsgalore.pie_menu_blend": "Soft Sector Edges",
+  "option.keybindsgalore.pie_menu_blend.tooltip": "Blends sector edges together instead of drawing hard outlines, for a softer look.",
 
   "option.keybindsgalore.label_text_shadow": "Label Text Shadow",
   "option.keybindsgalore.label_text_shadow.tooltip": "Renders a shadow behind action labels in the pie menu for improved readability.",
 
   "option.keybindsgalore.use_software_rendering": "Software Rendering",
-  "option.keybindsgalore.use_software_rendering.tooltip": "Uses software rendering for the pie menu instead of the GPU. Useful for troubleshooting.",
+  "option.keybindsgalore.use_software_rendering.tooltip": "Legacy option with no effect on this version. The pie menu always renders on the GPU. Kept so older config files still load.",
 
   "option.keybindsgalore.sector_gradation": "Sector Gradation",
   "option.keybindsgalore.sector_gradation.tooltip": "Enables a smooth gradient across pie menu sectors for a more polished look.",
@@ -114,8 +114,8 @@
   "option.keybindsgalore.color_cancel_hover": "Cancel Zone Hover Color",
   "option.keybindsgalore.color_cancel_hover.tooltip": "Colour of the cancel zone when the mouse hovers over it.",
 
-  "option.keybindsgalore.color_lighten_factor": "Color Lighten Factor",
-  "option.keybindsgalore.color_lighten_factor.tooltip": "RGB value used to lighten sector colours for visual effects. Range: 0-16777215.",
+  "option.keybindsgalore.color_lighten_factor": "Alternating Sector Lighten",
+  "option.keybindsgalore.color_lighten_factor.tooltip": "RGB value added to alternating sector colours so odd wedges stand out from even ones. Range: 0-16777215.",
 
   "option.keybindsgalore.pie_menu_alpha": "Pie Menu Alpha",
   "option.keybindsgalore.pie_menu_alpha.tooltip": "Overall opacity of the pie menu. 0 = fully transparent, 255 = fully opaque.",
