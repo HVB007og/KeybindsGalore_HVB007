@@ -1,9 +1,14 @@
 # Changelog
 
-## 1.7.2+26.2 — Minecraft 26.2
+## 1.8.0+26.2 — Minecraft 26.2
 
-Ported from the 1.21.7 line to Minecraft 26.2. This is a large internal change with a
-small player-facing one.
+**The config screen now works on 26.2.** The previous 26.2 build shipped with a known issue
+where the ModMenu config screen failed, because the Cloth Config release available at the
+time referenced a Minecraft class that no longer exists. Use the in-game settings screen
+instead of editing `keybindsgalore.properties` by hand.
+
+Beyond that, conflict detection was rebuilt around a single canonical index, and the pie
+menu was substantially reworked.
 
 ### Fixed
 
