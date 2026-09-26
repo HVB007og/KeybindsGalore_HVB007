@@ -210,7 +210,7 @@ public class KeybindSelectorScreen extends Screen {
 
     public void renderBackground(GuiGraphicsExtractor ctx, int mx, int my, float d) {
         if (Configurations.DARKENED_BACKGROUND) {
-            ctx.fill(0, 0, width, height, 0x60000000);
+            ctx.fill(0, 0, width, height, Configurations.DARKENED_BACKGROUND_STRENGTH << 24);
         }
     }
 

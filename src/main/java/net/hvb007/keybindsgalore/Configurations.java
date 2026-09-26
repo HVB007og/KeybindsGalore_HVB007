@@ -59,7 +59,6 @@ public class Configurations {
     public static int PIE_MENU_CANCEL_ZONE_HOVER_COLOR = 0xC0B04232;
     public static short PIE_MENU_ALPHA = 0x40;
     public static boolean SECTOR_GRADATION = true;
-    public static int LABEL_TEXT_INSET = 6;
     public static boolean ANIMATE_PIE_MENU = true;
 
     static {
@@ -102,7 +101,6 @@ public class Configurations {
         PIE_MENU_CANCEL_ZONE_HOVER_COLOR,
         PIE_MENU_ALPHA,
                 SECTOR_GRADATION,
-                LABEL_TEXT_INSET,
                 ANIMATE_PIE_MENU
         );
     }
@@ -142,7 +140,6 @@ public class Configurations {
         PIE_MENU_CANCEL_ZONE_HOVER_COLOR = snapshot.pieMenuCancelZoneHoverColor();
         PIE_MENU_ALPHA = snapshot.pieMenuAlpha();
         SECTOR_GRADATION = snapshot.sectorGradation();
-        LABEL_TEXT_INSET = snapshot.labelTextInset();
         ANIMATE_PIE_MENU = snapshot.animatePieMenu();
     }
 }

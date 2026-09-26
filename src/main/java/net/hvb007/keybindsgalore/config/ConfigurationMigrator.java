@@ -12,9 +12,13 @@ public final class ConfigurationMigrator {
      * "no matching config field" error in {@code ConfigManager}, and so the next save
      * rewrites the file without them. The option each one replaced is still present, so
      * no user-visible setting is lost by retiring them.
+     *
+     * <p>{@code LABEL_TEXT_INSET} is retired because labels now always sit a fixed
+     * distance outside the pie and are clamped so they cannot be clipped.
      */
     private static final Set<String> RETIRED_KEYS = Set.of(
-            "PIE_MENU_COLOR_LIGHTEN_FACTOR"
+            "PIE_MENU_COLOR_LIGHTEN_FACTOR",
+            "LABEL_TEXT_INSET"
     );
 
     private ConfigurationMigrator() {

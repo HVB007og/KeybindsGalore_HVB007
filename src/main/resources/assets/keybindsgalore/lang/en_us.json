@@ -59,7 +59,7 @@
   "option.keybindsgalore.invert_ignored_keys_list.tooltip": "When enabled, the ignored keys list becomes an allowed list - only those keys will be checked for conflicts.",
 
   "option.keybindsgalore.expansion_factor_when_selected": "Selected Sector Expansion",
-  "option.keybindsgalore.expansion_factor_when_selected.tooltip": "How far the hovered sector grows outward from the pie, as a fraction of the pie radius. 0 = no expansion.",
+  "option.keybindsgalore.expansion_factor_when_selected.tooltip": "How far the hovered sector grows outward from the pie, as a fraction of the pie radius. 0.06 is a subtle default. Range: 0.0-0.3.",
 
   "option.keybindsgalore.pie_menu_margin": "Pie Menu Margin",
   "option.keybindsgalore.pie_menu_margin.tooltip": "Empty space between the pie menu and the screen edge, in pixels. Larger values shrink the available space. Range: 0-200.",
@@ -71,13 +71,10 @@
   "option.keybindsgalore.cancel_zone_scale.tooltip": "Radius of the central cancel zone as a fraction of the pie radius. Releasing the key while the cursor is inside cancels the selection. 0.2 is the default. Range: 0.05-0.9.",
 
   "option.keybindsgalore.darkened_background": "Darken Background",
-  "option.keybindsgalore.darkened_background.tooltip": "Darkens the screen behind the pie menu for better visibility of sectors.",
+  "option.keybindsgalore.darkened_background.tooltip": "Darkens the screen behind whichever selector is open. Applies to both the pie menu and the list menu.",
 
   "option.keybindsgalore.darkened_background_strength": "Darken Strength",
-  "option.keybindsgalore.darkened_background_strength.tooltip": "How strongly the background is darkened, from 0 (no darkening) to 255 (solid black). Only applies while Darken Background is on.",
-
-  "option.keybindsgalore.darkened_background_list": "Darken Background",
-  "option.keybindsgalore.darkened_background_list.tooltip": "Darkens the screen behind the list menu. Shares its value with the pie menu setting.",
+  "option.keybindsgalore.darkened_background_strength.tooltip": "How strongly the background is darkened, from 0 (no darkening) to 255 (solid black). Applies to both selectors, and only while Darken Background is on.",
 
   "option.keybindsgalore.pie_menu_blend": "Soft Sector Edges",
   "option.keybindsgalore.pie_menu_blend.tooltip": "Not implemented yet. The setting is saved but currently has no effect.",
@@ -104,7 +101,7 @@
   "option.keybindsgalore.color_highlight.tooltip": "Highlight colour for the list menu row under the cursor. This affects the list menu only, not the pie menu.",
 
   "option.keybindsgalore.color_even": "Sector Color (Even)",
-  "option.keybindsgalore.color_even.tooltip": "Colour for even-numbered pie menu sectors.",
+  "option.keybindsgalore.color_even.tooltip": "Colour for even-numbered pie menu sectors. Enter an ARGB hex value such as C0606060, or use the colour preview to pick one.",
 
   "option.keybindsgalore.color_odd": "Sector Color (Odd)",
   "option.keybindsgalore.color_odd.tooltip": "Colour for odd-numbered pie menu sectors.",
@@ -125,8 +122,5 @@
   "option.keybindsgalore.color_lighten_factor.tooltip": "RGB value added to alternating sector colours so odd wedges stand out from even ones. Range: 0-16777215.",
 
   "option.keybindsgalore.pie_menu_alpha": "List Menu Opacity",
-  "option.keybindsgalore.pie_menu_alpha.tooltip": "Opacity of the list menu, from 0 (invisible) to 255 (solid). This affects the list menu only, not the pie menu.",
-
-  "option.keybindsgalore.label_text_inset": "Label Text Inset",
-  "option.keybindsgalore.label_text_inset.tooltip": "How far each action label sits outward from the pie, in pixels. Higher values push the labels away from the centre."
+  "option.keybindsgalore.pie_menu_alpha.tooltip": "Opacity of the list menu, from 0 (invisible) to 255 (solid). This affects the list menu only, not the pie menu."
 }

@@ -23,6 +23,11 @@ import static net.hvb007.keybindsgalore.KeybindsGalore.customDataManager;
 
 public class KeybindCircularScreen extends Screen {
 
+    // Labels sit just outside the pie edge rather than at a user-tunable distance.
+    private static final float LABEL_GAP = 4.0f;
+    private static final int SHADOW_OFFSET = 1;
+    private static final int SHADOW_COLOR = 0x40000000;
+
     private final InputConstants.Key conflictedKey;
     private final List<KeyMapping> conflicts = new ArrayList<>();
     private final ConflictActionPresentation presentation;
@@ -144,14 +149,13 @@ public class KeybindCircularScreen extends Screen {
         if (numberOfSectors == 0) return;
 
         Font textRenderer = Minecraft.getInstance().font;
-        int screenMargin = Math.max(2, Configurations.LABEL_TEXT_INSET);
+        int margin = 2;
 
         for (int sectorIndex = 0; sectorIndex < numberOfSectors; sectorIndex++) {
             float sectorAngle = (float) (Mth.TWO_PI / numberOfSectors);
 
-            // The inset moves the label outward along its own angle. Applying it to x/y
-            // instead pushed every label upwards regardless of which wedge it belonged to.
-            float textRadius = this.maxRadius * 1.1f + Configurations.LABEL_TEXT_INSET;
+            // Labels always sit outside the pie, just clear of its edge.
+            float textRadius = this.maxRadius * 1.1f + LABEL_GAP;
             float angle = (sectorIndex + 0.5f) * sectorAngle;
 
             float xPos = this.centreX + Mth.cos(angle) * textRadius;
@@ -162,26 +166,28 @@ public class KeybindCircularScreen extends Screen {
             int textWidth = textRenderer.width(actionName);
             int textHeight = textRenderer.lineHeight;
 
+            // Clamp on both axes so a long label can never be cut off by the screen edge.
             if (xPos > this.centreX) {
-                xPos -= screenMargin;
-                if (this.width - xPos < textWidth) {
-                    xPos = this.width - textWidth - screenMargin;
-                }
+                xPos -= margin;
             } else {
-                xPos -= textWidth - screenMargin;
-                if (xPos < screenMargin) {
-                    xPos = screenMargin;
-                }
+                xPos -= textWidth - margin;
             }
+            xPos = Mth.clamp(xPos, margin, Math.max(margin, this.width - textWidth - margin));
             yPos -= textHeight / 2.0f;
+            yPos = Mth.clamp(yPos, margin, Math.max(margin, this.height - textHeight - margin));
+
+            int drawX = (int) xPos;
+            int drawY = (int) yPos;
 
             if (selection.selectedIndex() == sectorIndex) {
                 actionName = ChatFormatting.UNDERLINE + actionName;
-                context.fill((int) xPos - 2, (int) yPos - 2, (int) xPos + textWidth + 2, (int) yPos + textHeight + 2, 0x80E0E0E0);
+                context.fill(drawX - 2, drawY - 2, drawX + textWidth + 2, drawY + textHeight + 2, 0x80E0E0E0);
             }
 
-            context.text(textRenderer, actionName, (int) xPos, (int) yPos, 0xFFFFFFFF,
-                    Configurations.LABEL_TEXT_SHADOW);
+            if (Configurations.LABEL_TEXT_SHADOW) {
+                context.text(textRenderer, actionName, drawX + SHADOW_OFFSET, drawY + SHADOW_OFFSET, SHADOW_COLOR, false);
+            }
+            context.text(textRenderer, actionName, drawX, drawY, 0xFFFFFFFF, false);
         }
     }
 

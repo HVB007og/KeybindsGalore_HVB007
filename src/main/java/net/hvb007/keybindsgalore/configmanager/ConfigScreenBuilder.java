@@ -78,6 +78,21 @@ public class ConfigScreenBuilder {
                 .setTooltip(Component.translatable("option.keybindsgalore.enable_attack_workaround.tooltip"))
                 .setSaveConsumer(v -> Configurations.ENABLE_ATTACK_WORKAROUND = v)
                 .build());
+
+        // One control only. Both selectors read DARKENED_BACKGROUND and
+        // DARKENED_BACKGROUND_STRENGTH, so a second toggle in the List tab would let the
+        // two widgets disagree and silently revert each other on save.
+        general.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.darkened_background"), Configurations.DARKENED_BACKGROUND)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.keybindsgalore.darkened_background.tooltip"))
+                .setSaveConsumer(v -> Configurations.DARKENED_BACKGROUND = v)
+                .build());
+
+        general.addEntry(eb.startIntSlider(Component.translatable("option.keybindsgalore.darkened_background_strength"), Configurations.DARKENED_BACKGROUND_STRENGTH, 0, 255)
+                .setDefaultValue(0x60)
+                .setTooltip(Component.translatable("option.keybindsgalore.darkened_background_strength.tooltip"))
+                .setSaveConsumer(v -> Configurations.DARKENED_BACKGROUND_STRENGTH = v)
+                .build());
     }
 
     private static void addBehavior(ConfigEntryBuilder eb, ConfigCategory behavior) {
@@ -152,8 +167,8 @@ public class ConfigScreenBuilder {
                 .build());
 
         visual.addEntry(eb.startFloatField(Component.translatable("option.keybindsgalore.expansion_factor_when_selected"), Configurations.EXPANSION_FACTOR_WHEN_SELECTED)
-                .setDefaultValue(0.0f)
-                .setMin(0.0f).setMax(1.0f)
+                .setDefaultValue(0.06f)
+                .setMin(0.0f).setMax(0.3f)
                 .setTooltip(Component.translatable("option.keybindsgalore.expansion_factor_when_selected.tooltip"))
                 .setSaveConsumer(v -> Configurations.EXPANSION_FACTOR_WHEN_SELECTED = v)
                 .build());
@@ -201,18 +216,6 @@ public class ConfigScreenBuilder {
                 .setTooltip(Component.translatable("option.keybindsgalore.color_cancel_hover.tooltip"))
                 .setSaveConsumer(v -> Configurations.PIE_MENU_CANCEL_ZONE_HOVER_COLOR = v)
                 .build());
-
-        visual.addEntry(eb.startIntSlider(Component.translatable("option.keybindsgalore.darkened_background_strength"), Configurations.DARKENED_BACKGROUND_STRENGTH, 0, 255)
-                .setDefaultValue(0x60)
-                .setTooltip(Component.translatable("option.keybindsgalore.darkened_background_strength.tooltip"))
-                .setSaveConsumer(v -> Configurations.DARKENED_BACKGROUND_STRENGTH = v)
-                .build());
-
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.darkened_background"), Configurations.DARKENED_BACKGROUND)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.keybindsgalore.darkened_background.tooltip"))
-                .setSaveConsumer(v -> Configurations.DARKENED_BACKGROUND = v)
-                .build());
     }
 
     private static void addPieEffects(ConfigEntryBuilder eb, ConfigCategory visual) {
@@ -242,12 +245,6 @@ public class ConfigScreenBuilder {
     }
 
     private static void addPieLabels(ConfigEntryBuilder eb, ConfigCategory visual) {
-        visual.addEntry(eb.startIntSlider(Component.translatable("option.keybindsgalore.label_text_inset"), Configurations.LABEL_TEXT_INSET, 0, 50)
-                .setDefaultValue(6)
-                .setTooltip(Component.translatable("option.keybindsgalore.label_text_inset.tooltip"))
-                .setSaveConsumer(v -> Configurations.LABEL_TEXT_INSET = v)
-                .build());
-
         visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.label_text_shadow"), Configurations.LABEL_TEXT_SHADOW)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.keybindsgalore.label_text_shadow.tooltip"))
@@ -274,12 +271,6 @@ public class ConfigScreenBuilder {
                 .setDefaultValue(64)
                 .setTooltip(Component.translatable("option.keybindsgalore.pie_menu_alpha.tooltip"))
                 .setSaveConsumer(v -> Configurations.PIE_MENU_ALPHA = (short) (int) v)
-                .build());
-
-        listVisual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.darkened_background_list"), Configurations.DARKENED_BACKGROUND)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.keybindsgalore.darkened_background_list.tooltip"))
-                .setSaveConsumer(v -> Configurations.DARKENED_BACKGROUND = v)
                 .build());
     }
 }

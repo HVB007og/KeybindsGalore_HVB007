@@ -37,7 +37,6 @@ public record ConfigurationSnapshot(
         int pieMenuCancelZoneHoverColor,
         short pieMenuAlpha,
         boolean sectorGradation,
-        int labelTextInset,
         boolean animatePieMenu) {
     public ConfigurationSnapshot {
         filteredCategoryKeys = List.copyOf(filteredCategoryKeys);
@@ -75,7 +74,7 @@ public record ConfigurationSnapshot(
                         "key.sneak:key.keyboard.left.shift",
                         "key.sprint:key.keyboard.left.control"
                 ),
-                0.0f,
+                0.06f,
                 0,
                 0.8f,
                 0.2f,
@@ -90,7 +89,6 @@ public record ConfigurationSnapshot(
                 0xC0B04232,
                 (short) 0x40,
                 true,
-                6,
                 true
         );
     }
