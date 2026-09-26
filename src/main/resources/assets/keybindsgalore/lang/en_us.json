@@ -68,7 +68,7 @@
   "option.keybindsgalore.sector_gradation": "Sector Gradation",
   "option.keybindsgalore.sector_gradation.tooltip": "Shades each wedge from a lighter inner edge to its outer colour, so the wedges look slightly rounded. Turn off for flat colours.",
   "option.keybindsgalore.gradation_intensity": "Gradient Intensity",
-  "option.keybindsgalore.gradation_intensity.tooltip": "How strong the inner-edge shading is, as a percentage toward white. 0 is flat, 100 is a white inner edge. Only applies when Sector Gradation is on.",
+  "option.keybindsgalore.gradation_intensity.tooltip": "How strong the inner-edge shading is, as a percentage toward white. 0 is flat, 100 is a white inner edge. 30 is a good default. Only applies when Sector Gradation is on.",
 
   "option.keybindsgalore.animate_pie_menu": "Animate Pie Menu",
   "option.keybindsgalore.animate_pie_menu.tooltip": "Plays an open animation when the pie menu appears. Labels appear once it finishes, and closing is always immediate so input is never delayed.",

@@ -52,7 +52,7 @@ public class Configurations {
     public static int PIE_MENU_CANCEL_ZONE_HOVER_COLOR = 0xC0B04232;
     public static short PIE_MENU_ALPHA = 0x40;
     public static boolean SECTOR_GRADATION = true;
-    public static int GRADATION_INTENSITY = 12;
+    public static int GRADATION_INTENSITY = 30;
     public static boolean ANIMATE_PIE_MENU = true;
     public static int ANIMATION_DURATION = 180;
 

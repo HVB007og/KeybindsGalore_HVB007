@@ -94,15 +94,25 @@ translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset
 
 ### P0.3 Release readiness
 
-- [ ] Audit `fabric.mod.json`: version, Java dependency, Fabric API range, links, and
-      description all need to reflect 26.2 and the real loader support
-- [ ] `README.md` still describes 1.21.x behaviour and mentions owo-lib, which the 26.2
-      branch does not use
-- [ ] `CHANGELOG_LATEST.md` predates the 26.2 port
-- [ ] `gradle.properties` is tracked despite being listed in `.gitignore`; resolve
-- [ ] `jars/` contains stale 1.21.1 Fabric and NeoForge artifacts with different
-      licensing metadata. Not releases — delete or quarantine
+- [x] Audit `fabric.mod.json`: version, Java dependency, and Fabric API range now reflect
+      26.2. `minecraft` tightened to `~26.2` so a future 26.3 does not silently install an
+      incompatible build. `cloth-config` moved from `recommends` to `depends`, because the
+      settings screen is built from Cloth Config classes and a user with ModMenu but no
+      Cloth Config would crash opening it. `contact` block added with project links
+- [x] `README.md` rewritten. The old one had corrupted encoding, and claimed
+      OpenGL/Tesselator rendering, a "live RGBA colour picker", a "Debug" category, and
+      "zero dependencies", none of which are true on this branch
+- [x] `CHANGELOG_LATEST.md` rewritten. It described the 1.21.7 owo-lib release
+- [x] `gradle.properties` un-ignored. It pins the Minecraft, Fabric API, and loader versions,
+      so it must be tracked for a build to be reproducible. Version bumps belong in that
+      file on purpose
+- [x] `jars/` untracked. Four stale 1.21.1 Fabric and NeoForge artifacts were committed to
+      the repository, with different licensing metadata, and looked like current releases
+- [ ] Decide the version scheme. `1.7.2+26.2` carries the Minecraft version as SemVer build
+      metadata. Consider whether 26.2 warrants a minor bump, since it is a port rather than a
+      feature release
 - [ ] First tagged release, then Modrinth + CurseForge + GitHub releases in sync
+- [ ] `MODRINTH_DESCRIPTION.md` still needs the same rewrite as the README
 
 ---
 

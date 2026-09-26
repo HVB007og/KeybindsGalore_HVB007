@@ -76,7 +76,7 @@ public record ConfigurationSnapshot(
                 0xC0B04232,
                 (short) 0x40,
                 true,
-                12,
+                30,
                 true,
                 180
         );

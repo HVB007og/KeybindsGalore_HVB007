@@ -1,5 +1,7 @@
 # Ignore changes to minecraft version here
-gradle.properties
+# gradle.properties is deliberately NOT ignored: it pins the Minecraft, Fabric API, and
+# loader versions this branch targets, so a build must be reproducible from a clean
+# checkout. Version bumps are made in that file on purpose.
 
 # gradle
 .gradle/

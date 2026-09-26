@@ -202,7 +202,7 @@ public class ConfigScreenBuilder {
                 .build());
 
         visual.addEntry(eb.startIntSlider(Component.translatable("option.keybindsgalore.gradation_intensity"), Configurations.GRADATION_INTENSITY, 0, 100)
-                .setDefaultValue(12)
+                .setDefaultValue(30)
                 .setTooltip(Component.translatable("option.keybindsgalore.gradation_intensity.tooltip"))
                 .setSaveConsumer(v -> Configurations.GRADATION_INTENSITY = v)
                 .build());
