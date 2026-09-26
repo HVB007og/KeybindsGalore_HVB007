@@ -44,3 +44,7 @@ replay_*.log
 
 
 jars/
+
+# Release archives. The jars themselves are ignored, but the notes and checksums are
+# tracked so the archive layout is documented in the repository. See bkpjar/README.md.
+bkpjar/*/*.jar

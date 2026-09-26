@@ -113,12 +113,17 @@ translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset
       and removes nine config options
 - [x] `MODRINTH_DESCRIPTION.md` rewritten for 26.2, leading with the config screen fix
 - [x] `RELEASE_CHECKLIST.md` written, with the values to paste and the gallery plan
+- [x] `bkpjar/` created as the durable local archive of every published build, with
+      `SHA256SUMS.txt` and a documented release procedure. Kept out of git because the
+      authoritative copy of a published build is the Modrinth version plus the GitHub
+      release assets
 - [x] Removed the dead `keybindsgaloreplus` language file and an unused duplicate icon from
       the jar. The Plus mod is a separate historical project; its translations shipped in
       every build and referred to a reload-config feature that no longer exists
 - [x] Verified the built jar: correct version, 60 classes, mixins config, default
       properties, icon, translations, embedded licence, and no stale assets
-- [ ] Publish 1.8.0+26.2 to Modrinth, then CurseForge
+- [ ] Publish 1.8.0+26.2 to Modrinth with the mod jar, then attach both jars to the GitHub
+      release. Note that Modrinth takes one file per version; the sources jar goes on GitHub
 - [ ] Tag the release and push the tag
 - [ ] Replace the three gallery screenshots, all of which are from 2023–2024 and show a
       pre-1.21.1 UI that no longer exists

@@ -5,16 +5,25 @@ from the state of the `recovery/26.2` branch.
 
 ---
 
-## 1. The file to upload
+## 1. The files to publish
+
+**Modrinth** accepts exactly one file per version, so it gets the mod jar only:
 
 | | |
 |---|---|
-| **File** | `jars/keybindsgalore-1.8.0+26.2.jar` (193 KB) |
+| **File** | `jars/keybindsgalore-1.8.0+26.2.jar` (139 KB) |
 | **Version ID / name** | `1.8.0+26.2` |
 | **Version number** | `1.8.0` |
 | **Game version** | `26.2` |
 | **Loader** | `Fabric` |
 | **Side** | `Client-only` |
+
+**GitHub Release** accepts multiple assets, so both jars go on the release:
+
+| | |
+|---|---|
+| Mod jar | `keybindsgalore-1.8.0+26.2.jar` |
+| Sources jar | `keybindsgalore-1.8.0+26.2-sources.jar` (80 KB, 50 `.java` files) |
 
 Verified inside the built jar: id `keybindsgalore`, version `1.8.0+26.2`, 60 classes,
 `fabric.mod.json`, mixins config, default properties, icon, `en_us.json`, and the LGPL
@@ -100,12 +109,49 @@ Minecraft's own control panel, not the mod.
 
 ---
 
-## 7. After publishing
+## 7. Archive the build, then publish
 
-- Tag the release: `git tag -a v1.8.0+26.2 -m "KeybindsGalore 1.8.0 for Minecraft 26.2"`
-  then `git push origin v1.8.0+26.2` and `git push origin recovery/26.2`
-- Consider a CurseForge version to keep the two platforms in sync
-- Existing `1.7.2+26.2` stays published; players upgrading will move to 1.8.0
+Do this **before** uploading, so the archive is guaranteed to match what ships.
+
+```powershell
+attrib.exe -R "C:\Users\HVB\Desktop\Projects\MC Mod\KeybindsGalore_HVB007\build\*" /S /D
+.\gradlew.bat build
+$version = "1.8.0+26.2"
+New-Item -ItemType Directory -Force -Path ".\bkpjar\$version"
+Copy-Item ".\build\libs\keybindsgalore-$version.jar" ".\bkpjar\$version\"
+Copy-Item ".\build\libs\keybindsgalore-$version-sources.jar" ".\bkpjar\$version\"
+Copy-Item ".\build\libs\keybindsgalore-$version.jar" ".\jars\"
+```
+
+Then regenerate the checksums:
+
+```powershell
+Get-ChildItem ".\bkpjar" -Recurse -Filter "*.jar" | Sort-Object FullName | ForEach-Object {
+  $rel = $_.FullName.Replace("$PWD\bkpjar\","").Replace("\","/")
+  "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $rel
+} | Set-Content ".\bkpjar\SHA256SUMS.txt"
+```
+
+`bkpjar/` is the durable local record of every published build. It is git-ignored, because
+build outputs do not belong in history and the authoritative copy is the Modrinth version
+plus the GitHub release assets. See `bkpjar/README.md`.
+
+## 8. Publish
+
+1. **Modrinth** — create version `1.8.0+26.2`, upload the mod jar, paste the description
+   from `MODRINTH_DESCRIPTION.md` and the changelog from `CHANGELOG_LATEST.md`.
+2. **GitHub** — tag and create a release with both jars attached:
+
+   ```powershell
+   git tag -a v1.8.0+26.2 -m "KeybindsGalore 1.8.0 for Minecraft 26.2"
+   git push origin v1.8.0+26.2
+   ```
+
+   Then attach `keybindsgalore-1.8.0+26.2.jar` and
+   `keybindsgalore-1.8.0+26.2-sources.jar` to the release on GitHub.
+3. **CurseForge** — mirror the Modrinth version if you still publish there.
+4. Leave the previous `1.7.2+26.2` published. Players move to 1.8.0, and the changelog
+   tells anyone who was told to hand-edit the properties file that they no longer need to.
 
 ---
 
