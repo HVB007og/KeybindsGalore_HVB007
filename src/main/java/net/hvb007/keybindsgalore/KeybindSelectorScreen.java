@@ -28,6 +28,8 @@ import static net.hvb007.keybindsgalore.KeybindsGalore.customDataManager;
  * that share the same physical key.
  */
 public class KeybindSelectorScreen extends Screen {
+
+    private static final int LIST_BACKGROUND_DIMMED = 0x60000000;
     private static final int BOX_HORIZONTAL_PADDING = 3;
     private static final int BOX_VERTICAL_PADDING = 3;
     private static final int BOX_SPACING = 3;
@@ -209,8 +211,11 @@ public class KeybindSelectorScreen extends Screen {
     }
 
     public void renderBackground(GuiGraphicsExtractor ctx, int mx, int my, float d) {
+        // The list menu keeps its own fixed darkening. DARKENED_BACKGROUND_STRENGTH is a
+        // pie-menu option; the list menu is a different layout with a different contrast
+        // problem, and tying the two together was rejected during testing.
         if (Configurations.DARKENED_BACKGROUND) {
-            ctx.fill(0, 0, width, height, Configurations.DARKENED_BACKGROUND_STRENGTH << 24);
+            ctx.fill(0, 0, width, height, LIST_BACKGROUND_DIMMED);
         }
     }
 

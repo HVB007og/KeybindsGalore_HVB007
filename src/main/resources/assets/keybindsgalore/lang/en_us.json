@@ -74,7 +74,7 @@
   "option.keybindsgalore.darkened_background.tooltip": "Darkens the screen behind whichever selector is open. Applies to both the pie menu and the list menu.",
 
   "option.keybindsgalore.darkened_background_strength": "Darken Strength",
-  "option.keybindsgalore.darkened_background_strength.tooltip": "How strongly the background is darkened, from 0 (no darkening) to 255 (solid black). Applies to both selectors, and only while Darken Background is on.",
+  "option.keybindsgalore.darkened_background_strength.tooltip": "How strongly the pie menu background is darkened, from 0 (no darkening) to 255 (solid black). The list menu has its own fixed dimming and ignores this. Only applies while Darken Background is on.",
 
   "option.keybindsgalore.pie_menu_blend": "Soft Sector Edges",
   "option.keybindsgalore.pie_menu_blend.tooltip": "Not implemented yet. The setting is saved but currently has no effect.",
