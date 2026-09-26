@@ -21,7 +21,6 @@ public final class ConfigurationSnapshotCodec {
                 booleanValue(merged, "VERBOSE_DEBUG"),
                 booleanValue(merged, "LAZY_CONFLICT_CHECK"),
                 intValue(merged, "CIRCLE_VERTICES"),
-                booleanValue(merged, "PIE_MENU_BLEND"),
                 booleanValue(merged, "DARKENED_BACKGROUND"),
                 intValue(merged, "DARKENED_BACKGROUND_STRENGTH"),
                 booleanValue(merged, "LABEL_TEXT_SHADOW"),
@@ -30,8 +29,6 @@ public final class ConfigurationSnapshotCodec {
                 booleanValue(merged, "SHOW_CONFLICT_WARNINGS"),
                 booleanValue(merged, "ENABLE_ATTACK_WORKAROUND"),
                 stringList(merged, "FILTERED_CATEGORY_KEYS"),
-                integerList(merged, "IGNORED_KEYS"),
-                booleanValue(merged, "INVERT_IGNORED_KEYS_LIST"),
                 booleanValue(merged, "USE_KEYBIND_FIX"),
                 intValue(merged, "PULSE_TIMER_DURATION"),
                 stringList(merged, "PRIORITY_CATEGORIES"),
@@ -41,7 +38,6 @@ public final class ConfigurationSnapshotCodec {
                 floatValue(merged, "PIE_MENU_SCALE"),
                 floatValue(merged, "CANCEL_ZONE_SCALE"),
                 intValue(merged, "PIE_MENU_COLOR"),
-                intValue(merged, "PIE_MENU_SELECT_COLOR"),
                 intValue(merged, "PIE_MENU_HIGHLIGHT_COLOR"),
                 intValue(merged, "PIE_MENU_SECTOR_COLOR_EVEN"),
                 intValue(merged, "PIE_MENU_SECTOR_COLOR_ODD"),
@@ -61,7 +57,6 @@ public final class ConfigurationSnapshotCodec {
         put(values, "VERBOSE_DEBUG", snapshot.verboseDebug());
         put(values, "LAZY_CONFLICT_CHECK", snapshot.lazyConflictCheck());
         put(values, "CIRCLE_VERTICES", snapshot.circleVertices());
-        put(values, "PIE_MENU_BLEND", snapshot.pieMenuBlend());
         put(values, "DARKENED_BACKGROUND", snapshot.darkenedBackground());
         put(values, "DARKENED_BACKGROUND_STRENGTH", snapshot.darkenedBackgroundStrength());
         put(values, "LABEL_TEXT_SHADOW", snapshot.labelTextShadow());
@@ -70,8 +65,6 @@ public final class ConfigurationSnapshotCodec {
         put(values, "SHOW_CONFLICT_WARNINGS", snapshot.showConflictWarnings());
         put(values, "ENABLE_ATTACK_WORKAROUND", snapshot.enableAttackWorkaround());
         put(values, "FILTERED_CATEGORY_KEYS", snapshot.filteredCategoryKeys());
-        put(values, "IGNORED_KEYS", snapshot.ignoredKeys());
-        put(values, "INVERT_IGNORED_KEYS_LIST", snapshot.invertIgnoredKeysList());
         put(values, "USE_KEYBIND_FIX", snapshot.useKeybindFix());
         put(values, "PULSE_TIMER_DURATION", snapshot.pulseTimerDuration());
         put(values, "PRIORITY_CATEGORIES", snapshot.priorityCategories());
@@ -81,7 +74,6 @@ public final class ConfigurationSnapshotCodec {
         put(values, "PIE_MENU_SCALE", snapshot.pieMenuScale());
         put(values, "CANCEL_ZONE_SCALE", snapshot.cancelZoneScale());
         put(values, "PIE_MENU_COLOR", snapshot.pieMenuColor());
-        put(values, "PIE_MENU_SELECT_COLOR", snapshot.pieMenuSelectColor());
         put(values, "PIE_MENU_HIGHLIGHT_COLOR", snapshot.pieMenuHighlightColor());
         put(values, "PIE_MENU_SECTOR_COLOR_EVEN", snapshot.pieMenuSectorColorEven());
         put(values, "PIE_MENU_SECTOR_COLOR_ODD", snapshot.pieMenuSectorColorOdd());

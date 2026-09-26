@@ -20,7 +20,6 @@ public class Configurations {
     // --- Performance ---
     public static boolean LAZY_CONFLICT_CHECK = true;
     public static int CIRCLE_VERTICES = 120;
-    public static boolean PIE_MENU_BLEND = false;
     public static boolean DARKENED_BACKGROUND = true;
     public static int DARKENED_BACKGROUND_STRENGTH = 0x60;
     public static boolean LABEL_TEXT_SHADOW = false;
@@ -36,8 +35,6 @@ public class Configurations {
     public static boolean SHOW_CONFLICT_WARNINGS = true;
     public static boolean ENABLE_ATTACK_WORKAROUND = true;
     public static ArrayList<String> FILTERED_CATEGORY_KEYS = new ArrayList<>();
-    public static ArrayList<Integer> IGNORED_KEYS = new ArrayList<>();
-    public static boolean INVERT_IGNORED_KEYS_LIST = false;
     public static boolean USE_KEYBIND_FIX = true;
     public static int PULSE_TIMER_DURATION = 5;
     public static ArrayList<String> PRIORITY_CATEGORIES = new ArrayList<>();
@@ -49,7 +46,6 @@ public class Configurations {
     public static float PIE_MENU_SCALE = 0.8f;
     public static float CANCEL_ZONE_SCALE = 0.2f;
     public static int PIE_MENU_COLOR = 0x00404040;
-    public static int PIE_MENU_SELECT_COLOR = 0x00FFFFFF;
     public static int PIE_MENU_HIGHLIGHT_COLOR = 0x00EED202;
     public static int PIE_MENU_SECTOR_COLOR_EVEN = 0xC0606060;
     public static int PIE_MENU_SECTOR_COLOR_ODD = 0xC0808080;
@@ -71,7 +67,6 @@ public class Configurations {
                 VERBOSE_DEBUG,
                 LAZY_CONFLICT_CHECK,
                 CIRCLE_VERTICES,
-                PIE_MENU_BLEND,
                 DARKENED_BACKGROUND,
                 DARKENED_BACKGROUND_STRENGTH,
                 LABEL_TEXT_SHADOW,
@@ -80,8 +75,6 @@ public class Configurations {
                 SHOW_CONFLICT_WARNINGS,
                 ENABLE_ATTACK_WORKAROUND,
                 FILTERED_CATEGORY_KEYS,
-                IGNORED_KEYS,
-                INVERT_IGNORED_KEYS_LIST,
                 USE_KEYBIND_FIX,
                 PULSE_TIMER_DURATION,
                 PRIORITY_CATEGORIES,
@@ -91,7 +84,6 @@ public class Configurations {
                 PIE_MENU_SCALE,
                 CANCEL_ZONE_SCALE,
                 PIE_MENU_COLOR,
-                PIE_MENU_SELECT_COLOR,
                 PIE_MENU_HIGHLIGHT_COLOR,
                 PIE_MENU_SECTOR_COLOR_EVEN,
                 PIE_MENU_SECTOR_COLOR_ODD,
@@ -110,7 +102,6 @@ public class Configurations {
         VERBOSE_DEBUG = snapshot.verboseDebug();
         LAZY_CONFLICT_CHECK = snapshot.lazyConflictCheck();
         CIRCLE_VERTICES = snapshot.circleVertices();
-        PIE_MENU_BLEND = snapshot.pieMenuBlend();
         DARKENED_BACKGROUND = snapshot.darkenedBackground();
         DARKENED_BACKGROUND_STRENGTH = snapshot.darkenedBackgroundStrength();
         LABEL_TEXT_SHADOW = snapshot.labelTextShadow();
@@ -119,8 +110,6 @@ public class Configurations {
         SHOW_CONFLICT_WARNINGS = snapshot.showConflictWarnings();
         ENABLE_ATTACK_WORKAROUND = snapshot.enableAttackWorkaround();
         FILTERED_CATEGORY_KEYS = new ArrayList<>(snapshot.filteredCategoryKeys());
-        IGNORED_KEYS = new ArrayList<>(snapshot.ignoredKeys());
-        INVERT_IGNORED_KEYS_LIST = snapshot.invertIgnoredKeysList();
         USE_KEYBIND_FIX = snapshot.useKeybindFix();
         PULSE_TIMER_DURATION = snapshot.pulseTimerDuration();
         PRIORITY_CATEGORIES = new ArrayList<>(snapshot.priorityCategories());
@@ -130,7 +119,6 @@ public class Configurations {
         PIE_MENU_SCALE = snapshot.pieMenuScale();
         CANCEL_ZONE_SCALE = snapshot.cancelZoneScale();
         PIE_MENU_COLOR = snapshot.pieMenuColor();
-        PIE_MENU_SELECT_COLOR = snapshot.pieMenuSelectColor();
         PIE_MENU_HIGHLIGHT_COLOR = snapshot.pieMenuHighlightColor();
         PIE_MENU_SECTOR_COLOR_EVEN = snapshot.pieMenuSectorColorEven();
         PIE_MENU_SECTOR_COLOR_ODD = snapshot.pieMenuSectorColorOdd();

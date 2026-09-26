@@ -7,7 +7,6 @@ public record ConfigurationSnapshot(
         boolean verboseDebug,
         boolean lazyConflictCheck,
         int circleVertices,
-        boolean pieMenuBlend,
         boolean darkenedBackground,
         int darkenedBackgroundStrength,
         boolean labelTextShadow,
@@ -16,8 +15,6 @@ public record ConfigurationSnapshot(
         boolean showConflictWarnings,
         boolean enableAttackWorkaround,
         List<String> filteredCategoryKeys,
-        List<Integer> ignoredKeys,
-        boolean invertIgnoredKeysList,
         boolean useKeybindFix,
         int pulseTimerDuration,
         List<String> priorityCategories,
@@ -27,7 +24,6 @@ public record ConfigurationSnapshot(
         float pieMenuScale,
         float cancelZoneScale,
         int pieMenuColor,
-        int pieMenuSelectColor,
         int pieMenuHighlightColor,
         int pieMenuSectorColorEven,
         int pieMenuSectorColorOdd,
@@ -40,7 +36,6 @@ public record ConfigurationSnapshot(
         boolean animatePieMenu) {
     public ConfigurationSnapshot {
         filteredCategoryKeys = List.copyOf(filteredCategoryKeys);
-        ignoredKeys = List.copyOf(ignoredKeys);
         priorityCategories = List.copyOf(priorityCategories);
         priorityKeybinds = List.copyOf(priorityKeybinds);
     }
@@ -51,7 +46,6 @@ public record ConfigurationSnapshot(
                 false,
                 true,
                 120,
-                false,
                 true,
                 0x60,
                 false,
@@ -60,8 +54,6 @@ public record ConfigurationSnapshot(
                 true,
                 true,
                 List.of(),
-                List.of(340, 341, 87, 65, 83, 68, 32),
-                false,
                 true,
                 5,
                 List.of("Movement"),
@@ -79,7 +71,6 @@ public record ConfigurationSnapshot(
                 0.8f,
                 0.2f,
                 0x00404040,
-                0x00FFFFFF,
                 0x00EED202,
                 0xC0606060,
                 0xC0808080,

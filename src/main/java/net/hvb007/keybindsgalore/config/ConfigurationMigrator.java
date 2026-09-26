@@ -15,10 +15,22 @@ public final class ConfigurationMigrator {
      *
      * <p>{@code LABEL_TEXT_INSET} is retired because labels now always sit a fixed
      * distance outside the pie and are clamped so they cannot be clipped.
+     *
+     * <p>{@code PIE_MENU_SELECT_COLOR} was superseded by
+     * {@code PIE_MENU_SECTOR_COLOR_SELECTED}, which is what the hovered wedge actually
+     * uses. {@code PIE_MENU_BLEND} duplicated what the per-sector colours already express.
+     *
+     * <p>{@code IGNORED_KEYS} and {@code INVERT_IGNORED_KEYS_LIST} were a
+     * suppress-these-keys feature that conflict detection never consulted; prioritising
+     * those keys achieves the same goal for the player, so the list is redundant.
      */
     private static final Set<String> RETIRED_KEYS = Set.of(
             "PIE_MENU_COLOR_LIGHTEN_FACTOR",
-            "LABEL_TEXT_INSET"
+            "PIE_MENU_SELECT_COLOR",
+            "PIE_MENU_BLEND",
+            "LABEL_TEXT_INSET",
+            "IGNORED_KEYS",
+            "INVERT_IGNORED_KEYS_LIST"
     );
 
     private ConfigurationMigrator() {

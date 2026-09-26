@@ -125,18 +125,6 @@ public class ConfigScreenBuilder {
                 .setTooltip(Component.translatable("option.keybindsgalore.priority_keybinds.tooltip"))
                 .setSaveConsumer(v -> Configurations.PRIORITY_KEYBINDS = new ArrayList<>(v))
                 .build());
-
-        behavior.addEntry(eb.startIntList(Component.translatable("option.keybindsgalore.ignored_keys"), Configurations.IGNORED_KEYS)
-                .setDefaultValue(new ArrayList<>())
-                .setTooltip(Component.translatable("option.keybindsgalore.ignored_keys.tooltip"))
-                .setSaveConsumer(v -> Configurations.IGNORED_KEYS = new ArrayList<>(v))
-                .build());
-
-        behavior.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.invert_ignored_keys_list"), Configurations.INVERT_IGNORED_KEYS_LIST)
-                .setDefaultValue(false)
-                .setTooltip(Component.translatable("option.keybindsgalore.invert_ignored_keys_list.tooltip"))
-                .setSaveConsumer(v -> Configurations.INVERT_IGNORED_KEYS_LIST = v)
-                .build());
     }
 
     private static void addPieLayout(ConfigEntryBuilder eb, ConfigCategory visual) {
@@ -229,12 +217,6 @@ public class ConfigScreenBuilder {
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.keybindsgalore.animate_pie_menu.tooltip"))
                 .setSaveConsumer(v -> Configurations.ANIMATE_PIE_MENU = v)
-                .build());
-
-        visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.pie_menu_blend"), Configurations.PIE_MENU_BLEND)
-                .setDefaultValue(false)
-                .setTooltip(Component.translatable("option.keybindsgalore.pie_menu_blend.tooltip"))
-                .setSaveConsumer(v -> Configurations.PIE_MENU_BLEND = v)
                 .build());
 
         visual.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.use_software_rendering"), Configurations.USE_SOFTWARE_RENDERING)
