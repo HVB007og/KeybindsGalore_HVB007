@@ -108,11 +108,20 @@ translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset
       file on purpose
 - [x] `jars/` untracked. Four stale 1.21.1 Fabric and NeoForge artifacts were committed to
       the repository, with different licensing metadata, and looked like current releases
-- [ ] Decide the version scheme. `1.7.2+26.2` carries the Minecraft version as SemVer build
-      metadata. Consider whether 26.2 warrants a minor bump, since it is a port rather than a
-      feature release
-- [ ] First tagged release, then Modrinth + CurseForge + GitHub releases in sync
-- [ ] `MODRINTH_DESCRIPTION.md` still needs the same rewrite as the README
+- [x] Version bumped to `1.8.0+26.2`. Modrinth already had `1.7.2+26.2` published and will
+      not accept a duplicate version string; minor bump because the release adds features
+      and removes nine config options
+- [x] `MODRINTH_DESCRIPTION.md` rewritten for 26.2, leading with the config screen fix
+- [x] `RELEASE_CHECKLIST.md` written, with the values to paste and the gallery plan
+- [x] Removed the dead `keybindsgaloreplus` language file and an unused duplicate icon from
+      the jar. The Plus mod is a separate historical project; its translations shipped in
+      every build and referred to a reload-config feature that no longer exists
+- [x] Verified the built jar: correct version, 60 classes, mixins config, default
+      properties, icon, translations, embedded licence, and no stale assets
+- [ ] Publish 1.8.0+26.2 to Modrinth, then CurseForge
+- [ ] Tag the release and push the tag
+- [ ] Replace the three gallery screenshots, all of which are from 2023–2024 and show a
+      pre-1.21.1 UI that no longer exists
 
 ---
 
