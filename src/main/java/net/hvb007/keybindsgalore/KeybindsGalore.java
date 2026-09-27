@@ -9,7 +9,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +31,18 @@ public class KeybindsGalore implements ClientModInitializer {
     public static ConfigManager configManager;
     public static DataManager customDataManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("keybindsgalore");
+
+    /**
+     * SDL scancode for the K key, used as the default binding for the capture hotkey.
+     *
+     * <p>26.3 replaced GLFW with SDL3, so {@code InputConstants.Type.KEYBOARD} stores
+     * SDL scancodes rather than GLFW keycodes, and letter keys have no named constant on
+     * {@code InputConstants}. SDL_SCANCODE_A is 4, so K is 14. This is the one value in
+     * the 26.3 port that could not be confirmed from vanilla source, so it is the first
+     * thing to check by hand: if the capture hotkey does not respond to K, rebind it in
+     * the vanilla Controls screen.
+     */
+    private static final int SDL_SCANCODE_K = 14;
     private static final BindingRegistry BINDING_REGISTRY = new BindingRegistry();
     private static final InputOwnershipStateMachine INPUT_STATE = new InputOwnershipStateMachine();
     private static boolean minecraftSourceRegistered;
@@ -162,8 +173,8 @@ public class KeybindsGalore implements ClientModInitializer {
 
         openCaptureKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.keybindsgalore.open_capture",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_K,
+                InputConstants.Type.KEYBOARD,
+                SDL_SCANCODE_K,
                 KeyMapping.Category.MISC
         ));
 

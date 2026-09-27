@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.hvb007.keybindsgalore.core.BindingSnapshot;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 import net.minecraft.client.KeyMapping;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,9 @@ public final class MinecraftBindingCatalog {
         List<Entry> entries = new ArrayList<>(keyMappings.length);
         for (KeyMapping binding : keyMappings) {
             InputConstants.Key physicalKey = ((KeyMappingAccessor) binding).getKey();
-            if (physicalKey.getValue() == GLFW.GLFW_KEY_UNKNOWN) {
+            // 26.3 replaced GLFW with SDL, so the old GLFW.GLFW_KEY_UNKNOWN sentinel is
+            // gone. Unbound keys carry the negative unknown value instead.
+            if (physicalKey.getValue() < 0) {
                 continue;
             }
 

@@ -15,7 +15,9 @@ class MinecraftConflictIndexTest {
     @Test
     void recordsRefreshReasonAndClearsPreviousIndex() {
         Map<InputConstants.Key, List<KeyMapping>> target = new HashMap<>();
-        target.put(InputConstants.Type.KEYSYM.getOrCreate(65), List.of());
+        // 26.3 stores SDL scancodes; SDL_SCANCODE_A is 4. The exact value is irrelevant
+        // here, it only has to be a stable non-negative key.
+        target.put(InputConstants.Type.KEYBOARD.getOrCreate(4), List.of());
         MinecraftConflictIndex index = new MinecraftConflictIndex(target, ignored -> List.of());
 
         index.refresh(new KeyMapping[0], List.of(), MinecraftConflictIndex.RefreshReason.STARTUP);
