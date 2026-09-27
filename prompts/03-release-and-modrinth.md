@@ -1,57 +1,126 @@
-# Prompt: prepare a release and get Modrinth ready
+# Prompt: prepare and publish a release (Modrinth + GitHub, via API)
 
-Paste this, then name the version if you know it, for example *"prepare 1.9.0+26.3"*.
+Paste this, then name the version if you know it, for example *"publish 1.8.0 for NeoForge"*.
 
 ---
 
-You are preparing a KeybindsGalore release. I am not a programmer. I want everything finished
-and correct so that uploading takes me minutes, not an evening. Work autonomously, commit in
-small steps, push after each milestone, and ask me any questions up front.
+You are publishing a KeybindsGalore release. I am not a programmer. I want the whole thing
+finished and correct, end to end, without me touching a single form. Work autonomously, commit
+in small steps, push after each milestone, and ask me any questions **up front** — not one at a
+time as you discover them.
+
+## Non-negotiable rules
+
+- **Never state something is verified unless you actually verified it yourself.** Distinguish
+  *built*, *tests passed*, *client launched*, *mixins applied*, and *a human played it*. Only
+  the last one means it works.
+- **Never guess an identifier.** Modrinth project IDs, loader names, and version IDs must come
+  from an API response you actually read. See the trap in step 5; it is a real one I hit.
+- **Never publish on a guess I have not confirmed**, especially a version number.
+- **Never commit or push** until I have seen the summary, unless I already asked you to.
+- If a step fails, report the actual error text. Do not summarise it as "something went wrong".
 
 ## Before anything else
 
-Read `AGENTS.md`, `ROADMAP.md`, and `RELEASE_CHECKLIST.md`, plus `gradle.properties` and
-`src/main/resources/fabric.mod.json`.
+Read `AGENTS.md`, `ROADMAP.md`, `AUTONOMOUS_PLAN.md`, `RELEASE_CHECKLIST.md`, `bkpjar/README.md`,
+plus `gradle.properties`, `build.gradle`, and the loader metadata for the branch
+(`src/main/resources/fabric.mod.json` on Fabric, `src/main/resources/META-INF/neoforge.mods.toml`
+on NeoForge).
 
-Confirm with me: the version string, and whether the build is already verified in game. If it
-has not been tested, say so plainly and tell me what is untested, rather than writing release
-notes that imply otherwise.
+Confirm with me, all in one message:
+
+- the **version string**
+- the **loader**: Fabric, NeoForge, or both as separate versions
+- whether the build is **verified in game**, and by whom
+- whether the **project description** on Modrinth is current
+
+If it has not been tested, say so plainly and tell me exactly what is untested, rather than
+writing release notes that imply otherwise.
+
+## Tokens and credentials
+
+Modrinth needs a personal access token with **only** these scopes:
+
+- `VERSION_CREATE` — to upload a version
+- `VERSION_READ` — to verify what got uploaded
+- optionally `PROJECT_READ` / `PROJECT_WRITE` if the description also needs changing
+
+Do **not** ask for project-creation, delete, or user scopes. Do not ask for
+`Read user email`. A token that is missing a scope returns `401` on endpoints that need it,
+which is expected and not a broken token — do not go hunting for a permissions problem when
+`401` appears on `/v2/user`, because that endpoint wants a scope we deliberately did not grant.
+
+**Never accept a token pasted into the chat.** Tokens end up in conversation history and must be
+treated as exposed. Instead, have me write it to a file:
+
+```powershell
+Set-Content -Path "$env:TEMP\modrinth_token.txt" -Value "<token>" -NoNewline
+```
+
+Read it from disk, use it, then **delete the file**. Tell me to revoke the token when finished.
+If a token was ever pasted into the conversation, say so and ask for a fresh one.
+
+GitHub uses the `gh` CLI, which is already authenticated. Do not handle a GitHub token by hand.
 
 ## The order of work
 
 ### 1. Version
 
-Modrinth **will not accept a duplicate version string**. If the version already exists on
-Modrinth, it must be bumped. Choose the bump honestly:
+Modrinth **will not accept a duplicate version string on the same loader**. If the version
+already exists for that loader, bump it honestly: **patch** for bug fixes, **minor** for
+features added or configuration options removed.
 
-- **patch** — bug fixes only
-- **minor** — features added, or configuration options removed
+**Follow the project's existing Modrinth convention, not the GitHub tag convention.** These
+differ, and mixing them is a real mistake:
 
-Update `mod_version` in `gradle.properties`. That feeds the jar name, the mod metadata, and
-the Modrinth version id.
+- Modrinth version numbers are plain semantic versions — `1.8.0`, `1.7.2+26.2`
+- The Minecraft version is a **separate field** in the form, so it must not be encoded into the
+  number
+- The loader is a **separate field** too, so it must not be encoded either
+- GitHub tags in this project *do* encode both: `keybindsgalore-1.8.0+26.2-neoforge`
+
+So a NeoForge build of the same mod is often **the same version number** as the Fabric build,
+differing only by loader. Check the existing version list before assuming a bump is needed:
+
+```powershell
+curl.exe -s -H "User-Agent: HVB007/KeybindsGalore-release/1.0" `
+  "https://api.modrinth.com/v2/project/l6y7RMn7/version"
+```
+
+Update `mod_version` in `gradle.properties` so the jar name matches.
 
 ### 2. Build and verify the jar
 
 ```powershell
 attrib.exe -R "C:\Users\HVB\Desktop\Projects\MC Mod\KeybindsGalore_HVB007\build\*" /S /D
 $env:JAVA_HOME="C:\Program Files\JetBrains\IntelliJ IDEA 2026.2.0.1\jbr"
-.\gradlew.bat clean build
+.\gradlew.bat build
+.\gradlew.bat test
 ```
 
-**Do not trust a green build.** Open the produced jar and confirm:
+**Do not trust a green build.** Open the jar and confirm:
 
-- `fabric.mod.json` version matches, and `depends.minecraft` is correct
+- the loader metadata file (`fabric.mod.json` or `META-INF/neoforge.mods.toml`) is present and
+  its version matches `gradle.properties`
 - the mixin config, `keybindsgalore.properties`, the icon, and `en_us.json` are all present
 - the **LGPL licence file is embedded** (`jar { from("LICENSE") }` in `build.gradle`)
 - **no stale assets or classes** from earlier Minecraft versions. This project once shipped a
   whole language file belonging to a different historical mod, and two different icons.
+- no leftover files from the *other* loader. A NeoForge jar must not contain `fabric.mod.json`,
+  and vice versa
 - report the class count and the jar size
+
+**If a NeoForge version string is hardcoded in `neoforge.mods.toml`, check it.** NeoForge reads
+the version from that file, and a dev run loads the exploded classes folder, which has no
+manifest to fall back on — so a stale or templated value shows up in-game as `0.0NONE`. The
+`verifyModVersion` task wired into `check` catches a mismatch with `gradle.properties`; run it.
 
 ### 3. Archive before publishing, not after
 
-Copy **both** jars into `bkpjar/<version>/`, then regenerate `bkpjar/SHA256SUMS.txt`.
-Archiving first guarantees the backup is byte-identical to what ships.
-`RELEASE_CHECKLIST.md` step 7 has the commands. The jars are git-ignored; do not commit them.
+Copy **both** jars into `bkpjar/<version>/`, then regenerate `bkpjar/SHA256SUMS.txt`, then
+**verify every archived jar against its recorded hash**. Archiving first guarantees the backup is
+byte-identical to what ships. `RELEASE_CHECKLIST.md` and `bkpjar/README.md` have the commands.
+The jars are git-ignored; only `README.md` and `SHA256SUMS.txt` are tracked. Do not commit jars.
 
 ### 4. Documentation
 
@@ -61,7 +130,7 @@ describing a previous Minecraft version, so check every version number and every
 - `README.md` — user facing. Must not contain mojibake; check for the replacement character.
 - `CHANGELOG_LATEST.md` — must describe **this** release, not the last one.
 - `MODRINTH_DESCRIPTION.md` — the Modrinth page body.
-- `ROADMAP.md` — tick what shipped, add what is new.
+- `ROADMAP.md` and `AUTONOMOUS_PLAN.md` — tick what shipped, add what is new.
 - `RELEASE_CHECKLIST.md` — refresh the version-specific values.
 
 **Claim audit.** The old README was wrong in four ways: it described a rendering library the
@@ -70,46 +139,134 @@ does not exist in this version, and claimed "zero dependencies". Check every tec
 against the current code. Where the mod has a known limitation, say so in a **Known
 limitations** section rather than hiding it.
 
-### 5. `fabric.mod.json` review
+**Loader neutrality.** If a project serves more than one loader, the **description must cover
+every loader it lists**. A description that says "A Fabric mod", requires Fabric Loader and
+Fabric API, and tells the reader to use ModMenu actively misleads NeoForge users, because
+NeoForge needs none of those. Check the live page, not just the repo file, since the two drift
+apart. When publishing a new loader, treat a stale description as part of the job, not a
+follow-up.
 
-- `depends.minecraft` must use `~` so a later patch cannot silently install an untested build
-- Java and Fabric API ranges match `gradle.properties`
-- Any library the code genuinely cannot run without must be in `depends`, not `recommends`.
-  This project had Cloth Config in `recommends` while the config screen was built from Cloth
-  Config classes, so a user with ModMenu but no Cloth Config would have **crashed**
-- a `contact` block with project links
-- a description that states what the mod does, not a changelog
+**Known cosmetic warnings.** If a dependency emits a deprecation or version warning, find out
+whether it is *ours* or *upstream* before writing anything about it, and say which. Do not
+patch a third-party jar to silence a warning, and do not ship one claiming a warning is absent
+when it is only absent from your own code.
 
-### 6. Repository hygiene
+### 5. Modrinth upload, via the API
 
-Check and report, fixing what is safe:
+Project id for this project is **`l6y7RMn7`** (slug `keybindsgalore+(hvb007)`). Read the
+version list and project object first so you are working from real data.
 
-- **any jar committed to the repository** — build outputs do not belong in history
-- **`gradle.properties` both tracked and ignored** — it pins the version baseline and must be
-  tracked, so the ignore rule is what is wrong
-- generated output or stale directories tracked
-- `AGENTS.md` and `.opencode/` must stay **untracked**; they are local agent memory.
-  `ROADMAP.md` is tracked, it is project documentation.
+**The endpoint is `POST /v2/version` and it is `multipart/form-data`, not JSON.** Sending a JSON
+body fails with `ContentTypeIncompatible`, which reads like a content-type problem but is
+actually the wrong shape entirely.
 
-### 7. Modrinth hand-off
+Two parts are required:
 
-Produce a final hand-off containing:
+- a part named `data` holding the version metadata as JSON
+- at least one file part, whose name is listed in `file_parts`
 
-- **File**: the mod jar. Modrinth takes **one file per version**, so the sources jar cannot go
-  there. It goes on the GitHub release instead.
-- **Version name** and **version number**, split sensibly. `1.9.0+26.3` is name `1.9.0+26.3`,
-  number `1.9.0`.
-- **Game version**, **loader**, **side**
-- the **dependency table**, and note anything that cannot be expressed there, such as a Java
-  version requirement
-- the description body and the changelog body, ready to paste
-- which existing page fields need **no** change
-- the **screenshot plan**, if the gallery is stale
+```powershell
+$token  = (Get-Content "$env:TEMP\modrinth_token.txt" -Raw).Trim()
+$changelog = [string]::Join("`n", [string[]](Get-Content ".\mr-changelog.txt"))
 
-### 8. GitHub release
+$data = @{
+  project_id     = "l6y7RMn7"          # REQUIRED, despite not being in the docs body
+  name           = "NeoForge port for Minecraft 26.2"
+  version_number = "1.8.0"
+  changelog      = [string]$changelog
+  dependencies   = @( @{ project_id = "9s6osm5g"; dependency_type = "required" } )
+  game_versions  = @("26.2")
+  version_type   = "release"
+  loaders        = @("neoforge")
+  featured       = $false
+  status         = "listed"
+  environment    = "client_only"        # a STRING, not an array
+  file_parts     = @("file")
+  primary_file   = "file"
+} | ConvertTo-Json -Depth 5 -Compress
 
-Give me the exact commands for the tag, and state that **both** jars attach to the release.
-Do not push the tag until I confirm the Modrinth upload succeeded.
+[System.IO.File]::WriteAllText("$PWD\mr-data.json", $data, (New-Object System.Text.UTF8Encoding($false)))
+
+curl.exe -s -w "`n__HTTP__%{http_code}" -X POST `
+  -H "Authorization: $token" -H "User-Agent: HVB007/KeybindsGalore-release/1.0" `
+  -F "data=<$PWD\mr-data.json;type=application/json" `
+  -F "file=@$jar;type=application/java-archive;filename=$filename" `
+  "https://api.modrinth.com/v2/version"
+```
+
+**PowerShell traps that will cost you an hour otherwise:**
+
+- `Get-Content -Raw` returns a `PSObject`. `ConvertTo-Json` then wraps it as
+  `{"value": "..."}`, and the API rejects it with a confusing parse error. Cast with
+  `[string]`, or use `[string]::Join("`n", [string[]](Get-Content ...))`.
+- `environment` is a **single string**, not an array. Sending `["client_only"]` fails with
+  `invalid type: sequence, expected a string`.
+- Write the JSON with `UTF8Encoding($false)`. The default encoder emits a BOM.
+- The API reports missing fields one at a time, as `400` with `missing field 'x'`. Expect to
+  add `file_parts`, `dependencies`, and `featured` on successive attempts.
+
+**Upload both files. Modrinth accepts a sources jar as a supplementary file on the same
+version**, alongside the primary mod jar — the primary is whichever part `primary_file` names.
+Both belong on Modrinth; the sources jar is not a GitHub-only artefact.
+
+- primary: `keybindsgalore-<version>.jar`
+- supplementary: `keybindsgalore-<version>-sources.jar`
+
+**Dependencies — the trap I actually fell into.** Do not copy a dependency `project_id` from an
+existing version of another loader. I reused `P7dR8mSH` from the Fabric release believing it was
+NeoForge, and it is in fact **Fabric API**. That single copy-paste would have instructed every
+NeoForge user to install Fabric API.
+
+**Look every dependency id up by slug and confirm what it actually is** before using it:
+
+```powershell
+curl.exe -s -H "User-Agent: HVB007/KeybindsGalore-release/1.0" `
+  "https://api.modrinth.com/v2/project/<slug>"
+```
+
+- `9s6osm5g` is Cloth Config — a real required dependency
+- **NeoForge has no Modrinth project page.** It is a loader, expressed through the `loaders`
+  tag on the version, so it must **not** appear as a dependency. Search confirms no such project
+  exists. If you cannot find it, that is expected, not an error to work around.
+
+### 6. Verify the upload, do not assume it
+
+Download the file back from the CDN URL in the API response and compare hashes against the
+archived jar:
+
+```powershell
+curl.exe -s -o verify.jar "<the file url from the response>"
+Get-FileHash verify.jar -Algorithm SHA1     # compare to the archive
+Get-FileHash verify.jar -Algorithm SHA512   # compare to the archive
+```
+
+Byte-identical or it did not ship correctly. Then confirm the version by id and check its
+`loaders`, `game_versions`, `status`, and file list. Report the version id and its public URL.
+
+Do the same digest check for GitHub release assets: `gh release view --json assets` returns a
+`sha256` per asset, which you can compare against the local archive.
+
+### 7. GitHub release
+
+Both jars attach to the release. This is independent of Modrinth, and unlike Modrinth both files
+belong on the primary upload rather than as a supplementary.
+
+```powershell
+gh release create "keybindsgalore-$version" `
+  ".\bkpjar\$version\keybindsgalore-$version.jar" `
+  ".\bkpjar\$version\keybindsgalore-$version-sources.jar" `
+  --title "$version" --notes-file ".\release-notes.md" --target "<branch>"
+```
+
+Tags in this project carry the Minecraft version and loader, so the GitHub tag is
+`keybindsgalore-1.8.0+26.2-neoforge` while the Modrinth number is `1.8.0`. That is intentional.
+
+### 8. Close out
+
+- delete the token file, and tell me to revoke the token
+- `git log --oneline` and a clean `git status`, so I can see exactly what changed
+- a plain summary of what is now public, with links
+- anything you deliberately did **not** do, and why
 
 ## Screenshots
 
@@ -117,10 +274,3 @@ Check `MODRINTH_DESCRIPTION.md` and the existing gallery. If the gallery images 
 current UI, say so plainly and give me a numbered shot list with a one-line caption and alt
 text for each. Always lead with the strongest single image: it becomes the project's preview
 thumbnail in search results.
-
-## Rules
-
-- Never state that something is verified unless you actually verified it.
-- Never leave a doc describing an older Minecraft version.
-- Never silently change a version number. Tell me what you changed and why.
-- Do not commit or push until I have seen the summary, unless I have already asked you to.
