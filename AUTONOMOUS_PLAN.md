@@ -13,11 +13,37 @@ Requested 2026-09-26. Three goals, in priority order:
 | Does 26.3 exist? | **Yes**, released 15 Sep 2026, "Wilderness Bound" | minecraft.net |
 | Does NeoForge support 26.2? | **Yes**, `26.2.0.75` stable | projects.neoforged.net |
 | Does NeoForge support 26.3? | Listed on neoforged.net, likely beta | neoforged.net |
-| Is 26.2 → 26.3 a small change? | Content update: Dappled Forest, new blocks, no GUI/renderer overhaul in the notes read | 26.3 changelog |
+| Is 26.2 → 26.3 a small change? | **No.** Content update *plus* two platform breaks: GLFW replaced by SDL3, and the GUI render pipeline moved to `renderpearl`. Found by inspecting the 26.3 jar, not the changelog. | 26.3 jar inspection |
+
+## Goal 1 outcome — verified working
+
+**Closed.** `recovery/26.3-fabric`, version `1.9.0+26.3`.
+
+- Compiles; 45 unit tests pass
+- Client launches as `1.9.0+26.3`; all mixins apply with no injection errors
+- Startup conflict scan runs on 26.3
+- The user confirmed in game that it works
+
+Two platform changes were needed, both found by inspecting the 26.3 jar:
+
+- **GLFW replaced with SDL3.** `org.lwjgl.glfw` is gone, `InputConstants.Type.KEYSYM`
+  became `Type.KEYBOARD`, and key values are now SDL scancodes. Confirmed by
+  `InputConstants` calling `SDL_GetKeyFromScancode` and `SDL_GetKeyName`.
+- **The render pipeline moved** to `com.mojang.renderpearl.api.pipeline`. `RingRenderer`
+  needed only its import changed; `RenderPipelines.GUI` still exists.
+
+Verified as unchanged, so the mixins were left alone: `KeyMapping.set/click/setDown`, the
+accessor fields, `Category.id()/label()`, `KeyEvent`, `MouseButtonEvent`.
+
+Still worth one check, because the user called their own testing limited: the **K capture
+hotkey**. The SDL scancode for K was derived from `SDL_SCANCODE_A = 4` rather than read
+from vanilla source, since letter keys have no named constant on `InputConstants`. If K
+does not open the capture screen, the fix is to rebind it in the vanilla Controls screen.
+Pie visual fidelity and the full 26.2 manual matrix have not been re-run on 26.3.
 
 ## Honest assessment of each goal
 
-### Goal 1 — 26.3 Fabric port: achievable
+### Goal 1 — 26.3 Fabric port: done
 
 Expected work: bump `minecraft_version` and the Fabric API version, build, fix whatever
 the compiler reports, then look for silent breakages in the mixin targets and re-run the
