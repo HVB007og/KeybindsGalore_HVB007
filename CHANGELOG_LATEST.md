@@ -1,6 +1,37 @@
 # Changelog
 
-## 1.8.0+26.2 — Minecraft 26.2
+## 1.8.0+26.3 - Minecraft 26.3
+
+Port of 1.8.0 to Minecraft 26.3 on Fabric. **No mod behaviour changed.** The pie menu, list
+menu, priority system, K-key priority capture, live conflict re-scanning, per-category filters,
+and the config screen all work exactly as they do on 26.2. The version number is unchanged
+because nothing in the mod itself differs.
+
+The work is entirely in adapting the mod to 26.3's client changes:
+
+- The client moved from GLFW to SDL3, so the capture key and key handling use
+  `InputConstants.Type.KEYBOARD` instead of the removed `KEYSYM`
+- Unbound keys are detected by their negative key value rather than by scanning GLFW state
+- `org.lwjgl.glfw` no longer exists, so its references were replaced with SDL3 equivalents
+- Rendering moved to the newer `RenderPipeline` API in the `com.mojang.renderpearl` package;
+  the pie menu is drawn through the GPU-batched ring renderer
+
+### Requirements
+
+- Minecraft 26.3
+- Fabric Loader 0.19.3 or newer
+- Fabric API 0.161.0+26.3 or newer
+- Java 25 or newer
+- Cloth Config 26.3.159 or newer
+- ModMenu 21.0.0 or newer (optional, only for the settings screen)
+
+### Verification status
+
+Built and unit-tested, with 45 tests passing. The pie menu, list menu, and config screen were
+spot-checked in game. **K-key priority capture has not been confirmed on 26.3 specifically**;
+the SDL3 key handling behind it is the least exercised path on this version.
+
+## 1.8.0+26.2 - Minecraft 26.2
 
 **The config screen now works on 26.2.** The previous 26.2 build shipped with a known issue
 where the ModMenu config screen failed, because the Cloth Config release available at the

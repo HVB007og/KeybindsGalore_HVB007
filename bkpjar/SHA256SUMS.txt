@@ -2,5 +2,5 @@ ed58ce4fe3508b944c67d42e9b8bc8c15f252c9b6f07477245149ed4d91a9a39  1.8.0+26.2/key
 60c6c59ebfdd05cee77a958f9f9113d4eb73bfa224804601499e8cacd8e2b41e  1.8.0+26.2/keybindsgalore-1.8.0+26.2-sources.jar
 aacdfeeff2997fb6918bed443a20cc19ea1f917c40edc189fb34cca039e0e5a6  1.8.0+26.2-neoforge/keybindsgalore-1.8.0+26.2-neoforge.jar
 1f54230cab6128ccc3c793948408c7463c7d2920ad10bac09ca058ed13ae7ab4  1.8.0+26.2-neoforge/keybindsgalore-1.8.0+26.2-neoforge-sources.jar
-5ac5b4001f484a89fb5065af5ebf655d23314c5bae6b1800f8d9311f9a2194f7  1.9.0+26.3/keybindsgalore-1.9.0+26.3.jar
-da54e5be7b82178ef59ffa1f0ef479d1859ae765a3af213e2ee57cacbaf4a203  1.9.0+26.3/keybindsgalore-1.9.0+26.3-sources.jar
+dbb24f47f2a3d9195a871ac18446c5469e4f1de246c32cd0aaa73dbcd7d2a4e1  1.8.0+26.3/keybindsgalore-1.8.0+26.3.jar
+3dee6fa2b8f195ffd0b5634a5f60101bc0d1c94f8478bcb19cbc1de1951d984a  1.8.0+26.3/keybindsgalore-1.8.0+26.3-sources.jar

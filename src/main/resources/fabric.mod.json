@@ -4,7 +4,7 @@
     "version": "${version}",
 
     "name": "Keybinds Galore",
-    "description": "Resolves Minecraft keybind conflicts instead of letting actions silently override each other. When two actions share a key, a selection menu opens so you pick the one you meant, every time.\n\nIncludes a pie menu and a list menu, a priority system for keys that should never ask, K-key priority capture, live conflict detection across categories, and an in-game config screen.\n\n1.9.0 for Minecraft 26.3 (Fabric). Ported from 26.2, which replaced GLFW with SDL3 and moved the GUI render pipeline to renderpearl.",
+    "description": "Resolves Minecraft keybind conflicts instead of letting actions silently override each other. When two actions share a key, a selection menu opens so you pick the one you meant, every time.\n\nIncludes a pie menu and a list menu, a priority system for keys that should never ask, K-key priority capture, live conflict detection across categories, and an in-game config screen.\n\n1.8.0 for Minecraft 26.3 (Fabric). Ported from 26.2, which replaced GLFW with SDL3 and moved the GUI render pipeline to renderpearl.",
     "authors": [
        "Blender",
        "HVB007",
