@@ -39,28 +39,50 @@ writing release notes that imply otherwise.
 
 ## Tokens and credentials
 
-Modrinth needs a personal access token with **only** these scopes:
-
-- `VERSION_CREATE` — to upload a version
-- `VERSION_READ` — to verify what got uploaded
-- optionally `PROJECT_READ` / `PROJECT_WRITE` if the description also needs changing
-
-Do **not** ask for project-creation, delete, or user scopes. Do not ask for
-`Read user email`. A token that is missing a scope returns `401` on endpoints that need it,
-which is expected and not a broken token — do not go hunting for a permissions problem when
-`401` appears on `/v2/user`, because that endpoint wants a scope we deliberately did not grant.
-
-**Never accept a token pasted into the chat.** Tokens end up in conversation history and must be
-treated as exposed. Instead, have me write it to a file:
+**The Modrinth token is already configured.** It lives in the user environment variable
+`MODRINTH_TOKEN`, set once with a 3-month expiry, so nothing needs doing per release:
 
 ```powershell
-Set-Content -Path "$env:TEMP\modrinth_token.txt" -Value "<token>" -NoNewline
+$token = $env:MODRINTH_TOKEN
 ```
 
-Read it from disk, use it, then **delete the file**. Tell me to revoke the token when finished.
-If a token was ever pasted into the conversation, say so and ask for a fresh one.
+**If `$env:MODRINTH_TOKEN` is empty, it is a stale-process problem, not a missing token.**
+`setx` only affects *new* processes, so a shell that was already running will not see it. Read
+the registry value instead, and tell me to restart anything that still cannot see it:
+
+```powershell
+if (-not $env:MODRINTH_TOKEN) {
+    $token = (Get-ItemProperty -Path 'HKCU:\Environment').MODRINTH_TOKEN
+}
+```
+
+Confirm the token works before relying on it. An empty `POST` to `/v2/version` returns `400` when
+the token is valid and `401` when it is not, which distinguishes the two without publishing
+anything:
+
+```powershell
+curl.exe -s -o nul -w "HTTP %{http_code} (400 = auth ok, 401 = bad token)`n" `
+  -X POST -H "Authorization: $token" -H "User-Agent: HVB007/KeybindsGalore-release/1.0" `
+  -H "Content-Type: application/json" -d '{}' 'https://api.modrinth.com/v2/version'
+```
+
+The token carries `VERSION_CREATE` and `VERSION_READ`. It **cannot** delete a version or touch
+the account, which is a deliberately small blast radius for a long-lived credential.
+
+**Never ask me to paste a token into the chat.** Tokens end up in conversation history and must
+be treated as exposed. If a token is ever pasted, say so, ask for a fresh one, and tell me to
+revoke the pasted one. Use the environment variable; if it is missing entirely, ask me to set it
+with `setx` rather than accepting it in a message:
+
+```powershell
+setx MODRINTH_TOKEN "<token>"
+```
 
 GitHub uses the `gh` CLI, which is already authenticated. Do not handle a GitHub token by hand.
+
+**Do not store the token in the repository.** Not even in a gitignored file. A secret in the
+working tree is one `git add -f` away from a commit, and the environment variable needs no
+cleanup and cannot be swept into a backup or an IDE sync.
 
 ## The order of work
 
@@ -166,7 +188,8 @@ Two parts are required:
 - at least one file part, whose name is listed in `file_parts`
 
 ```powershell
-$token  = (Get-Content "$env:TEMP\modrinth_token.txt" -Raw).Trim()
+$token  = $env:MODRINTH_TOKEN
+if (-not $token) { $token = (Get-ItemProperty -Path 'HKCU:\Environment').MODRINTH_TOKEN }
 $changelog = [string]::Join("`n", [string[]](Get-Content ".\mr-changelog.txt"))
 
 $data = @{
@@ -263,7 +286,9 @@ Tags in this project carry the Minecraft version and loader, so the GitHub tag i
 
 ### 8. Close out
 
-- delete the token file, and tell me to revoke the token
+- confirm no stray token file was left behind, and that nothing token-shaped is staged or
+  committed. The token lives in the environment variable and needs no cleanup
+- note the token's expiry so we renew it before a release is blocked by it
 - `git log --oneline` and a clean `git status`, so I can see exactly what changed
 - a plain summary of what is now public, with links
 - anything you deliberately did **not** do, and why
