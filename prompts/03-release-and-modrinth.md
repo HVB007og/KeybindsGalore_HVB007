@@ -187,6 +187,10 @@ Two parts are required:
 - a part named `data` holding the version metadata as JSON
 - at least one file part, whose name is listed in `file_parts`
 
+The `data` part must come **first** in the multipart body, or the upload fails with
+`` `data` field must come before file fields ``. `project_id` is required in that payload
+despite being absent from the documented request body.
+
 ```powershell
 $token  = $env:MODRINTH_TOKEN
 if (-not $token) { $token = (Get-ItemProperty -Path 'HKCU:\Environment').MODRINTH_TOKEN }
@@ -204,16 +208,19 @@ $data = @{
   featured       = $false
   status         = "listed"
   environment    = "client_only"        # a STRING, not an array
-  file_parts     = @("file")
-  primary_file   = "file"
-} | ConvertTo-Json -Depth 5 -Compress
+  file_parts     = @("file","sources")
+  primary_file   = "file"                 # the mod jar, by multipart field name
+  file_types     = @{ sources = "sources-jar" }
+} | ConvertTo-Json -Depth 6 -Compress
 
 [System.IO.File]::WriteAllText("$PWD\mr-data.json", $data, (New-Object System.Text.UTF8Encoding($false)))
 
+# The data part MUST come before the file parts, or the API rejects the upload.
 curl.exe -s -w "`n__HTTP__%{http_code}" -X POST `
   -H "Authorization: $token" -H "User-Agent: HVB007/KeybindsGalore-release/1.0" `
   -F "data=<$PWD\mr-data.json;type=application/json" `
   -F "file=@$jar;type=application/java-archive;filename=$filename" `
+  -F "sources=@$sourcesJar;type=application/java-archive;filename=$sourcesFilename" `
   "https://api.modrinth.com/v2/version"
 ```
 
@@ -222,18 +229,64 @@ curl.exe -s -w "`n__HTTP__%{http_code}" -X POST `
 - `Get-Content -Raw` returns a `PSObject`. `ConvertTo-Json` then wraps it as
   `{"value": "..."}`, and the API rejects it with a confusing parse error. Cast with
   `[string]`, or use `[string]::Join("`n", [string[]](Get-Content ...))`.
+- `Get-Content -Raw` also reads as the **ANSI codepage**, not UTF-8, so em-dashes and emoji
+  arrive double-encoded and land on the live page as `Aâ€"`. Read the body with
+  `[System.IO.File]::ReadAllText` (UTF-8 by default), or make the text pure ASCII. The
+  project description was corrupted twice this way before it was made pure ASCII.
+- **Never fix text with a PowerShell `-replace` chain and trust it.** One such chain silently
+  deleted every lowercase `i` and briefly turned "KeybindsGalore" into "KeybndsGalore" on the
+  live page. Write the file, then verify by comparing the fetched result to the intended text
+  as whole strings, not by eye.
 - `environment` is a **single string**, not an array. Sending `["client_only"]` fails with
   `invalid type: sequence, expected a string`.
 - Write the JSON with `UTF8Encoding($false)`. The default encoder emits a BOM.
 - The API reports missing fields one at a time, as `400` with `missing field 'x'`. Expect to
   add `file_parts`, `dependencies`, and `featured` on successive attempts.
 
-**Upload both files. Modrinth accepts a sources jar as a supplementary file on the same
-version**, alongside the primary mod jar — the primary is whichever part `primary_file` names.
-Both belong on Modrinth; the sources jar is not a GitHub-only artefact.
+**Set the primary file at creation. There is no way to set it afterwards.** This is the single
+most important rule in this section, and getting it wrong is not cleanly reversible.
+
+- `primary_file` is a **string** at creation: the multipart *field name* of the primary file.
+- On the **edit** endpoint the field is an array `[algorithm, hash]`, and as of the current
+  Labrinth v3 code the edit request struct has **no primary field at all**. `PATCH
+  /v2/version/{id}` returns `204` and silently does nothing, so it looks like it worked.
+- There is no `PATCH /v2/version_file/{id}`. That route does not exist on v2 or v3, and a
+  `primary` hint passed to the add-file endpoint is ignored.
+- Files with no `primary` flag are not re-ordered. The API will happily return the sources jar
+  first, and `DELETE`ing the other file does not promote anything.
+
+**So: never create a version, then rename it and swap its files.** Decide the version number and
+the exact file set *before* the first upload. If a version number turns out to be wrong, the
+recovery is `DELETE /v2/version/{id}` and a fresh create, which needs the **`VERSION_DELETE`**
+scope. Ask for that scope up front alongside create/read/write so renames stay possible.
+
+**Version files are addressed by hash, not by id.** `DELETE /v2/version_file/{sha1}` works;
+`DELETE /v2/version_file/{base62-id}` returns `404`. The base62 `id` on each file is for
+nothing you need here.
+
+**Tag the sources jar as a sources jar.** On creation, pass a `file_types` map from multipart
+field name to type, and it can be corrected later via `PATCH /v2/version/{id}` with a
+`file_types` array of `{algorithm, hash, file_type}` — the one file field that *is* still
+editable:
+
+```json
+"file_types": { "sources": "sources-jar" }
+```
+
+Without the tag, Modrinth treats the sources jar as a generic supplement. With it, the version
+page and the API expose `file_type: "sources-jar"` and the download button correctly resolves
+to the mod jar. Verify this on the real version page after publishing, not just in the API
+response, because a version whose files are all unflagged and sources-first is ambiguous.
+
+
+**Upload both files in the first create, and get the version number right first.** Modrinth
+accepts a sources jar as a supplementary file on the same version — the primary is whichever
+part `primary_file` names. Both belong on Modrinth; the sources jar is not a GitHub-only
+artefact.
 
 - primary: `keybindsgalore-<version>.jar`
-- supplementary: `keybindsgalore-<version>-sources.jar`
+- supplementary: `keybindsgalore-<version>-sources.jar`, tagged `sources-jar`
+
 
 **Dependencies — the trap I actually fell into.** Do not copy a dependency `project_id` from an
 existing version of another loader. I reused `P7dR8mSH` from the Fabric release believing it was
