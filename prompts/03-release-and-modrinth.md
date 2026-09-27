@@ -252,27 +252,13 @@ curl.exe -s -H "User-Agent: HVB007/KeybindsGalore-release/1.0" `
   tag on the version, so it must **not** appear as a dependency. Search confirms no such project
   exists. If you cannot find it, that is expected, not an error to work around.
 
-### 6. Verify the upload, do not assume it
+### 6. GitHub release
 
-Download the file back from the CDN URL in the API response and compare hashes against the
-archived jar:
+Do this as a full step, not as an afterthought after Modrinth. **A GitHub release is part of
+publishing**, because the sources jar is a release artefact in its own right and GitHub is where
+people decompile against it.
 
-```powershell
-curl.exe -s -o verify.jar "<the file url from the response>"
-Get-FileHash verify.jar -Algorithm SHA1     # compare to the archive
-Get-FileHash verify.jar -Algorithm SHA512   # compare to the archive
-```
-
-Byte-identical or it did not ship correctly. Then confirm the version by id and check its
-`loaders`, `game_versions`, `status`, and file list. Report the version id and its public URL.
-
-Do the same digest check for GitHub release assets: `gh release view --json assets` returns a
-`sha256` per asset, which you can compare against the local archive.
-
-### 7. GitHub release
-
-Both jars attach to the release. This is independent of Modrinth, and unlike Modrinth both files
-belong on the primary upload rather than as a supplementary.
+Both jars attach to the release:
 
 ```powershell
 gh release create "keybindsgalore-$version" `
@@ -281,8 +267,62 @@ gh release create "keybindsgalore-$version" `
   --title "$version" --notes-file ".\release-notes.md" --target "<branch>"
 ```
 
-Tags in this project carry the Minecraft version and loader, so the GitHub tag is
-`keybindsgalore-1.8.0+26.2-neoforge` while the Modrinth number is `1.8.0`. That is intentional.
+If the release is being created in a turn where I have **not** yet seen a summary, prepare the
+commands and the notes and show them to me first. When I have already said to go ahead, or when
+this is a follow-up turn for a version whose release already exists, create it without asking
+again. `prompts/12-prepare-a-github-release.md` covers the GitHub side in more depth, including
+confirming the tag target before creating anything.
+
+Check the tag is free first, and check what titles already exist, so you neither clobber an old
+release nor create a confusing near-duplicate:
+
+```powershell
+gh release list --limit 10
+git ls-remote --tags origin
+```
+
+**Tag and title conventions differ from Modrinth, on purpose.**
+
+- the GitHub **tag** carries the Minecraft version and loader:
+  `keybindsgalore-1.8.0+26.2-neoforge`
+- the GitHub **title** is the plain version number: `1.8.0`
+- the Modrinth **version_number** is also the plain number: `1.8.0`
+- the **jar filename** carries the Minecraft version: `keybindsgalore-1.8.0+26.2-neoforge.jar`
+
+So a NeoForge build and a Fabric build of the same mod share the number `1.8.0` and differ by
+tag and filename. That is intentional, not an inconsistency to tidy up. If you find an existing
+release whose title still embeds the Minecraft version, retitle it with
+`gh release edit <tag> --title <plain-number>` rather than creating a second release.
+
+### 7. Verify both uploads, do not assume either
+
+**Modrinth.** Download each file back from the CDN URL in the API response and compare hashes
+against the archived jar:
+
+```powershell
+curl.exe -s -o verify.jar "<the file url from the response>"
+Get-FileHash verify.jar -Algorithm SHA1     # compare to the archive
+Get-FileHash verify.jar -Algorithm SHA512   # compare to the archive
+```
+
+Byte-identical or it did not ship correctly. Then fetch the version by id and confirm its
+`loaders`, `game_versions`, `status`, `environment`, `dependencies`, and file list — including
+that the sources jar is present and `primary` is false. Report the version id and public URL.
+
+**GitHub.** `gh release view <tag> --json assets` returns a `sha256` per asset. Compare each
+against the local archive:
+
+```powershell
+gh release view "keybindsgalore-$version" --json assets
+```
+
+A mismatch means the wrong file was uploaded. Check `bkpjar/SHA256SUMS.txt` to see which build
+the archive actually holds.
+
+**Watch for archive drift.** A sources jar rebuilt from a newer commit differs by a few bytes
+from one archived earlier, because prompts and docs are packaged into it. When a release already
+exists on one platform, align the archive to what that platform serves rather than silently
+shipping different bytes to different users, unless I say otherwise.
 
 ### 8. Close out
 
