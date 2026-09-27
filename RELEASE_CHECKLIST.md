@@ -1,33 +1,53 @@
-# Release checklist — 1.8.0+26.2
+# Release checklist
 
-Everything that has to be filled in on Modrinth, plus the values to paste. Generated
-from the state of the `recovery/26.2` branch.
+Applies to any loader and any Minecraft version. The concrete values below come from the last
+Fabric release as worked examples; substitute the branch you are actually building.
+
+`prompts/03-release-and-modrinth.md` is the full procedure and carries the Modrinth API traps
+this summary deliberately does not repeat. **Read it before releasing.**
+
+---
+
+## 0. Version numbering, decided before anything is uploaded
+
+| Where | Form | Example (26.2 NeoForge) |
+|---|---|---|
+| Modrinth `version_number` | plain semver, no Minecraft version, no loader | `1.8.0` |
+| GitHub tag | version + Minecraft version + loader | `keybindsgalore-1.8.0+26.2-neoforge` |
+| GitHub release title | plain semver, matching Modrinth | `1.8.0` |
+| Jar filename | version + Minecraft version (+ loader) | `keybindsgalore-1.8.0+26.2-neoforge.jar` |
+| `bkpjar/` directory | jar filename without extension | `1.8.0+26.2-neoforge` |
+
+A Fabric build and a NeoForge build of the same mod share the Modrinth number and differ by
+loader. **Do not bump the number for a port that changes no mod behaviour.** A Minecraft port
+that only adapts to engine changes keeps the number it already had.
+
+Decide this *before* the first upload. Modrinth can rename a version afterwards, but it
+**cannot set the primary file afterwards**, so a version created with the wrong file set is
+only fixable by deleting and recreating it, which needs the `VERSION_DELETE` scope.
 
 ---
 
 ## 1. The files to publish
 
-**Modrinth** accepts exactly one file per version, so it gets the mod jar only:
+**Both jars go on both platforms.** Modrinth takes a mod jar plus supplementary files, and the
+sources jar belongs there too, tagged `sources-jar`. GitHub takes both as release assets.
+
+Worked example, Fabric 26.2:
 
 | | |
 |---|---|
-| **File** | `jars/keybindsgalore-1.8.0+26.2.jar` (139 KB) |
-| **Version ID / name** | `1.8.0+26.2` |
+| **Mod jar** | `keybindsgalore-1.8.0+26.2.jar` (139 KB) |
+| **Sources jar** | `keybindsgalore-1.8.0+26.2-sources.jar` (80 KB) |
 | **Version number** | `1.8.0` |
 | **Game version** | `26.2` |
-| **Loader** | `Fabric` |
-| **Side** | `Client-only` |
+| **Loader** | `fabric` |
+| **Side** | `client_only` |
 
-**GitHub Release** accepts multiple assets, so both jars go on the release:
-
-| | |
-|---|---|
-| Mod jar | `keybindsgalore-1.8.0+26.2.jar` |
-| Sources jar | `keybindsgalore-1.8.0+26.2-sources.jar` (80 KB, 50 `.java` files) |
-
-Verified inside the built jar: id `keybindsgalore`, version `1.8.0+26.2`, 60 classes,
-`fabric.mod.json`, mixins config, default properties, icon, `en_us.json`, and the LGPL
-licence file. No stale classes or assets from earlier Minecraft versions.
+Verified inside the built jar: id `keybindsgalore`, version matching `gradle.properties`, the
+loader metadata file, mixins config, default properties, icon, `en_us.json`, and the LGPL
+licence file. No stale classes or assets from earlier Minecraft versions, and no files
+belonging to the other loader.
 
 ---
 

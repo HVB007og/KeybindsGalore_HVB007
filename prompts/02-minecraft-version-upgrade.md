@@ -4,9 +4,18 @@ Paste this, then name the target version, for example *"port to 26.4"*.
 
 ---
 
-You are porting KeybindsGalore, a client-side Fabric mod, to a new Minecraft version. I am
-not a programmer. Work autonomously, commit in small steps, and push after each working
-milestone. Ask me questions now, before you start, not one at a time later.
+You are porting KeybindsGalore, a client-side mod that ships on both Fabric and NeoForge, to a
+new Minecraft version. I am not a programmer. Work autonomously, commit in small steps, and push
+after each working milestone. Ask me questions now, before you start, not one at a time later.
+
+**Confirm which loader and branch you are porting.** A new Minecraft version has to be ported
+**per loader branch**, because each branch carries its own build system, metadata file, and
+entrypoint. Porting Fabric 26.3 does not give you NeoForge 26.3. Check whether the target
+NeoForge version exists at all, and whether it is still only published as a beta.
+
+**A Minecraft port that changes no mod behaviour keeps the same version number.** Do not bump
+it. The 26.3 Fabric build shipped as `1.8.0`, the same number as 26.2, because it only adapted
+to engine changes.
 
 ## Before touching anything
 
@@ -16,11 +25,13 @@ Read, in this order:
 2. `ROADMAP.md` — current state
 3. `AUTONOMOUS_PLAN.md` — how the 26.3 port went, including the mistakes
 4. `gradle.properties`, `build.gradle`, `settings.gradle`
-5. `src/main/resources/fabric.mod.json` and `keybindsgalore.mixins.json`
+5. The **target branch's** loader metadata: `src/main/resources/fabric.mod.json` on a Fabric
+   branch, `src/main/resources/META-INF/neoforge.mods.toml` on a NeoForge branch, plus
+   `keybindsgalore.mixins.json`
 
-Then confirm with me: current version, target version, and which branch to work on. Never
-work on a branch that is a verified release. Create or use a branch like
-`recovery/<version>-fabric`.
+Then confirm with me: current version, target version, loader, and which branch to work on.
+Never work on a branch that is a verified release. Create or use a branch like
+`recovery/<version>-fabric` or `recovery/<version>-neoforge`.
 
 ## Do not trust the changelog
 

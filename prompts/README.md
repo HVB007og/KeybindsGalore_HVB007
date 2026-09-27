@@ -26,6 +26,12 @@ the prompt tells it to read them first:
 
 Those are the source of truth. The prompts here are *how to do a job*, not *what is true*.
 
+**Do not cherry-pick release commits between loader branches.** A cherry-pick that touched
+`gradle.properties` or `fabric.mod.json` tried to set the 26.3 version string on the 26.2
+NeoForge branch. The conflict warning caught it, but the safe rule is to copy only the
+loader-agnostic files (`prompts/`, `ROADMAP.md`, `AGENTS.md`) and hand-write anything that
+names a Minecraft or loader version.
+
 ## The prompts
 
 | File | Use it for |
@@ -38,7 +44,8 @@ Those are the source of truth. The prompts here are *how to do a job*, not *what
 | `06-codebase-audit.md` | Reviewing and tidying the codebase against ecosystem conventions |
 | `07-new-feature.md` | Adding a feature without breaking the input path or the config contract |
 | `08-unattended-overnight-run.md` | Letting an assistant work for hours with you asleep |
-| `12-prepare-a-github-release.md` | Tagging a release and attaching both jars
+| `12-prepare-a-github-release.md` | Tagging a release and attaching both jars |
+| `04-neoforge-port.md` | Porting the mod to NeoForge. Already used for 26.2; reuse it for 26.3 |
 
 ## Recommended additions, not yet written
 
@@ -50,9 +57,8 @@ small file in this folder.
 | `09-revert-a-bad-change.md` | Undoing a change that turned out wrong, without losing unrelated work. There have been several this project, including a bulk config edit that silently removed `useKeybindFix` and a bulk GUI edit that deleted six unrelated widgets. |
 | `10-translate-the-mod.md` | Adding or correcting a language file. Must include the rule that `en_us.json` is not validated by the build, and that a trailing comma on the last entry is invalid. |
 | `11-dependency-upgrade.md` | Bumping Fabric API, Cloth Config, or ModMenu without assuming the Modrinth version string is the Maven coordinate. This project lost a build to exactly that. |
-| ~~`12-prepare-a-github-release.md`~~ | **Written.** Tagging a release and attaching both jars. Separate from `03` because Modrinth takes one file per version, so the sources jar belongs on GitHub. |
 | `13-audit-config-options.md` | Finding options that are persisted but never read. A repeatable version of the sweep that retired nine options. |
-| `14-multi-loader-maintenance.md` | Keeping Fabric and NeoForge branches in step once both exist. This will matter the moment there are two branches to drift apart. |
+| `14-multi-loader-maintenance.md` | Keeping the four loader branches in step. Now genuinely needed: there are already three published branches and a fourth under construction, and they have drifted once already, when a cherry-pick tried to put the 26.3 version string onto the 26.2 NeoForge branch. |
 
 ## One rule that outranks all of them
 

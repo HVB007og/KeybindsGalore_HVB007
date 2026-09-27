@@ -25,6 +25,8 @@ The work is entirely in adapting the mod to 26.3's client changes:
 - Cloth Config 26.3.159 or newer
 - ModMenu 21.0.0 or newer (optional, only for the settings screen)
 
+The same mod is also published for 26.2 on Fabric and on NeoForge, under the same number.
+
 ### Verification status
 
 Built and unit-tested, with 45 tests passing. The pie menu, list menu, and config screen were

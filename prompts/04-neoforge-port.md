@@ -10,18 +10,45 @@ questions now rather than one at a time later.
 
 ## Understand the shape of this job
 
-This is **not** a version bump. The 26.3 port was four import and constant changes. This is a
-port to a different mod loader, which means a different build system, different metadata,
-different config-screen registration, and separate mixin configuration. Budget accordingly and
-do not report progress as though it were a small edit.
+This is **not** a version bump, and it is not always a big job either. Measure it before
+assuming: count the loader-specific imports in the tree.
 
-Expect roughly: build system, metadata, entrypoints, config screen, mixin wiring, and then a
-long tail of runtime differences that only appear at launch.
+For the 26.2 port that count was **7 imports across 50 files**, and the finished port touched
+**3 source files**. The conflict engine, config model, and both selector screens were untouched,
+because nearly all of the mod is plain Minecraft or plain Java. Time went into build-system
+traps, not code:
+
+- ModDevGradle needs `addModdingDependenciesTo sourceSets.test`, or tests that construct
+  `KeyMapping` fail to compile
+- `foojay-resolver-convention` must be **1.0.0** in `settings.gradle`; 0.9.0 references
+  `JvmVendorSpec.IBM_SEMERU`, removed in Gradle 9, and the run tasks then fail hunting for a
+  Java 21 toolchain
+- the `plugins {}` block in `settings.gradle` must come *after* `pluginManagement {}`
+
+A port to a *newer Minecraft version* on NeoForge costs more than this, because the game
+itself changed. Going 26.2 to 26.3 means the SDL3 key handling and the `renderpearl` pipeline
+on top of the loader work.
+
+## The gate: get an empty mod launching first
+
+Before porting any feature, get a bare `@Mod(dist = Dist.CLIENT)` class compiling and
+launching with the real metadata file. A skeleton that reaches the main menu proves the
+toolchain, the version numbers, and the dependency coordinates. Only then bring the real code
+across. It also makes any later failure obviously about the port rather than the build.
 
 ## Before anything else
 
 Read `AGENTS.md`, `ROADMAP.md`, and `AUTONOMOUS_PLAN.md`, then `build.gradle`,
-`gradle.properties`, and `src/main/resources/fabric.mod.json`.
+`gradle.properties`, and the **target branch's** loader metadata
+(`src/main/resources/fabric.mod.json` or `src/main/resources/META-INF/neoforge.mods.toml`).
+
+**Check what NeoForge actually publishes before promising a target.** Versions may exist only
+as `-beta`, and a version line may stop well short of the newest Minecraft release. Report
+what you found rather than assuming parity with the Fabric target.
+
+`run/` and `build/` are shared across branches. If a run launches the wrong loader, check the
+log for `net.neoforged.fml` versus `FabricLoader` before suspecting the code, and clear
+`build/` after switching branches.
 
 I have already decided, do not re-litigate:
 

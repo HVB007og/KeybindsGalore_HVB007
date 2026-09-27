@@ -1,6 +1,6 @@
 # Prompt: prepare a GitHub release
 
-Paste this, then name the version, for example *"prepare the GitHub release for 1.9.0+26.3"*.
+Paste this, then name the build, for example *"prepare the GitHub release for 1.8.0+26.3"*.
 
 ---
 
@@ -21,9 +21,13 @@ this prompt exists separately.
 
 | Artifact | Modrinth | GitHub release |
 |---|---|---|
-| Mod jar | yes | yes |
-| Sources jar | **no**, one file per version | yes |
+| Mod jar | yes, as the primary file | yes |
+| Sources jar | yes, as a supplementary file tagged `sources-jar` | yes |
 | SHA256SUMS | no | optional, useful |
+
+**Both platforms get both jars.** Modrinth does not restrict a version to one file; the mod jar
+is the primary and the sources jar is supplementary. Tagging it `sources-jar` is what makes
+Modrinth resolve the mod jar as the download, so do not skip the tag.
 
 Keep the sources jar. Other modders decompile against it, and it is the only published view of
 the source for a given build.
@@ -36,11 +40,15 @@ The release must be built from an **archived** jar in `bkpjar/<version>/`, not f
 `build/`. Archiving happened before upload precisely so the backup is byte-identical to what
 ships. If the archive is missing, stop and say so; do not rebuild and assume it matches.
 
+The `bkpjar/` directory is named for the **jar version string**, which is not the Modrinth
+version number: three published builds are all Modrinth `1.8.0`, while the directories read
+`1.8.0+26.2`, `1.8.0+26.2-neoforge`, and `1.8.0+26.3`.
+
 Verify:
 
-- the jar filename matches the version
-- `fabric.mod.json` inside the jar reports the same version
-- `depends.minecraft` and the Fabric API range are correct
+- the jar filename matches the archive directory
+- the loader metadata inside the jar reports the same version
+- the Minecraft range and loader-API range are correct
 - the LGPL licence file is embedded
 - `bkpjar/SHA256SUMS.txt` contains an entry for both jars
 
@@ -49,11 +57,21 @@ Report the SHA256 of each file you attach.
 ### 2. Confirm the tag target
 
 The tag must point at the commit that produced the build, on the branch for that Minecraft
-version. Multiple branches exist here, for example `recovery/26.2` and `recovery/26.3-fabric`,
-so this is easy to get wrong.
+version **and loader**. There are four active branches here, for example `recovery/26.3-fabric`
+and `recovery/26.2-neoforge`, and the version string alone does not tell you which loader a
+tag belongs to. This is easy to get wrong.
 
-Ask me which branch the version belongs to if it is not obvious from the version string, and
-show me the commit you are about to tag **before** creating anything.
+Ask me which branch the version belongs to if it is not obvious, and show me the commit you are
+about to tag **before** creating anything.
+
+**Tag naming, and the trap that goes with it.** Tags carry the version, Minecraft version, and
+loader: `keybindsgalore-1.8.0+26.2-neoforge`. The release *title* is the plain Modrinth number,
+`1.8.0`. Do not mix the two forms.
+
+Renaming a tag after the fact is disruptive on GitHub: deleting the tag turns its release into
+a **draft**, and the release must then be re-pointed at the new tag through the API
+(`PATCH /repos/{owner}/{repo}/releases/{id}` with `tag_name` and `draft: false`) before it
+reappears. Prefer getting the tag right the first time.
 
 ### 3. Write the release notes
 

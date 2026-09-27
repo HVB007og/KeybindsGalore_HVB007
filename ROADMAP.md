@@ -9,20 +9,36 @@ Status legend: `[ ]` open · `[~]` in progress · `[x]` done · `[-]` deliberate
 
 ## Current state
 
-Branch `recovery/26.2`, Minecraft 26.2, Java 25. Pushed through `8aebb26`; six
-commits are local only:
+**Three releases are published and human-verified in game.**
 
-- `6f2a6cd` — wire the pie scale options
-- `347bb7c` — regroup the config screen by concern
-- `28bea80` — fix four visual settings that appeared to do nothing
-- `73d1845` — retire `PIE_MENU_COLOR_LIGHTEN_FACTOR`
-- `e1a2c52` — retire label inset, de-duplicate the darken toggle, visible label shadow
-- `f53d0a5` — keep darken strength out of the list menu
+| Branch | Target | Loader | Modrinth version | GitHub tag |
+|---|---|---|---|---|
+| `recovery/26.2-neoforge` | 26.2 | NeoForge | `1.8.0` | `keybindsgalore-1.8.0+26.2-neoforge` |
+| `recovery/26.3-fabric` | 26.3 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.3` |
+| `recovery/26.2` | 26.2 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.2` |
 
-45 unit tests pass. Every visual option has now been manually tested in game, which
-is how most of the items below were found.
+Modrinth project `l6y7RMn7`. Every entry carries the mod jar plus a sources jar, all verified by
+downloading back and comparing digests. 45 unit tests pass on every branch.
+
+Verified in game on 26.3 Fabric: pie menu, list menu, K-key priority capture, priority
+resolution, and the config screen. Verified in game on 26.2 NeoForge: the same set, plus the
+ModMenu-free config screen contributed through NeoForge's extension point.
 
 **The mod works. Everything below is improvement, not repair.**
+
+### Outstanding, small
+
+- [~] **NeoForge 26.3 port.** NeoForge publishes 26.3 only as beta; newest is `26.3.0.26-beta`.
+      Branch `recovery/26.3-neoforge` is being prepared for testing. Must handle SDL3 key input
+      and the `renderpearl` pipeline, which 26.2 does not.
+- [ ] Modrinth project **short description** still reads *"I Learnt how to code Java for the
+      explicit purpose of updating this mod... updated to 1.20"*, and `source_url` points at
+      `KeybindsGalore_HVB007_1.20.x/tree/Alpha`. Being fixed by hand.
+- [ ] The 26.3 Modrinth version has no file flagged `primary`, because the version number was
+      corrected after creation and Modrinth cannot set that field afterwards. Downloads are
+      correct. A clean fix needs `VERSION_DELETE` and a recreate.
+- [ ] Screenshots. The gallery holds 6 images; whether they still show the current UI is
+      unverified. The preview thumbnail is the single highest-leverage image on the page.
 
 ---
 
@@ -122,11 +138,16 @@ translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset
       every build and referred to a reload-config feature that no longer exists
 - [x] Verified the built jar: correct version, 60 classes, mixins config, default
       properties, icon, translations, embedded licence, and no stale assets
-- [ ] Publish 1.8.0+26.2 to Modrinth with the mod jar, then attach both jars to the GitHub
-      release. Note that Modrinth takes one file per version; the sources jar goes on GitHub
-- [ ] Tag the release and push the tag
-- [ ] Replace the three gallery screenshots, all of which are from 2023–2024 and show a
-      pre-1.21.1 UI that no longer exists
+- [x] Published `1.8.0` to Modrinth for 26.2 Fabric, 26.2 NeoForge, and 26.3 Fabric. Each entry
+      carries the mod jar **and** the sources jar, with the sources tagged `sources-jar`. Both
+      jars also attach to each GitHub release. Every file was verified by downloading it back
+      and comparing digests
+- [x] Tagged and pushed all three releases. Modrinth numbers are plain `1.8.0`; GitHub tags
+      encode the Minecraft version and loader
+- [x] Automated the release path in `prompts/03-release-and-modrinth.md`, including the
+      Modrinth API traps: multipart shape, hash-addressed file deletes, and the fact that a
+      primary file can only be set at creation
+- [ ] Replace the gallery screenshots, which are from 2023-2024 and show a pre-1.21.1 UI
 
 ---
 
@@ -271,13 +292,17 @@ Decisions that need a human answer before the work can start.
       wedge outline colour and width, a rotation offset for the starting wedge, and a
       maximum label width that truncates with an ellipsis
 - [ ] Profiles: per-world, per-server, or global?
-- [ ] Is the `debug` category ever going to get a real English label in 26.2? If not, the
+- [ ] Is the `debug` category ever going to get a real English label in 26.2+? If not, the
       legacy `FILTER_DEBUG_KEYS → [Debug]` migration should be retired
-- [ ] Release tag format, and whether 26.2 ships as a new major version given the
-      Minecraft-version jump
+- [x] Release tag format, settled: Modrinth uses the plain number, GitHub tags carry the
+      Minecraft version and loader, and a port that changes no mod behaviour does **not** bump
+      the number
 - [ ] Should the pie scale defaults stay at `0.8`/`0.2`? Those are the values the code
       always used; the `0.6`/`0.25` the config file once advertised were never in effect.
       Current behaviour was kept deliberately, but it was never a choice you made
+- [ ] Give each loader branch its own run directory. `run/` and `build/` are shared, and
+      leftover `build/moddev` plus a NeoForge-written `run/` makes a Fabric branch look
+      broken when `runClient` launches the wrong loader
 
 ---
 

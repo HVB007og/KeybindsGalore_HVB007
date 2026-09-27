@@ -1,7 +1,7 @@
 # Keybinds Galore
 
-A Fabric client-side mod for Minecraft 26.2 that resolves keybind conflicts instead of
-letting actions silently override each other.
+A client-side mod for Minecraft that resolves keybind conflicts instead of letting actions
+silently override each other. Available for **Fabric** (26.2 and 26.3) and **NeoForge** (26.2).
 
 When two actions share a physical key, Minecraft picks one and ignores the other, usually
 without telling you. Keybinds Galore intercepts that and asks: a selection menu opens, you
@@ -23,19 +23,21 @@ Originally created by Cael. Maintained for modern versions by HVB007.
   you close the vanilla Controls screen, when you save config, and when priorities change.
 - **Per-category filters.** Exclude whole categories from conflict detection if you never
   want to be asked about them.
-- **In-game config.** Full settings screen through ModMenu and Cloth Config. Nothing
-  requires editing a text file.
+- **In-game config.** Full settings screen through Cloth Config. Nothing requires editing a text
+  file. On Fabric it appears in ModMenu; on NeoForge it appears in the mod list.
 - **Public API.** A small versioned API lets other mods register their actions so their
   bindings participate in conflict detection.
 
 ## Requirements
 
-- Minecraft 26.2
-- Fabric Loader 0.19.3 or newer
-- Fabric API 0.152.1+26.2 or newer
-- Java 25 or newer
-- Cloth Config 26.2.155 or newer
-- ModMenu 20.0.2 or newer (optional, only for the settings screen)
+Pick the row that matches your loader and Minecraft version.
+
+| Loader | Minecraft | Also needs |
+|---|---|---|
+| Fabric | 26.2 or 26.3 | Fabric Loader 0.19.3+, Fabric API, ModMenu (optional) |
+| NeoForge | 26.2 | NeoForge 26.2.0.88+ |
+
+Java 25 or newer on all combinations. Cloth Config 26.2.155+ (26.3.159+ for Minecraft 26.3).
 
 Client-side only. Not usable on a dedicated server.
 

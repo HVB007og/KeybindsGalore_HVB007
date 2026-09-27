@@ -17,12 +17,18 @@ Requested 2026-09-26. Three goals, in priority order:
 
 ## Goal 1 outcome — verified working
 
-**Closed.** `recovery/26.3-fabric`, version `1.9.0+26.3`.
+**Closed and shipped.** `recovery/26.3-fabric`, published as Modrinth `1.8.0` with GitHub tag
+`keybindsgalore-1.8.0+26.3`. The version was originally `1.9.0+26.3` and was corrected, because
+a port that changes no mod behaviour must not claim a minor bump.
 
 - Compiles; 45 unit tests pass
-- Client launches as `1.9.0+26.3`; all mixins apply with no injection errors
+- Client launches with Fabric Loader and all mixins apply with no injection errors
 - Startup conflict scan runs on 26.3
-- The user confirmed in game that it works
+- Human-verified in game: pie menu, list menu, K-key priority capture, priorities, config screen
+
+The K-capture path was the one open question here, since it depends on the SDL3 key handling
+below. It has since been confirmed in game, with `Executing priority action` entries appearing in
+`run/logs/latest.log`.
 
 Two platform changes were needed, both found by inspecting the 26.3 jar:
 
@@ -100,23 +106,39 @@ manually verified before being committed. A NeoForge jar I cannot launch is a gu
 
 ## Decisions needed from the user
 
-Recorded here so the answers survive even if the conversation does not.
+Recorded here so the answers survive even if the conversation does not. **All four are now
+answered**; the answers are in the right-hand column and the work has been done.
 
-- [ ] **NeoForge 26.3 stability.** Target 26.2 NeoForge first, and only attempt 26.3 once
-      26.2 works? Default if unanswered: yes, 26.2 first.
-- [ ] **Repository layout.** One branch per target
-      (`recovery/26.2-fabric`, `recovery/26.3-fabric`, `recovery/26.2-neoforge`,
-      `recovery/26.3-neoforge`), or a multi-loader Gradle layout with a shared common
-      source set? Default if unanswered: separate branches, because a multi-loader layout
-      is a restructure of a working, verified project and is far riskier unattended.
-- [ ] **May untested code be pushed to the public repository?** Default if unanswered:
-      **no.** Work lands on local branches and is only pushed after it compiles, tests
-      pass, and the mixins are confirmed to apply at launch. Anything less would put an
-      unverified jar on a repository with 21.8k downloads.
-- [ ] **ModMenu on NeoForge.** Port the in-game config screen through NeoForge's own
-      extension point, or ship NeoForge builds with file-only configuration? Default if
-      unanswered: port the screen, since a NeoForge build without a config screen is a
-      worse product.
+| Question | Answer given | Consequence |
+|---|---|---|
+| NeoForge 26.3 stability, 26.2 first? | Yes | 26.2 NeoForge shipped first as `1.8.0` |
+| One branch per target, or multi-loader layout? | Separate branches | Four branches, no shared source set |
+| May untested code be pushed? | Yes, as a backup | Ports are pushed once they compile, tests pass, and the client launches; the *reports* still say what is unverified |
+| ModMenu on NeoForge? | Port the screen | Config screen goes through NeoForge's `IConfigScreenFactory` extension point |
+
+## Outcome
+
+- **26.3 Fabric:** shipped as `1.8.0`, and now human-verified in game including the K-key
+  priority capture, which had been the outstanding unknown because 26.3 moved the client from
+  GLFW to SDL3. 45 tests pass.
+- **26.2 NeoForge:** shipped as `1.8.0`, human-verified in game: pie menu, list menu, K-capture,
+  priorities, and the config screen. The port touched only 3 source files.
+- **26.3 NeoForge:** not started. NeoForge publishes 26.3 **only as beta**, newest
+  `26.3.0.26-beta`, and 26.2 stops at `26.2.0.88`. A beta is a real, runnable target, so the
+  port is feasible; the caveat is that a beta target can change under us.
+- **Harness:** not built. It would need a real Minecraft input simulation, and the only
+  practical route is a test mod rather than a plain JUnit test.
+
+## What the NeoForge 26.2 port actually cost
+
+Worth recording, because it changes the estimate for 26.3. Only 7 loader-specific imports
+existed across 50 source files, so the port was one entrypoint rewrite plus a metadata file.
+The two things that actually cost time were build-system traps, not code: ModDevGradle
+needing `addModdingDependenciesTo sourceSets.test`, and the `foojay-resolver-convention`
+version that references a Gradle 9 enum member which no longer exists.
+
+For 26.3 the code cost is higher, because 26.3 needs the SDL3 key handling and the
+`renderpearl` pipeline that 26.2 does not have.
 
 ## Definition of done per goal
 

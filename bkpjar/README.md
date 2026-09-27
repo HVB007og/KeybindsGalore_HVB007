@@ -8,10 +8,21 @@ the exact Modrinth version string.
 ```text
 bkpjar/
   SHA256SUMS.txt                                  checksums for every archived jar
-  1.8.0+26.2/
-    keybindsgalore-1.8.0+26.2.jar                the file uploaded to Modrinth
-    keybindsgalore-1.8.0+26.2-sources.jar        Java sources, attached to the GitHub release
+  1.8.0+26.2/                                     Fabric, Minecraft 26.2
+    keybindsgalore-1.8.0+26.2.jar
+    keybindsgalore-1.8.0+26.2-sources.jar
+  1.8.0+26.2-neoforge/                            NeoForge, Minecraft 26.2
+    keybindsgalore-1.8.0+26.2-neoforge.jar
+    keybindsgalore-1.8.0+26.2-neoforge-sources.jar
+  1.8.0+26.3/                                     Fabric, Minecraft 26.3
+    keybindsgalore-1.8.0+26.3.jar
+    keybindsgalore-1.8.0+26.3-sources.jar
 ```
+
+The directory name is the **jar version string**, which is not the Modrinth version number. All
+three published builds are Modrinth `1.8.0`; the jar name additionally carries the Minecraft
+version and, for NeoForge, the loader, so one project can list the same number twice under
+different loaders without ambiguity.
 
 ## Why this exists
 
@@ -22,10 +33,14 @@ published.
 
 ## Rules
 
-- Never edit or delete a directory here. Retired builds stay, so an old version someone
-  still runs can always be matched to its binary.
-- Both jars are kept, not just the mod jar. The sources jar is a release artefact in its own
-  right, since it is what other modders decompile against.
+- Never edit a directory here. Retired builds stay, so an old version someone still runs can
+  always be matched to its binary. The one exception is a build that was published briefly and
+  then superseded within the same session, where a corrected rebuild would otherwise leave two
+  conflicting binaries of the same release: `1.9.0+26.3` was removed when the 26.3 version
+  number was corrected to `1.8.0`.
+- Both jars are kept, not just the mod jar, and **both are published to Modrinth and GitHub**.
+  The sources jar is a release artefact in its own right, since it is what other modders
+  decompile against.
 - `SHA256SUMS.txt` is regenerated on every release. Verify with
   `Get-FileHash -Algorithm SHA256` if a download is ever suspect.
 

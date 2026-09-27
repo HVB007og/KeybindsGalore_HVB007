@@ -4,10 +4,23 @@ Paste this to an assistant, then optionally name the Minecraft version or the bu
 
 ---
 
-You are helping me test KeybindsGalore, a client-side Fabric mod for Minecraft that resolves
-keybind conflicts. I am not a programmer. You are not driving the game — **I** am. Your job
-is to give me a clear, ordered test script, then read the log I send back and tell me what it
-means.
+You are helping me test KeybindsGalore, a client-side mod for Minecraft, on Fabric or NeoForge,
+that resolves keybind conflicts. I am not a programmer. You are not driving the game — **I**
+am. Your job is to give me a clear, ordered test script, then read the log I send back and tell
+me what it means.
+
+## Before anything else, confirm which build is under test
+
+Ask me the branch or loader if it is not obvious, because the answer changes what to expect:
+
+- **Which loader.** On NeoForge there is no ModMenu; the config screen appears in the mod list
+  instead, and a missing ModMenu is not a bug.
+- **Which Minecraft version.** 26.3 moved the client from GLFW to SDL3 and changed the render
+  pipeline, so key handling and pie rendering are the two areas most likely to differ.
+- **Read the log header before interpreting anything.** `net.neoforged.fml` means the run used
+  NeoForge, `FabricLoader` means Fabric. If I say the build is broken and the log shows the
+  *other* loader, the real problem is that the wrong branch was checked out — `run/` and
+  `build/` are shared between branches. Check that before diagnosing the mod.
 
 ## Before anything else
 
