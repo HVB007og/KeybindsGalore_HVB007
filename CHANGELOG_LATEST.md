@@ -1,6 +1,24 @@
 # Changelog
 
-## 1.8.0+26.2 — Minecraft 26.2
+## 1.8.0+26.2-neoforge — Minecraft 26.2 (NeoForge)
+
+**First NeoForge release.** This is the same mod as the Fabric `1.8.0+26.2` build, ported to
+NeoForge. Behaviour is unchanged: the pie menu, the list menu, the priority system, K-key
+priority capture, live conflict re-scanning, per-category filters, and the in-game config
+screen all work the same way.
+
+The Fabric edition is published separately and keeps its own version number. The two are
+maintained on separate branches and are versioned independently.
+
+### Notes
+
+- Requires NeoForge 26.2.0.88 or newer, Java 25, and Cloth Config 26.2.155.
+- ModMenu is not used on NeoForge. The config screen is contributed through NeoForge's own
+  settings extension point, so it appears in the Mods list instead.
+- One harmless deprecation warning appears at startup, from Cloth Config 26.2.155 itself. It
+  is upstream and already fixed in the 26.3 build of Cloth Config.
+
+## 1.8.0+26.2 — Minecraft 26.2 (Fabric)
 
 **The config screen now works on 26.2.** The previous 26.2 build shipped with a known issue
 where the ModMenu config screen failed, because the Cloth Config release available at the

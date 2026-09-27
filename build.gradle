@@ -1,91 +1,96 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
-	id 'maven-publish'
+    id 'net.neoforged.moddev' version "${moddevgradle_version}"
 }
 
 version = project.mod_version
 group = project.maven_group
 
 base {
-	archivesName = project.archives_base_name
-}
-
-repositories {
-	maven { url = "https://maven.shedaniel.me/" }
-	mavenCentral()
-	maven { url = "https://maven.fabricmc.net/" }
-	maven { url = "https://maven.terraformersmc.com/" }
-}
-
-loom {
-	runs {
-		datagen {
-			inherit server
-			name "Data Generation"
-			vmArg "-Dfabric-api.datagen"
-			vmArg "-Dfabric-api.datagen.output-dir=${file("src/main/generated")}"
-			vmArg "-Dfabric-api.datagen.modid=keybindsgalore"
-			runDir "build/datagen"
-		}
-	}
-}
-
-sourceSets {
-	main {
-		resources {
-			srcDirs += ['src/main/generated']
-		}
-	}
-}
-
-dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	implementation "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_version}"
-	implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-	testImplementation "org.junit.jupiter:junit-jupiter:5.13.4"
-	testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.13.4"
-}
-
-processResources {
-	inputs.property "version", project.version
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	options.release = 25
+    archivesName = project.archives_base_name
 }
 
 java {
-	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    withSourcesJar()
 }
 
-test {
-	useJUnitPlatform()
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client {
+            client()
+        }
+    }
+
+    mods {
+        keybindsgalore {
+            sourceSet sourceSets.main
+        }
+    }
+
+    // MinecraftConflictIndexTest constructs real KeyMapping instances, so the
+    // test source set needs the modding dependencies too, not just pure-Java.
+    addModdingDependenciesTo sourceSets.test
 }
 
-jar {
-	from("LICENSE") {
-		rename { "${it}_${project.base.archivesName.get()}" }
-	}
+repositories {
+    mavenCentral()
+    maven {
+        name = 'Shedaniel'
+        url = 'https://maven.shedaniel.me/'
+    }
 }
 
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-		}
-	}
-	repositories {
-		// Add publishing target if needed (e.g., Modrinth/Maven/etc)
-	}
+dependencies {
+    implementation "me.shedaniel.cloth:cloth-config-neoforge:${project.cloth_version}"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.13.4"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.13.4"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
 
 tasks.withType(JavaCompile).configureEach {
-	options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
+    options.encoding = 'UTF-8'
+    options.release = 25
+    options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+    manifest {
+        attributes(
+                'Implementation-Title': project.base.archivesName.get(),
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+// NeoForge reads the mod version from neoforge.mods.toml, and there is no manifest to fall
+// back on in a dev run, so the literal there must track gradle.properties. A stale value
+// shows up in-game as the wrong version, which is easy to miss.
+def modsToml = file('src/main/resources/META-INF/neoforge.mods.toml')
+tasks.register('verifyModVersion') {
+    def declared = null
+    def expected = project.version.toString()
+    inputs.file(modsToml)
+    doLast {
+        def match = (modsToml.text =~ /(?m)^version\s*=\s*"([^"]+)"/)
+        if (!match) {
+            throw new GradleException("No version found in ${modsToml}")
+        }
+        if (match[0][1] != expected) {
+            throw new GradleException(
+                    "Version mismatch: neoforge.mods.toml says '${match[0][1]}' " +
+                    "but gradle.properties says '${expected}'. Update the toml.")
+        }
+    }
+}
+tasks.named('check') {
+    dependsOn tasks.named('verifyModVersion')
 }
