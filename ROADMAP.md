@@ -76,10 +76,15 @@ Remaining, neither urgent:
 
 ---
 
-## P0 — Make it trustworthy
+## P0 — Make it trustworthy - closed
 
-The goal of P0 is that nothing in the mod can lie to the player. Mostly done; the
-remainder is honesty about unwired options.
+The goal was that nothing in the mod can lie to the player. That is met: every option is wired
+or retired, the runtime invariants are tested, and the one remaining edge case is documented
+rather than hidden. **P0 is closed. Work now moves to P1.**
+
+If something reopens P0, it is a bug report, not a feature request: an option that is persisted
+but unread, a refresh that silently does not happen, or a claim in the docs that the code does
+not support.
 
 ### P0.1 Dead config options — resolved
 
@@ -135,14 +140,18 @@ the codec, and `en_us.json` all agree on the same 30 options, with no orphaned
 translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset of
 `DEBUG`; give it its own meaning or document the relationship.
 
-### P0.2 Non-vanilla rebinding notification
+### P0.2 Non-vanilla rebinding notification - closed as a documented limitation
 
-- [ ] **Not a bug, a known limitation.** The conflict index refreshes on startup, world join,
+- [-] **Accepted, not fixed.** The conflict index refreshes on startup, world join,
       Controls-screen close, config save, and priority changes. If another mod rebinds a key at
       runtime through its own config screen, that change is not picked up until one of those
       triggers fires. A fix needs an explicit adapter notification, not polling, because polling
       the key state is exactly the anti-pattern that was already tried and reverted elsewhere in
-      this codebase. Listed so it is not mistaken for an oversight.
+      this codebase. It stays listed under **Known limitations** on the Modrinth page and in the
+      README, so it is documented rather than forgotten.
+
+      Worth revisiting only if a mod in the wild actually causes a visible problem, and then
+      through a public API rather than a private hook.
 
 ### P0.3 Release readiness
 
