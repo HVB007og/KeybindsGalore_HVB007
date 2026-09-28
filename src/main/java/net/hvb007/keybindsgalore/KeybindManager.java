@@ -124,8 +124,22 @@ public class KeybindManager {
 
     /**
      * Opens the conflict resolution screen (the selection menu).
+     *
+     * <p>Replaces any selector already showing the same key rather than constructing a second one.
+     * The operating system auto-repeats a held key, and the mod sees every repeat as an ordinary
+     * press. Without this guard each repeat built a fresh screen, which made the pie flicker while
+     * the key was held. The existing screen is already correct for that key, so keeping it is both
+     * cheaper and visually stable.
      */
     public static void openConflictMenu(InputConstants.Key key) {
+        Screen current = Minecraft.getInstance().gui.screen();
+        if (current instanceof KeybindSelectorScreen list && list.ownsKey(key)) {
+            return;
+        }
+        if (current instanceof KeybindCircularScreen pie && pie.ownsKey(key)) {
+            return;
+        }
+
         KeybindsGalore.inputState().selectorOpened();
         Screen screen;
         if (Configurations.USE_CIRCULAR_MENU) {
