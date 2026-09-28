@@ -40,24 +40,39 @@ NeoForge's own extension point.
       `1.8.0` for neoforge/26.3, human-verified in game. Built on the 26.3 Fabric branch, so the
       SDL3 and `renderpearl` work carried over and only the loader surface changed. NeoForge
       publishes 26.3 **only as beta**, so this tracks a moving target
-Modrinth project page, hand-fixed by the maintainer:
+Modrinth project page, all four done:
 
-- [x] `source_url` now points at the repo root, `https://github.com/HVB007og/KeybindsGalore_HVB007`
+- [x] `source_url` points at the repo root, `https://github.com/HVB007og/KeybindsGalore_HVB007`
 - [x] Gallery screenshots replaced with current ones
-- [x] `master` fast-forwarded to a working build with a version-free README, so the repo front page
-      is accurate
-- [ ] **Project summary** still reads *"I Learnt how to code Java for the explicit purpose of
-      updating this mod. it took me bashing my head against my laptop for a week, But in the end
-      I got it to work."* It is only ever seen in the edit form, never the published page, so it
-      is low priority. A better one-liner would be *"Resolves Minecraft keybind conflicts: when
-      two actions share a key, choose the one you meant."*
-
+- [x] `master` fast-forwarded to a working build with a version-free README, so the repo front
+      page is accurate
+- [x] Project summary replaced. It now reads *"Resolves Minecraft keybind conflicts: when two
+      actions share a key, choose the one you meant."*
 - [x] The 26.3 Fabric Modrinth version's primary-file flag fixed. The version was recreated with
       `primary_file` set at creation, giving it a new id, and the changelog was carried over
       byte-for-byte. Ids are recorded in `AGENTS.md`.
+
+**On reading a live Modrinth or GitHub page: always bypass the cache.** Every GET to
+`api.modrinth.com/v2/project/{id}` can return a cached body, and a stale one led to reporting
+a third summary line that had not been on the page for months. Append a cache-busting query
+parameter, and check a field you know changed:
+
+```powershell
+$nonce = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+Invoke-RestMethod "https://api.modrinth.com/v2/project/l6y7RMn7?cb=$nonce"
+```
+
+Do not trust the `updated` field either: Modrinth does not reliably bump it on a description
+edit, so it cannot be used to tell whether a save landed. Read the field you care about back and
+compare it.
+
+Remaining, neither urgent:
+
 - [ ] Re-check the NeoForge 26.3 beta periodically. A newer beta may change the render or input
       API, and the version range in `neoforge.mods.toml` is `[26.3.0-beta,)`, so it will accept
       whatever comes next without re-testing
+- [ ] Gallery screenshot *ordering*. The images are current, but the featured image drives the
+      preview thumbnail in search results and is the highest-leverage image on the page
 
 ---
 
@@ -168,7 +183,7 @@ translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset
 - [x] Automated the release path in `prompts/03-release-and-modrinth.md`, including the
       Modrinth API traps: multipart shape, hash-addressed file deletes, and the fact that a
       primary file can only be set at creation
-- [ ] Replace the gallery screenshots, which are from 2023-2024 and show a pre-1.21.1 UI
+- [x] Replace the gallery screenshots, which were from 2023-2024 and showed a pre-1.21.1 UI
 
 ---
 
