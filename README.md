@@ -1,7 +1,8 @@
 # Keybinds Galore
 
 A client-side mod for Minecraft that resolves keybind conflicts instead of letting actions
-silently override each other. Available for **Fabric** (26.2 and 26.3) and **NeoForge** (26.2).
+silently override each other. Available for **Fabric** and **NeoForge**, on Minecraft 26.2 and
+26.3.
 
 When two actions share a physical key, Minecraft picks one and ignores the other, usually
 without telling you. Keybinds Galore intercepts that and asks: a selection menu opens, you
@@ -36,6 +37,7 @@ Pick the row that matches your loader and Minecraft version.
 |---|---|---|
 | Fabric | 26.2 or 26.3 | Fabric Loader 0.19.3+, Fabric API, ModMenu (optional) |
 | NeoForge | 26.2 | NeoForge 26.2.0.88+ |
+| NeoForge | 26.3 | NeoForge 26.3.0.26-beta+ |
 
 Java 25 or newer on all combinations. Cloth Config 26.2.155+ (26.3.159+ for Minecraft 26.3).
 

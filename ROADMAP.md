@@ -13,32 +13,41 @@ Status legend: `[ ]` open · `[~]` in progress · `[x]` done · `[-]` deliberate
 
 | Branch | Target | Loader | Modrinth version | GitHub tag |
 |---|---|---|---|---|
+| `recovery/26.2` | 26.2 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.2` |
 | `recovery/26.2-neoforge` | 26.2 | NeoForge | `1.8.0` | `keybindsgalore-1.8.0+26.2-neoforge` |
 | `recovery/26.3-fabric` | 26.3 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.3` |
-| `recovery/26.2` | 26.2 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.2` |
+| `recovery/26.3-neoforge` | 26.3 | NeoForge | `1.8.0` | `keybindsgalore-1.8.0+26.3-neoforge` |
 
-Modrinth project `l6y7RMn7`. Every entry carries the mod jar plus a sources jar, all verified by
-downloading back and comparing digests. 45 unit tests pass on every branch.
+Modrinth project `l6y7RMn7`. All four entries are published and `listed`, each carrying the mod
+jar plus a sources jar, every file verified by downloading it back and comparing digests. 45
+unit tests pass on every branch.
 
-Verified in game on 26.3 Fabric: pie menu, list menu, K-key priority capture, priority
-resolution, and the config screen. Verified in game on 26.2 NeoForge: the same set, plus the
-ModMenu-free config screen contributed through NeoForge's extension point.
+**Every combination is human-verified in game**: pie menu, list menu, K-key priority capture,
+priority resolution, and the config screen, on 26.2 Fabric, 26.2 NeoForge, 26.3 Fabric, and 26.3
+NeoForge. The NeoForge builds need no ModMenu and contribute their config screen through
+NeoForge's own extension point.
 
 **The mod works. Everything below is improvement, not repair.**
 
 ### Outstanding, small
 
-- [~] **NeoForge 26.3 port.** NeoForge publishes 26.3 only as beta; newest is `26.3.0.26-beta`.
-      Branch `recovery/26.3-neoforge` is being prepared for testing. Must handle SDL3 key input
-      and the `renderpearl` pipeline, which 26.2 does not.
+- [x] **NeoForge 26.3 port.** Shipped. Branch `recovery/26.3-neoforge`, published as Modrinth
+      `1.8.0` for neoforge/26.3, human-verified in game. Built on the 26.3 Fabric branch, so the
+      SDL3 and `renderpearl` work carried over and only the loader surface changed. NeoForge
+      publishes 26.3 **only as beta**, so this tracks a moving target
 - [ ] Modrinth project **short description** still reads *"I Learnt how to code Java for the
       explicit purpose of updating this mod... updated to 1.20"*, and `source_url` points at
       `KeybindsGalore_HVB007_1.20.x/tree/Alpha`. Being fixed by hand.
-- [ ] The 26.3 Modrinth version has no file flagged `primary`, because the version number was
-      corrected after creation and Modrinth cannot set that field afterwards. Downloads are
-      correct. A clean fix needs `VERSION_DELETE` and a recreate.
+- [ ] The 26.3 Fabric Modrinth version has no file flagged `primary`, because that version number
+      was corrected after creation and Modrinth cannot set that field afterwards. Downloads are
+      correct and the page serves the mod jar. A clean fix needs `VERSION_DELETE` and a recreate.
+      The 26.3 NeoForge entry does not have this problem, because its number and file set were
+      both right on the first upload
 - [ ] Screenshots. The gallery holds 6 images; whether they still show the current UI is
       unverified. The preview thumbnail is the single highest-leverage image on the page.
+- [ ] Re-check the NeoForge 26.3 beta periodically. A newer beta may change the render or input
+      API, and the version range in `neoforge.mods.toml` is `[26.3.0-beta,)`, so it will accept
+      whatever comes next without re-testing
 
 ---
 
@@ -138,11 +147,11 @@ translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset
       every build and referred to a reload-config feature that no longer exists
 - [x] Verified the built jar: correct version, 60 classes, mixins config, default
       properties, icon, translations, embedded licence, and no stale assets
-- [x] Published `1.8.0` to Modrinth for 26.2 Fabric, 26.2 NeoForge, and 26.3 Fabric. Each entry
-      carries the mod jar **and** the sources jar, with the sources tagged `sources-jar`. Both
-      jars also attach to each GitHub release. Every file was verified by downloading it back
-      and comparing digests
-- [x] Tagged and pushed all three releases. Modrinth numbers are plain `1.8.0`; GitHub tags
+- [x] Published `1.8.0` to Modrinth for all four combinations: 26.2 Fabric, 26.2 NeoForge,
+      26.3 Fabric, and 26.3 NeoForge. Each entry carries the mod jar **and** the sources jar,
+      with the sources tagged `sources-jar`. Both jars also attach to each GitHub release.
+      Every file was verified by downloading it back and comparing digests
+- [x] Tagged and pushed all four releases. Modrinth numbers are plain `1.8.0`; GitHub tags
       encode the Minecraft version and loader
 - [x] Automated the release path in `prompts/03-release-and-modrinth.md`, including the
       Modrinth API traps: multipart shape, hash-addressed file deletes, and the fact that a

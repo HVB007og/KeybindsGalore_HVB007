@@ -37,15 +37,14 @@ names a Minecraft or loader version.
 | File | Use it for |
 |---|---|
 | `01-manual-testing.md` | Driving a full manual test pass in game, then reporting results |
-| `02-minecraft-version-upgrade.md` | Porting to a new Minecraft version on the current loader |
-| `03-release-and-modrinth.md` | Getting a release ready: docs, metadata, Modrinth, tags, archive |
-| `04-neoforge-port.md` | Porting the mod to NeoForge |
+| `02-minecraft-version-upgrade.md` | Porting to a new Minecraft version, per loader branch |
+| `03-release-and-modrinth.md` | Getting a release ready and publishing it to both platforms |
+| `04-neoforge-port.md` | Porting the mod to NeoForge. Used for 26.2 and again for 26.3 |
 | `05-bug-investigation-from-log.md` | Diagnosing a bug from a log file, without guessing |
 | `06-codebase-audit.md` | Reviewing and tidying the codebase against ecosystem conventions |
 | `07-new-feature.md` | Adding a feature without breaking the input path or the config contract |
 | `08-unattended-overnight-run.md` | Letting an assistant work for hours with you asleep |
 | `12-prepare-a-github-release.md` | Tagging a release and attaching both jars |
-| `04-neoforge-port.md` | Porting the mod to NeoForge. Already used for 26.2; reuse it for 26.3 |
 
 ## Recommended additions, not yet written
 
@@ -58,7 +57,8 @@ small file in this folder.
 | `10-translate-the-mod.md` | Adding or correcting a language file. Must include the rule that `en_us.json` is not validated by the build, and that a trailing comma on the last entry is invalid. |
 | `11-dependency-upgrade.md` | Bumping Fabric API, Cloth Config, or ModMenu without assuming the Modrinth version string is the Maven coordinate. This project lost a build to exactly that. |
 | `13-audit-config-options.md` | Finding options that are persisted but never read. A repeatable version of the sweep that retired nine options. |
-| `14-multi-loader-maintenance.md` | Keeping the four loader branches in step. Now genuinely needed: there are already three published branches and a fourth under construction, and they have drifted once already, when a cherry-pick tried to put the 26.3 version string onto the 26.2 NeoForge branch. |
+| `14-multi-loader-maintenance.md` | Keeping the four active branches in step. Now genuinely needed: there are four published branches and they have drifted once already, when a cherry-pick tried to put the 26.3 version string onto the 26.2 NeoForge branch. |
+| `15-verify-a-release.md` | Checking that what is actually published matches what is in the repo, across both platforms and all four branches. Every release so far needed a download-back hash check to catch something. |
 
 ## One rule that outranks all of them
 

@@ -43,12 +43,12 @@ take part in conflict detection.
 
 ## What's New in 1.8.0
 
-**Now available on NeoForge as well as Fabric.** The 26.2 NeoForge build is the same mod on the
-NeoForge loader: same menus, same priority system, same config screen. It needs no Fabric
-Loader, no Fabric API, and no ModMenu.
+**Available on NeoForge as well as Fabric, on both 26.2 and 26.3.** The NeoForge builds are the
+same mod on the NeoForge loader: same menus, same priority system, same config screen. They need
+no Fabric Loader, no Fabric API, and no ModMenu.
 
-**Minecraft 26.3 support on Fabric.** The 26.3 build ports the mod to 26.3, where the client
-moved from GLFW to SDL3 and rendering moved to the newer `RenderPipeline` API.
+**Minecraft 26.3 support.** The 26.3 builds port the mod to 26.3, where the client moved from
+GLFW to SDL3 and rendering moved to the newer `RenderPipeline` API.
 
 **The config screen works on 26.2.** The previous 26.2 build shipped with a known issue where
 the config screen failed, because the Cloth Config version available at the time referenced a
@@ -94,9 +94,9 @@ Pick the row that matches your loader.
 
 **NeoForge**
 
-- Minecraft 26.2
-- NeoForge >= 26.2.0.88
-- Cloth Config >= 26.2.155
+- Minecraft 26.2: NeoForge >= 26.2.0.88
+- Minecraft 26.3: NeoForge >= 26.3.0.26-beta
+- Cloth Config >= 26.2.155 (26.3.159+ on 26.3)
 
 Java 25 or newer on both. Client-side only: not for dedicated servers.
 

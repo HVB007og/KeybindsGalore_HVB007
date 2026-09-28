@@ -17,12 +17,15 @@ bkpjar/
   1.8.0+26.3/                                     Fabric, Minecraft 26.3
     keybindsgalore-1.8.0+26.3.jar
     keybindsgalore-1.8.0+26.3-sources.jar
+  1.8.0+26.3-neoforge/                            NeoForge, Minecraft 26.3
+    keybindsgalore-1.8.0+26.3-neoforge.jar
+    keybindsgalore-1.8.0+26.3-neoforge-sources.jar
 ```
 
 The directory name is the **jar version string**, which is not the Modrinth version number. All
-three published builds are Modrinth `1.8.0`; the jar name additionally carries the Minecraft
-version and, for NeoForge, the loader, so one project can list the same number twice under
-different loaders without ambiguity.
+four published builds are Modrinth `1.8.0`; the jar name additionally carries the Minecraft
+version and, for NeoForge, the loader, so one project can list the same number four times
+without ambiguity.
 
 ## Why this exists
 

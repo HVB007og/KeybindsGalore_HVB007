@@ -123,9 +123,10 @@ answered**; the answers are in the right-hand column and the work has been done.
   GLFW to SDL3. 45 tests pass.
 - **26.2 NeoForge:** shipped as `1.8.0`, human-verified in game: pie menu, list menu, K-capture,
   priorities, and the config screen. The port touched only 3 source files.
-- **26.3 NeoForge:** not started. NeoForge publishes 26.3 **only as beta**, newest
-  `26.3.0.26-beta`, and 26.2 stops at `26.2.0.88`. A beta is a real, runnable target, so the
-  port is feasible; the caveat is that a beta target can change under us.
+- **26.3 NeoForge:** shipped as `1.8.0`, human-verified in game. Built against
+  `26.3.0.26-beta`, because NeoForge publishes 26.3 only as beta. It was based on the **26.3
+  Fabric** branch, not the 26.2 NeoForge branch, so the SDL3 and `renderpearl` work carried over
+  unchanged and only the loader surface needed porting. `RingRenderer` needed no edits at all.
 - **Harness:** not built. It would need a real Minecraft input simulation, and the only
   practical route is a test mod rather than a plain JUnit test.
 
@@ -137,8 +138,11 @@ The two things that actually cost time were build-system traps, not code: ModDev
 needing `addModdingDependenciesTo sourceSets.test`, and the `foojay-resolver-convention`
 version that references a Gradle 9 enum member which no longer exists.
 
-For 26.3 the code cost is higher, because 26.3 needs the SDL3 key handling and the
-`renderpearl` pipeline that 26.2 does not have.
+For 26.3 the code cost is higher if ported from 26.2, because 26.3 needs the SDL3 key handling
+and the `renderpearl` pipeline that 26.2 does not have. **Port the newer Minecraft version on
+Fabric first, then the other loader**, so that work is done once and inherited rather than
+repeated per loader. The 26.3 NeoForge port was built on the 26.3 Fabric branch for exactly
+this reason and needed no engine changes.
 
 ## Definition of done per goal
 

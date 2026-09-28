@@ -1,6 +1,35 @@
 # Changelog
 
-## 1.8.0+26.3 - Minecraft 26.3
+## 1.8.0+26.3-neoforge - Minecraft 26.3 (NeoForge)
+
+The NeoForge build for Minecraft 26.3. **No mod behaviour changed**; this adds a loader, not
+features, so the version number stays `1.8.0`.
+
+Cheaper to port than expected, because it was based on the 26.3 Fabric branch rather than the
+26.2 NeoForge one, so the SDL3 key handling and the `renderpearl` render pipeline carried over
+unchanged. `RingRenderer` needed no edits at all. Only the loader surface changed:
+
+- the entrypoint is a NeoForge `@Mod(dist = CLIENT)` class, and `ModMenuIntegration` was removed
+  because NeoForge allows one `@Mod` class per mod id, so its config-screen registration moved
+  into the main constructor
+- key registration uses `RegisterKeyMappingsEvent`
+- tick and connection events use the NeoForge equivalents
+- the config directory uses `FMLPaths.CONFIGDIR`
+- configuration loading moved to the first client tick, because `Minecraft.options` is still
+  null during NeoForge mod construction
+- `fabric.mod.json` is replaced by `META-INF/neoforge.mods.toml`
+
+### Requirements
+
+- Minecraft 26.3
+- NeoForge 26.3.0.26-beta or newer
+- Java 25 or newer
+- Cloth Config 26.3.159 or newer
+
+NeoForge publishes 26.3 only as beta at the time of writing, so this build tracks a moving
+target.
+
+## 1.8.0+26.3 - Minecraft 26.3 (Fabric)
 
 Port of 1.8.0 to Minecraft 26.3 on Fabric. **No mod behaviour changed.** The pie menu, list
 menu, priority system, K-key priority capture, live conflict re-scanning, per-category filters,
@@ -29,9 +58,9 @@ The same mod is also published for 26.2 on Fabric and on NeoForge, under the sam
 
 ### Verification status
 
-Built and unit-tested, with 45 tests passing. The pie menu, list menu, and config screen were
-spot-checked in game. **K-key priority capture has not been confirmed on 26.3 specifically**;
-the SDL3 key handling behind it is the least exercised path on this version.
+Built and unit-tested, with 45 tests passing. Verified in game: pie menu, list menu, config
+screen, **and K-key priority capture**, which was the open question because 26.3 moved the client
+to SDL3. The capture path is confirmed working on both the Fabric and NeoForge 26.3 builds.
 
 ## 1.8.0+26.2 - Minecraft 26.2
 
