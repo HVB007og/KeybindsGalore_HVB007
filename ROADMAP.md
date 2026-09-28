@@ -285,19 +285,25 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
       Options are shrinking the wedge radius as the count rises, truncating with an
       ellipsis plus tooltip, or moving to a radial list. The list menu has the mirror
       problem and can reuse a vanilla scrollable widget
-- [ ] **Input navigation for both selectors, keyboard and controller together.** Both
-      selectors are currently mouse-only, which makes them unusable without a mouse. Build one
-      input layer that maps *actions* (move previous, move next, commit, cancel) onto whatever
-      the player is using, rather than hardcoding arrow keys and bolting controllers on after.
-      Keyboard: arrow keys or WASD to move, Enter or Space to commit, Escape to cancel.
-      Controller: stick or d-pad to move, a face button to commit, B to cancel. Minecraft already
-      routes controller input, so most of the work is the shared abstraction. If controller
-      support turns out to be substantially larger once scoped, move it to P2 rather than
-      shipping a half-done version
-- [ ] **Screen-reader narration** of the conflict and the selected action. Ranked high on
-      purpose: a screen-reader user is a real player this mod currently *hurts*, because a menu
-      appearing silently is a menu they can neither perceive nor diagnose. Without narration the
-      mod removes the feedback vanilla gave them
+- [x] **Keyboard navigation for both selectors.** Arrows or WASD to move, Enter or Space to
+      commit, Escape to cancel. Selection runs through a new pure `ConflictInputActions` type
+      that maps four abstract actions onto the existing `ConflictSelectionModel`, so it is
+      unit-tested without launching Minecraft: 56 tests, 11 of them new. Both screens gained a
+      `keyboardFocus` flag because the per-frame hover pass would otherwise discard the
+      selection the moment the mouse sat outside a wedge; moving the mouse back over the menu
+      hands control to hover, so no existing mouse behaviour is lost
+- [ ] **Controller support**, feeding the same actions. **Correcting an earlier claim: vanilla
+      26.3 has no controller support at all.** There are no controller or gamepad classes, and
+      no client source file references an SDL controller API, so there is no event to hook.
+      This needs a polling layer, deadzone handling, and button edge detection, which makes it
+      substantially larger than the shared abstraction I originally described. Kept in P1
+      because the input layer is now the right seam for it
+- [x] **Screen-reader narration** of the focused action and the commit. Both selectors
+      implement `updateNarrationState` and speak the same custom label the screen draws, via
+      `SelectionNarration`. Ranked high on purpose: a screen-reader user is a real player this
+      mod was *hurting*, because a menu that opened silently is one they can neither perceive
+      nor diagnose. Vanilla 26.3 has the full narration API client-side, confirmed against the
+      decompiled sources
 - [ ] **High-contrast mode** honouring Minecraft's own accessibility setting
 - [ ] **Reduced-motion support**, which pairs with the `ANIMATE_PIE_MENU` work and can collapse
       the open animation to instant
