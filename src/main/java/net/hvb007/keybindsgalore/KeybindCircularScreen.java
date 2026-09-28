@@ -2,6 +2,7 @@ package net.hvb007.keybindsgalore;
 
 import net.hvb007.keybindsgalore.ui.model.CircularMenuGeometry;
 import net.hvb007.keybindsgalore.ui.model.ConflictInputActions;
+import net.hvb007.keybindsgalore.ui.model.ContestedKeyConfirmGate;
 import net.hvb007.keybindsgalore.ui.model.ConflictSelectionModel;
 import net.hvb007.keybindsgalore.input.minecraft.SelectionActivationService;
 import net.hvb007.keybindsgalore.ui.minecraft.ConflictActionPresentation;
@@ -49,6 +50,7 @@ public class KeybindCircularScreen extends Screen {
      * yields instead of overwriting the highlight.
      */
     private boolean keyboardFocus;
+    private final ContestedKeyConfirmGate confirmGate = new ContestedKeyConfirmGate();
 
     public KeybindCircularScreen(InputConstants.Key key) {
         super(Component.empty());
@@ -326,16 +328,22 @@ public class KeybindCircularScreen extends Screen {
 
         if (ownsKey(key)) {
             // In keyboard control mode the contested key doubles as confirm, so a player can
-            // commit with the same finger that opened the menu. Without the option this key
-            // falls through to vanilla untouched, preserving the original behaviour.
+            // commit with the same finger that opened the menu. It only counts once a real
+            // release has been seen, otherwise OS auto-repeat would close the menu instantly.
             if (!Configurations.KEYBOARD_CONTROL_MODE) {
                 return super.keyPressed(event);
             }
-            return confirmAndClose();
+            return confirmGate.shouldConfirmOnPress() ? confirmAndClose() : true;
         }
 
         ConflictInputActions.Action action = SelectorKeyBindings.toAction(key);
         if (action == null) {
+            return super.keyPressed(event);
+        }
+
+        // Keyboard nav is opt-in. When the option is off these keys must be inert so the menu
+        // cannot be driven without consent, and so movement keys are not swallowed.
+        if (!Configurations.KEYBOARD_CONTROL_MODE) {
             return super.keyPressed(event);
         }
 
@@ -362,8 +370,14 @@ public class KeybindCircularScreen extends Screen {
     @Override
     public boolean keyReleased(KeyEvent event) {
         InputConstants.Key key = InputConstants.getKey(event);
-        // The contested key resolves on release, so it must not also commit on press.
         if (ownsKey(key)) {
+            confirmGate.onRelease();
+            // In mouse mode the release is the commit gesture and must keep working. In keyboard
+            // mode it is only evidence that the player let go, so the pie stays up and the
+            // highlighted sector is preserved for the next deliberate key press.
+            if (Configurations.KEYBOARD_CONTROL_MODE) {
+                return true;
+            }
             return tryFinalize(key);
         }
         return super.keyReleased(event);
