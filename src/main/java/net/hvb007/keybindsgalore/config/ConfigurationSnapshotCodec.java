@@ -24,6 +24,7 @@ public final class ConfigurationSnapshotCodec {
                 intValue(merged, "DARKENED_BACKGROUND_STRENGTH"),
                 booleanValue(merged, "LABEL_TEXT_SHADOW"),
                 booleanValue(merged, "USE_CIRCULAR_MENU"),
+            booleanValue(merged, "KEYBOARD_CONTROL_MODE"),
                 booleanValue(merged, "SHOW_CONFLICT_WARNINGS"),
                 booleanValue(merged, "ENABLE_ATTACK_WORKAROUND"),
                 stringList(merged, "FILTERED_CATEGORY_KEYS"),
@@ -59,6 +60,7 @@ public final class ConfigurationSnapshotCodec {
         put(values, "DARKENED_BACKGROUND_STRENGTH", snapshot.darkenedBackgroundStrength());
         put(values, "LABEL_TEXT_SHADOW", snapshot.labelTextShadow());
         put(values, "USE_CIRCULAR_MENU", snapshot.useCircularMenu());
+        put(values, "KEYBOARD_CONTROL_MODE", snapshot.keyboardControlMode());
         put(values, "SHOW_CONFLICT_WARNINGS", snapshot.showConflictWarnings());
         put(values, "ENABLE_ATTACK_WORKAROUND", snapshot.enableAttackWorkaround());
         put(values, "FILTERED_CATEGORY_KEYS", snapshot.filteredCategoryKeys());
