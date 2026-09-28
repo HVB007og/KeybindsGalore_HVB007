@@ -1,0 +1,41 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "LGPL-3.0-only"
+issueTrackerURL = "https://github.com/HVB007og/KeybindsGalore_HVB007/issues"
+
+[[mods]]
+modId = "keybindsgalore"
+version = "1.8.0+26.3-neoforge"
+displayName = "Keybinds Galore"
+displayURL = "https://modrinth.com/mod/keybindsgalore"
+iconFile = "assets/keybindsgalore/icon.png"
+authors = "Cael, HVB007"
+description = '''
+Resolves Minecraft keybind conflicts instead of letting actions silently override each other. When two actions share a key, a selection menu opens so you pick the one you meant, every time.
+
+Includes a pie menu and a list menu, a priority system for keys that should never ask, K-key priority capture, live conflict detection across categories, and an in-game config screen.
+'''
+
+[[mixins]]
+config = "keybindsgalore.mixins.json"
+
+[[dependencies.keybindsgalore]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.3.0-beta,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.keybindsgalore]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.3,26.4)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.keybindsgalore]]
+modId = "cloth_config"
+type = "required"
+versionRange = "[26.3.159,)"
+ordering = "AFTER"
+side = "CLIENT"

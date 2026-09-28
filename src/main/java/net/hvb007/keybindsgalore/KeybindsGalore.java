@@ -1,12 +1,17 @@
 package net.hvb007.keybindsgalore;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.common.NeoForge;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import org.slf4j.Logger;
@@ -20,6 +25,7 @@ import java.util.Set;
 import net.hvb007.keybindsgalore.api.BindingRegistry;
 import net.hvb007.keybindsgalore.api.KeybindApi;
 import net.hvb007.keybindsgalore.configmanager.ConfigManager;
+import net.hvb007.keybindsgalore.configmanager.ConfigScreenBuilder;
 import net.hvb007.keybindsgalore.core.InputOwnershipStateMachine;
 import net.hvb007.keybindsgalore.customdata.DataManager;
 import net.hvb007.keybindsgalore.integrations.minecraft.MinecraftBindingSource;
@@ -27,7 +33,9 @@ import net.hvb007.keybindsgalore.input.minecraft.MinecraftConflictIndex;
 import net.hvb007.keybindsgalore.input.minecraft.PulseController;
 import net.hvb007.keybindsgalore.mixin.KeyMappingAccessor;
 
-public class KeybindsGalore implements ClientModInitializer {
+@Mod(value = KeybindsGalore.MOD_ID, dist = Dist.CLIENT)
+public class KeybindsGalore {
+    public static final String MOD_ID = "keybindsgalore";
     public static ConfigManager configManager;
     public static DataManager customDataManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("keybindsgalore");
@@ -37,16 +45,17 @@ public class KeybindsGalore implements ClientModInitializer {
      *
      * <p>26.3 replaced GLFW with SDL3, so {@code InputConstants.Type.KEYBOARD} stores
      * SDL scancodes rather than GLFW keycodes, and letter keys have no named constant on
-     * {@code InputConstants}. SDL_SCANCODE_A is 4, so K is 14. This is the one value in
-     * the 26.3 port that could not be confirmed from vanilla source, so it is the first
-     * thing to check by hand: if the capture hotkey does not respond to K, rebind it in
-     * the vanilla Controls screen.
+     * {@code InputConstants}. SDL_SCANCODE_A is 4, so K is 14. This value could not be
+     * read from vanilla source, so it is worth knowing it is confirmed: the capture hotkey
+     * was verified working in game on 26.3 Fabric, and the same value is used on NeoForge
+     * 26.3. If it ever stops responding to K, rebind it in the vanilla Controls screen.
      */
     private static final int SDL_SCANCODE_K = 14;
     private static final BindingRegistry BINDING_REGISTRY = new BindingRegistry();
     private static final InputOwnershipStateMachine INPUT_STATE = new InputOwnershipStateMachine();
     private static boolean minecraftSourceRegistered;
     private static boolean conflictsInitialized;
+    private static boolean configLoadAttempted;
 
     public static KeybindApi getApi() {
         return BINDING_REGISTRY;
@@ -167,64 +176,84 @@ public class KeybindsGalore implements ClientModInitializer {
         }));
     }
 
-    @Override
-    public void onInitializeClient() {
+    public KeybindsGalore(IEventBus modBus, ModContainer container) {
         LOGGER.info("KeybindsGalore initialising...");
 
-        openCaptureKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+        modBus.addListener(this::registerKeyMappings);
+        NeoForge.EVENT_BUS.addListener(this::onClientTick);
+        NeoForge.EVENT_BUS.addListener(this::onLoggingIn);
+        NeoForge.EVENT_BUS.addListener(this::onLoggingOut);
+
+        // NeoForge has no ModMenu, so the config screen is contributed through the loader's
+        // own extension point instead of a ModMenu Api entrypoint.
+        container.registerExtensionPoint(
+                IConfigScreenFactory.class,
+                (minecraft, parent) -> ConfigScreenBuilder.buildConfigScreen(parent)
+        );
+    }
+
+    private void registerKeyMappings(RegisterKeyMappingsEvent event) {
+        openCaptureKey = new KeyMapping(
                 "key.keybindsgalore.open_capture",
                 InputConstants.Type.KEYBOARD,
                 SDL_SCANCODE_K,
                 KeyMapping.Category.MISC
-        ));
+        );
+        event.register(openCaptureKey);
+    }
 
-        try {
-            configManager = new ConfigManager("KeybindsGalore", FabricLoader.getInstance().getConfigDir(), "keybindsgalore.properties", Configurations.class, null);
-            if (Configurations.DEBUG) {
-                configManager.printAllConfigs();
+    private void onClientTick(ClientTickEvent.Post event) {
+        Minecraft client = Minecraft.getInstance();
+
+        if (!minecraftSourceRegistered && client.options != null) {
+            BINDING_REGISTRY.registerSource(new MinecraftBindingSource(client.options.keyMappings));
+            minecraftSourceRegistered = true;
+        }
+        if (!conflictsInitialized && client.options != null) {
+            KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.STARTUP);
+            conflictsInitialized = true;
+        }
+        if (client.gui.screen() != null) {
+            resetInputOwnership();
+            while (openCaptureKey.consumeClick()) {
             }
-
-            customDataManager = new DataManager(FabricLoader.getInstance().getConfigDir(), "keybindsgalore_customdata.data");
-
-            // Register a client tick event to manage the pulse timer.
-            ClientTickEvents.END_CLIENT_TICK.register(client -> {
-                if (!minecraftSourceRegistered && client.options != null) {
-                    BINDING_REGISTRY.registerSource(new MinecraftBindingSource(client.options.keyMappings));
-                    minecraftSourceRegistered = true;
+        } else {
+            while (openCaptureKey.consumeClick()) {
+                if (client.gui.screen() != null || captureCooldownTicks > 0 || openCaptureKey.isDown()) {
+                    continue;
                 }
-                if (!conflictsInitialized && client.options != null) {
-                    KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.STARTUP);
-                    conflictsInitialized = true;
-                }
-                if (client.gui.screen() != null) {
-                    resetInputOwnership();
-                    while (openCaptureKey.consumeClick()) {
-                    }
-                } else {
-                    while (openCaptureKey.consumeClick()) {
-                        if (client.gui.screen() != null || captureCooldownTicks > 0 || openCaptureKey.isDown()) {
-                            continue;
-                        }
-                        openCaptureScreen();
-                    }
-                }
-
-                tickPulse();
-                if (captureCooldownTicks > 0) {
-                    captureCooldownTicks--;
-                }
-            });
-        } catch (IOException ioe) {
-            LOGGER.error("Failed to read config file on init!", ioe);
+                openCaptureScreen();
+            }
         }
 
-        // Find all conflicting keybinds when the player joins a world.
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.WORLD_JOIN);
-        });
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            resetInputOwnership();
-        });
+        tickPulse();
+        if (captureCooldownTicks > 0) {
+            captureCooldownTicks--;
+        }
+
+        // Minecraft.options is still null during NeoForge mod construction, so config
+        // loading has to wait for the first client tick.
+        if (configManager == null && !configLoadAttempted) {
+            configLoadAttempted = true;
+            try {
+                configManager = new ConfigManager("KeybindsGalore", FMLPaths.CONFIGDIR.get(), "keybindsgalore.properties", Configurations.class, null);
+                if (Configurations.DEBUG) {
+                    configManager.printAllConfigs();
+                }
+
+                customDataManager = new DataManager(FMLPaths.CONFIGDIR.get(), "keybindsgalore_customdata.data");
+            } catch (IOException ioe) {
+                LOGGER.error("Failed to read config file on init!", ioe);
+            }
+        }
+    }
+
+    private void onLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
+        KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.WORLD_JOIN);
+    }
+
+    private void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
+        resetInputOwnership();
     }
 
     /**
