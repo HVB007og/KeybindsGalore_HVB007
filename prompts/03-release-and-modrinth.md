@@ -348,14 +348,24 @@ git ls-remote --tags origin
 
 - the GitHub **tag** carries the Minecraft version and loader:
   `keybindsgalore-1.8.0+26.2-neoforge`
-- the GitHub **title** is the plain version number: `1.8.0`
-- the Modrinth **version_number** is also the plain number: `1.8.0`
-- the **jar filename** carries the Minecraft version: `keybindsgalore-1.8.0+26.2-neoforge.jar`
+- the GitHub **title** is the version, then the Minecraft version, then `Neo` on NeoForge
+  builds: `1.8.0+26.2Neo` for NeoForge, `1.8.0+26.2` for Fabric
+- the Modrinth **version_number** is the plain number only: `1.8.0`
+- the **jar filename** carries the Minecraft version and full loader name:
+  `keybindsgalore-1.8.0+26.2-neoforge.jar`
 
-So a NeoForge build and a Fabric build of the same mod share the number `1.8.0` and differ by
-tag and filename. That is intentional, not an inconsistency to tidy up. If you find an existing
-release whose title still embeds the Minecraft version, retitle it with
-`gh release edit <tag> --title <plain-number>` rather than creating a second release.
+So a NeoForge build and a Fabric build of the same mod share the Modrinth number `1.8.0` and
+differ by tag, filename, and the `Neo` marker in the release title. The `Neo` suffix exists
+because a release list showing four entries called `1.8.0` is genuinely ambiguous, and the
+shorthand is what fits in a release list. That is intentional, not an inconsistency to tidy up.
+
+If you find an existing release whose title does not follow this, fix it in place rather than
+creating a second release:
+
+```powershell
+gh release edit <tag> --title "1.8.0+<mc>Neo"   # NeoForge
+gh release edit <tag> --title "1.8.0+<mc>"      # Fabric
+```
 
 ### 7. Verify both uploads, do not assume either
 

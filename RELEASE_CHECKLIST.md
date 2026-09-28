@@ -14,7 +14,7 @@ this summary deliberately does not repeat. **Read it before releasing.**
 |---|---|---|
 | Modrinth `version_number` | plain semver, no Minecraft version, no loader | `1.8.0` |
 | GitHub tag | version + Minecraft version + loader | `keybindsgalore-1.8.0+26.2-neoforge` |
-| GitHub release title | plain semver, matching Modrinth | `1.8.0` |
+| GitHub release title | version + Minecraft version, with `Neo` on NeoForge builds | `1.8.0+26.2-neoforge` shown as `1.8.0+26.2Neo` |
 | Jar filename | version + Minecraft version (+ loader) | `keybindsgalore-1.8.0+26.2-neoforge.jar` |
 | `bkpjar/` directory | jar filename without extension | `1.8.0+26.2-neoforge` |
 
