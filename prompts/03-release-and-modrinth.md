@@ -230,7 +230,7 @@ curl.exe -s -w "`n__HTTP__%{http_code}" -X POST `
   `{"value": "..."}`, and the API rejects it with a confusing parse error. Cast with
   `[string]`, or use `[string]::Join("`n", [string[]](Get-Content ...))`.
 - `Get-Content -Raw` also reads as the **ANSI codepage**, not UTF-8, so em-dashes and emoji
-  arrive double-encoded and land on the live page as `Aâ€"`. Read the body with
+  arrive double-encoded and land on the live page as mojibake. Read the body with
   `[System.IO.File]::ReadAllText` (UTF-8 by default), or make the text pure ASCII. The
   project description was corrupted twice this way before it was made pure ASCII.
 - **Never fix text with a PowerShell `-replace` chain and trust it.** One such chain silently
@@ -245,6 +245,16 @@ curl.exe -s -w "`n__HTTP__%{http_code}" -X POST `
 
 **Set the primary file at creation. There is no way to set it afterwards.** This is the single
 most important rule in this section, and getting it wrong is not cleanly reversible.
+
+**The repair, when it is already wrong.** `VERSION_DELETE` plus a recreate is the only fix, so
+ask for that scope up front rather than discovering the limit after publishing. Read the broken
+version's full metadata **first** and carry it over verbatim: `name`, `version_number`,
+`changelog`, `dependencies`, `game_versions`, `loaders`, `version_type`, `status`,
+`requested_status`, `featured`, `environment`. Then delete, then recreate with `primary_file`
+set. Afterwards verify three things: the changelog is byte-identical to the version it replaced,
+each CDN file still matches the archive, and the page serves the mod jar. The recreated version
+gets a **new id**, so record it and update any doc citing the old one. This was needed once
+already, on the 26.3 Fabric entry, after its number was corrected after the fact.
 
 - `primary_file` is a **string** at creation: the multipart *field name* of the primary file.
 - On the **edit** endpoint the field is an array `[algorithm, hash]`, and as of the current
