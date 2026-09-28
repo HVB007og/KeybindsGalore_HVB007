@@ -289,16 +289,26 @@ public class KeybindCircularScreen extends Screen {
         }
 
         selection.beginFinalization();
+        completeFinalization(key);
+        return true;
+    }
+
+    /**
+     * Activates the chosen sector and closes the pie. Split out of {@link #tryFinalize} because
+     * the keyboard-control commit path has already marked the model finalised, and the guard in
+     * tryFinalize would otherwise reject it and leave the menu stuck open.
+     */
+    private void completeFinalization(InputConstants.Key key) {
         KeyMapping selected = selection.selected();
         if (selected == null) {
-            KeybindsGalore.verboseLog("Pie selection CANCELLED for key {}: cursor was inside the cancel zone or over no sector", key.getName());
+            KeybindsGalore.verboseLog("Pie selection CANCELLED for key {}: nothing was highlighted", key.getName());
+            SelectionActivationService.cancel(conflicts);
         } else {
             KeybindsGalore.verboseLog("Pie selection FINALISED for key {}: chose sector {} -> {}",
                     key.getName(), selection.selectedIndex(), selected.getName());
+            SelectionActivationService.activate(conflicts, selected);
         }
         Minecraft.getInstance().gui.setScreen(null);
-        SelectionActivationService.activate(conflicts, selected);
-        return true;
     }
 
     /**
@@ -310,28 +320,78 @@ public class KeybindCircularScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         InputConstants.Key key = InputConstants.getKey(event);
-        if (selection.isFinalized() || ownsKey(key)) {
+        if (selection.isFinalized()) {
             return super.keyPressed(event);
+        }
+
+        if (ownsKey(key)) {
+            // In keyboard control mode the contested key doubles as confirm, so a player can
+            // commit with the same finger that opened the menu. Without the option this key
+            // falls through to vanilla untouched, preserving the original behaviour.
+            if (!Configurations.KEYBOARD_CONTROL_MODE) {
+                return super.keyPressed(event);
+            }
+            return confirmAndClose();
+        }
+
+        ConflictInputActions.Action action = SelectorKeyBindings.toAction(key);
+        if (action == null) {
+            return super.keyPressed(event);
+        }
+
+        if (action == ConflictInputActions.Action.COMMIT) {
+            return confirmAndClose();
+        }
+        if (action == ConflictInputActions.Action.CANCEL) {
+            return cancelAndClose();
         }
 
         keyboardFocus = true;
-        ConflictInputActions.Outcome outcome = input.apply(SelectorKeyBindings.toAction(key));
-        if (outcome == ConflictInputActions.Outcome.IGNORED) {
-            return super.keyPressed(event);
-        }
-
+        ConflictInputActions.Outcome outcome = input.apply(action);
         if (outcome == ConflictInputActions.Outcome.SELECTION_MOVED) {
             int sector = selection.selectedIndex();
             KeybindsGalore.verboseLog("Pie keyboard focus: sector {} -> {}",
                     sector, sector >= 0 ? this.presentation.label(sector) : "cancel zone");
             SelectionNarration.announceSelection(presentation, selection.selected());
         }
-        return true;
+        // IGNORED is a deliberate no-op, for example moving in a single-sector menu. Swallowing
+        // the key there would stop the player from reaching vanilla, so report unhandled.
+        return outcome != ConflictInputActions.Outcome.IGNORED;
     }
 
     @Override
     public boolean keyReleased(KeyEvent event) {
-        return tryFinalize(InputConstants.getKey(event));
+        InputConstants.Key key = InputConstants.getKey(event);
+        // The contested key resolves on release, so it must not also commit on press.
+        if (ownsKey(key)) {
+            return tryFinalize(key);
+        }
+        return super.keyReleased(event);
+    }
+
+    /** Commits the highlighted sector and closes, used by the keyboard-control confirm paths. */
+    private boolean confirmAndClose() {
+        ConflictInputActions.Outcome outcome = input.apply(ConflictInputActions.Action.COMMIT);
+        if (outcome == ConflictInputActions.Outcome.IGNORED) {
+            return false;
+        }
+        if (outcome == ConflictInputActions.Outcome.CANCELLED) {
+            Minecraft.getInstance().gui.setScreen(null);
+            return true;
+        }
+        completeFinalization(conflictedKey);
+        return true;
+    }
+
+    /** Abandons the selection and closes, used by the keyboard-control cancel path. */
+    private boolean cancelAndClose() {
+        if (input.apply(ConflictInputActions.Action.CANCEL) == ConflictInputActions.Outcome.IGNORED) {
+            return false;
+        }
+        KeybindsGalore.verboseLog("Pie selection CANCELLED for key {}: cancel key pressed", conflictedKey.getName());
+        SelectionNarration.announceCancel();
+        Minecraft.getInstance().gui.setScreen(null);
+        return true;
     }
 
     @Override

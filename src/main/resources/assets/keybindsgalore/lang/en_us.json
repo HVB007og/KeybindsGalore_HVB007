@@ -32,6 +32,9 @@
   "option.keybindsgalore.use_circular_menu": "Use Pie Menu (Circular)",
   "option.keybindsgalore.use_circular_menu.tooltip": "Enables the circular pie menu for keybind selection instead of the default list.",
 
+  "option.keybindsgalore.keyboard_control_mode": "Keyboard Control Mode",
+  "option.keybindsgalore.keyboard_control_mode.tooltip": "Drive the conflict menu with the keyboard. Arrows or WASD move the highlight, Enter or Space confirms, Escape cancels. The contested key also confirms while this is on, and the mouse keeps working either way.",
+
   "option.keybindsgalore.show_conflict_warnings": "Show Conflict Warnings",
   "option.keybindsgalore.show_conflict_warnings.tooltip": "Shows a warning in chat when key conflicts are detected.",
 
