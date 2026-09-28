@@ -10,6 +10,7 @@ public record ConfigurationSnapshot(
         int darkenedBackgroundStrength,
         boolean labelTextShadow,
         boolean useCircularMenu,
+        boolean keyboardControlMode,
         boolean showConflictWarnings,
         boolean enableAttackWorkaround,
         List<String> filteredCategoryKeys,
@@ -48,6 +49,9 @@ public record ConfigurationSnapshot(
                 0x60,
                 false,
                 true,
+                // keyboardControlMode defaults to false so existing configs behave exactly as
+                // they did before keyboard navigation existed. Opting in is a deliberate choice.
+                false,
                 true,
                 true,
                 List.of(),

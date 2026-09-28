@@ -90,6 +90,12 @@ public class ConfigScreenBuilder {
                 .setSaveConsumer(v -> Configurations.USE_CIRCULAR_MENU = v)
                 .build());
 
+        behavior.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.keyboard_control_mode"), Configurations.KEYBOARD_CONTROL_MODE)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.keybindsgalore.keyboard_control_mode.tooltip"))
+                .setSaveConsumer(v -> Configurations.KEYBOARD_CONTROL_MODE = v)
+                .build());
+
         behavior.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.show_conflict_warnings"), Configurations.SHOW_CONFLICT_WARNINGS)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.keybindsgalore.show_conflict_warnings.tooltip"))
