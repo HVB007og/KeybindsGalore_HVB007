@@ -1,12 +1,14 @@
 package net.hvb007.keybindsgalore;
 
 import net.hvb007.keybindsgalore.ui.model.CircularMenuGeometry;
+import net.hvb007.keybindsgalore.ui.model.ConflictInputActions;
 import net.hvb007.keybindsgalore.ui.model.ConflictSelectionModel;
 import net.hvb007.keybindsgalore.input.minecraft.SelectionActivationService;
 import net.hvb007.keybindsgalore.ui.minecraft.ConflictActionPresentation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -34,6 +36,7 @@ public class KeybindCircularScreen extends Screen {
     private final List<KeyMapping> conflicts = new ArrayList<>();
     private final ConflictActionPresentation presentation;
     private final ConflictSelectionModel<KeyMapping> selection;
+    private final ConflictInputActions input;
 
     private int centreX = 0, centreY = 0;
     private float maxRadius = 0;
@@ -41,12 +44,19 @@ public class KeybindCircularScreen extends Screen {
     private int lastHoveredSector = Integer.MIN_VALUE;
     private long openedAtNanos;
 
+    /**
+     * True while the player is choosing with keys or a controller, so the per-frame hover pass
+     * yields instead of overwriting the highlight.
+     */
+    private boolean keyboardFocus;
+
     public KeybindCircularScreen(InputConstants.Key key) {
         super(Component.empty());
         this.conflictedKey = key;
         this.conflicts.addAll(KeybindManager.getConflicts(key));
         this.presentation = new ConflictActionPresentation(this.conflicts, customDataManager);
         this.selection = new ConflictSelectionModel<>(this.conflicts);
+        this.input = new ConflictInputActions(this.selection);
     }
 
     @Override
@@ -101,14 +111,18 @@ public class KeybindCircularScreen extends Screen {
                 this.cancelZoneRadius,
                 numberOfSectors
         );
-        this.selection.select(geometrySelection.sectorIndex());
-        if (geometrySelection.sectorIndex() != this.lastHoveredSector) {
-            this.lastHoveredSector = geometrySelection.sectorIndex();
-            if (geometrySelection.sectorIndex() < 0) {
+        // While the player is navigating by keys or a controller the hover pass is skipped.
+        // It runs every frame and would otherwise overwrite the highlight the moment the mouse
+        // sat outside a wedge, discarding the choice being made.
+        int hoverSector = keyboardFocus ? this.selection.selectedIndex() : geometrySelection.sectorIndex();
+        this.selection.select(hoverSector);
+        if (hoverSector != this.lastHoveredSector) {
+            this.lastHoveredSector = hoverSector;
+            if (hoverSector < 0) {
                 KeybindsGalore.verboseLog("Pie hover: cancel zone for key {}", this.conflictedKey.getName());
             } else {
                 KeybindsGalore.verboseLog("Pie hover: sector {} -> {}",
-                        geometrySelection.sectorIndex(), this.presentation.label(geometrySelection.sectorIndex()));
+                        hoverSector, this.presentation.label(hoverSector));
             }
         }
 
@@ -287,6 +301,34 @@ public class KeybindCircularScreen extends Screen {
         return true;
     }
 
+    /**
+     * Routes navigation keys through the shared input layer.
+     *
+     * <p>The contested key is excluded, because it is resolved on release. That contract is the
+     * most delicate path in the mod and must not change.
+     */
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        InputConstants.Key key = InputConstants.getKey(event);
+        if (selection.isFinalized() || ownsKey(key)) {
+            return super.keyPressed(event);
+        }
+
+        keyboardFocus = true;
+        ConflictInputActions.Outcome outcome = input.apply(SelectorKeyBindings.toAction(key));
+        if (outcome == ConflictInputActions.Outcome.IGNORED) {
+            return super.keyPressed(event);
+        }
+
+        if (outcome == ConflictInputActions.Outcome.SELECTION_MOVED) {
+            int sector = selection.selectedIndex();
+            KeybindsGalore.verboseLog("Pie keyboard focus: sector {} -> {}",
+                    sector, sector >= 0 ? this.presentation.label(sector) : "cancel zone");
+            SelectionNarration.announceSelection(presentation, selection.selected());
+        }
+        return true;
+    }
+
     @Override
     public boolean keyReleased(KeyEvent event) {
         return tryFinalize(InputConstants.getKey(event));
@@ -298,10 +340,16 @@ public class KeybindCircularScreen extends Screen {
     }
 
     @Override
+    protected void updateNarrationState(NarrationElementOutput output) {
+        SelectionNarration.narrateOutput(presentation, selection.selected(), output);
+    }
+
+    @Override
     public void onClose() {
         if (!selection.isFinalized()) {
             KeybindsGalore.verboseLog("Pie selection CANCELLED for key {}: selector closed without releasing over a sector", conflictedKey.getName());
             selection.cancel();
+            SelectionNarration.announceCancel();
             SelectionActivationService.cancel(conflicts);
         }
         Minecraft.getInstance().gui.setScreen(null);

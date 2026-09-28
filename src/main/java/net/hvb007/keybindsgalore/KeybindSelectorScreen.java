@@ -6,10 +6,12 @@ package net.hvb007.keybindsgalore;
 import net.hvb007.keybindsgalore.input.minecraft.SelectionActivationService;
 import net.hvb007.keybindsgalore.ui.minecraft.ConflictActionPresentation;
 import net.hvb007.keybindsgalore.ui.model.ConflictListLayout;
+import net.hvb007.keybindsgalore.ui.model.ConflictInputActions;
 import net.hvb007.keybindsgalore.ui.model.ConflictSelectionModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -40,8 +42,15 @@ public class KeybindSelectorScreen extends Screen {
     private final ConflictActionPresentation presentation;
     private final ConflictSelectionModel<KeyMapping> selection;
     private final List<ConflictListLayout.Box> cachedBoxes = new ArrayList<>();
+    private final ConflictInputActions input;
 
     private boolean firstFrame = true;
+
+    /**
+     * True while the player is choosing with keys or a controller. The hover pass yields to it
+     * so the highlight does not flicker back to the mouse position every frame.
+     */
+    private boolean keyboardFocus;
 
     public KeybindSelectorScreen(InputConstants.Key key) {
         super(Component.empty());
@@ -49,6 +58,7 @@ public class KeybindSelectorScreen extends Screen {
         this.conflicts.addAll(KeybindManager.getConflicts(key));
         this.presentation = new ConflictActionPresentation(this.conflicts, customDataManager);
         this.selection = new ConflictSelectionModel<>(this.conflicts);
+        this.input = new ConflictInputActions(this.selection);
     }
 
     @Override
@@ -94,9 +104,53 @@ public class KeybindSelectorScreen extends Screen {
         return true;
     }
 
+    /**
+     * Routes navigation keys through the shared input layer.
+     *
+     * <p>Only keys that are not the contested key are handled here. The contested key is
+     * resolved on release, which is the mod's existing contract and must not change.
+     */
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        InputConstants.Key key = InputConstants.getKey(event);
+        if (selection.isFinalized() || ownsKey(key)) {
+            return super.keyPressed(event);
+        }
+
+        keyboardFocus = true;
+        ConflictInputActions.Outcome outcome = input.apply(SelectorKeyBindings.toAction(key));
+        if (outcome == ConflictInputActions.Outcome.IGNORED) {
+            return super.keyPressed(event);
+        }
+
+        if (outcome == ConflictInputActions.Outcome.SELECTION_MOVED) {
+            KeybindsGalore.verboseLog("List keyboard focus moved to row {} -> {}",
+                    selection.selectedIndex(), selection.selected().getName());
+            SelectionNarration.announceSelection(presentation, selection.selected());
+        }
+        return true;
+    }
+
     @Override
     public boolean keyReleased(KeyEvent event) {
         return tryFinalize(InputConstants.getKey(event));
+    }
+
+    /** Hands selection back to the mouse once the player moves it again. */
+    private void releaseKeyboardFocusOnMouseMove(int mouseX, int mouseY) {
+        if (keyboardFocus && !pointerOverAnyBox(mouseX, mouseY)) {
+            keyboardFocus = false;
+        }
+    }
+
+    private boolean pointerOverAnyBox(int mx, int my) {
+        for (ConflictListLayout.Box box : cachedBoxes) {
+            if (mx >= box.x() && mx <= box.x() + box.width()
+                    && my >= box.y() && my <= box.y() + box.height()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -105,10 +159,16 @@ public class KeybindSelectorScreen extends Screen {
     }
 
     @Override
+    protected void updateNarrationState(NarrationElementOutput output) {
+        SelectionNarration.narrateOutput(presentation, selection.selected(), output);
+    }
+
+    @Override
     public void onClose() {
         if (!selection.isFinalized()) {
             KeybindsGalore.verboseLog("List selection CANCELLED for key {}: selector closed before finalisation", conflictedKey.getName());
             selection.cancel();
+            SelectionNarration.announceCancel();
             SelectionActivationService.cancel(conflicts);
         }
         closeMenu();
@@ -180,8 +240,17 @@ public class KeybindSelectorScreen extends Screen {
 
     /**
      * Updates the currently selected index based on the mouse position.
+     *
+     * <p>While the player is navigating by keyboard or controller the hover pass is skipped,
+     * because it runs every frame and would otherwise reset the selection to nothing the moment
+     * the mouse moved off a row, discarding the focus the player had just set. Moving the mouse
+     * again hands control back to hover.
      */
     private void updateSelection(int mx, int my) {
+        releaseKeyboardFocusOnMouseMove(mx, my);
+        if (keyboardFocus) {
+            return;
+        }
         selection.select(-1);
         for (int i = 0; i < cachedBoxes.size(); i++) {
             ConflictListLayout.Box box = cachedBoxes.get(i);
