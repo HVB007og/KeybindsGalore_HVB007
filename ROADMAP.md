@@ -285,15 +285,17 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
       Options are shrinking the wedge radius as the count rises, truncating with an
       ellipsis plus tooltip, or moving to a radial list. The list menu has the mirror
       problem and can reuse a vanilla scrollable widget
-- [ ] **Input navigation for both selectors, keyboard and controller together.** Both
-      selectors are currently mouse-only, which makes them unusable without a mouse. Build one
-      input layer that maps *actions* (move previous, move next, commit, cancel) onto whatever
-      the player is using, rather than hardcoding arrow keys and bolting controllers on after.
+- [x] **Input navigation for both selectors.** Both selectors were mouse-only, which made them
+      unusable without a mouse. One input layer now maps *actions* (move previous, move next,
+      commit, cancel) onto the selection model, so the device is a detail rather than something
+      baked into the selection logic. `ui/model/ConflictInputActions` is Minecraft-free and
+      unit-tested, so navigation behaviour is verified without launching the game.
       Keyboard: arrow keys or WASD to move, Enter or Space to commit, Escape to cancel.
-      Controller: stick or d-pad to move, a face button to commit, B to cancel. Minecraft already
-      routes controller input, so most of the work is the shared abstraction. If controller
-      support turns out to be substantially larger once scoped, move it to P2 rather than
-      shipping a half-done version
+      Opt in with `KEYBOARD_CONTROL_MODE` in the Behaviour tab, default **off** so an existing
+      config behaves exactly as it did before. With the option on, the contested key also
+      confirms, and the menu stays up when the key is released, so the same finger can open and
+      close it. The mouse keeps working in both states. Controller is deliberately not pursued;
+      see "Explicitly not doing"
 - [ ] **Screen-reader narration** of the conflict and the selected action. Ranked high on
       purpose: a screen-reader user is a real player this mod currently *hurts*, because a menu
       appearing silently is a menu they can neither perceive nor diagnose. Without narration the
@@ -429,3 +431,32 @@ Still open:
   What *would* be legitimate and adjacent: an integration with a **macro** tool that plays
   back a recorded input sequence, or a keybind macro mod with a public API. The distinction is
   user-authored macros versus the mod generating clicks itself.
+
+- **Native controller support.** Closed by the maintainer: not wanted, and the research shows it
+  is not worth the cost. Recording the findings so the question is not reopened.
+
+  There is no vanilla controller support to build on. Minecraft 26.3 has no controller or gamepad
+  classes and no client source referencing an SDL controller API, so a from-scratch
+  implementation would need polling, deadzones, and button-edge detection written by hand. An
+  earlier note in this file claimed "Minecraft already routes controller input, so most of the
+  work is the shared abstraction". That was wrong, and checking it rather than assuming is the
+  only reason the estimate was corrected.
+
+  Four mods give Java Edition real controller support. Only **Controlify** has a mod-developer
+  API; Midnight Controls, Controllable, and Controller Support Mod have none, and the latter two
+  are in maintenance mode. Controlify is current, targets 26.2 and 26.3 on both loaders from a
+  single universal jar, and uses SDL3, the same input stack as 26.3.
+
+  Two of its documented behaviours would probably cover our selectors with no code at all: it
+  auto-converts unhandled modded `KeyMapping`s into controller bindings, and it emulates arrow
+  keys for GUI navigation, which our keyboard mode already consumes. Neither has been tested in
+  game, so treat it as a cheap thing to try rather than a known result.
+
+  A proper integration would be a `ScreenProcessor` mapping controller bindings straight onto
+  `ConflictInputActions.Action`, plus button-guide glyphs. That fits our existing
+  `ui/minecraft` versus `ui/model` split almost exactly, because Controlify's rule is that
+  controller handling lives in a separate class so the screen does not depend on the mod loading.
+  Against that: it adds a compile dependency that differs per Minecraft version, and Controlify
+  churns fast, replacing its entire guide and trigger API with a Contextual API in 3.5.0. Not a
+  stable contract to bind a small mod to for a feature nobody asked for.
+
