@@ -90,18 +90,27 @@ public class KeybindSelectorScreen extends Screen {
         if (selection.isFinalized() || !ownsKey(key)) {
             return false;
         }
-
         selection.beginFinalization();
+        completeFinalization(key);
+        return true;
+    }
+
+    /**
+     * Activates the chosen row and closes the menu. Split out of {@link #tryFinalize} because the
+     * keyboard-control commit path has already marked the model finalised, and the guard in
+     * tryFinalize would otherwise reject it and leave the menu stuck open.
+     */
+    private void completeFinalization(InputConstants.Key key) {
         KeyMapping selected = selection.selected();
         if (selected == null) {
-            KeybindsGalore.verboseLog("List selection CANCELLED for key {}: no row was hovered", key.getName());
+            KeybindsGalore.verboseLog("List selection CANCELLED for key {}: no row was highlighted", key.getName());
+            SelectionActivationService.cancel(conflicts);
         } else {
             KeybindsGalore.verboseLog("List selection FINALISED for key {}: chose row {} -> {}",
                     key.getName(), selection.selectedIndex(), selected.getName());
+            SelectionActivationService.activate(conflicts, selected);
         }
         closeMenu();
-        SelectionActivationService.activate(conflicts, selected);
-        return true;
     }
 
     /**
@@ -113,27 +122,77 @@ public class KeybindSelectorScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         InputConstants.Key key = InputConstants.getKey(event);
-        if (selection.isFinalized() || ownsKey(key)) {
+        if (selection.isFinalized()) {
             return super.keyPressed(event);
+        }
+
+        if (ownsKey(key)) {
+            // In keyboard control mode the contested key doubles as confirm, so a player can
+            // commit with the same finger that opened the menu. Without the option this key
+            // falls through to vanilla untouched, preserving the original behaviour.
+            if (!Configurations.KEYBOARD_CONTROL_MODE) {
+                return super.keyPressed(event);
+            }
+            return confirmAndClose();
+        }
+
+        ConflictInputActions.Action action = SelectorKeyBindings.toAction(key);
+        if (action == null) {
+            return super.keyPressed(event);
+        }
+
+        if (action == ConflictInputActions.Action.COMMIT) {
+            return confirmAndClose();
+        }
+        if (action == ConflictInputActions.Action.CANCEL) {
+            return cancelAndClose();
         }
 
         keyboardFocus = true;
-        ConflictInputActions.Outcome outcome = input.apply(SelectorKeyBindings.toAction(key));
-        if (outcome == ConflictInputActions.Outcome.IGNORED) {
-            return super.keyPressed(event);
-        }
-
+        ConflictInputActions.Outcome outcome = input.apply(action);
         if (outcome == ConflictInputActions.Outcome.SELECTION_MOVED) {
             KeybindsGalore.verboseLog("List keyboard focus moved to row {} -> {}",
                     selection.selectedIndex(), selection.selected().getName());
             SelectionNarration.announceSelection(presentation, selection.selected());
         }
-        return true;
+        // IGNORED is a deliberate no-op, for example moving in a single-row menu. Swallowing the
+        // key there would stop the player from reaching vanilla, so report unhandled.
+        return outcome != ConflictInputActions.Outcome.IGNORED;
     }
 
     @Override
     public boolean keyReleased(KeyEvent event) {
-        return tryFinalize(InputConstants.getKey(event));
+        InputConstants.Key key = InputConstants.getKey(event);
+        // The contested key resolves on release, so it must not also commit on press.
+        if (ownsKey(key)) {
+            return tryFinalize(key);
+        }
+        return super.keyReleased(event);
+    }
+
+    /** Commits the highlighted row and closes, used by the keyboard-control confirm paths. */
+    private boolean confirmAndClose() {
+        ConflictInputActions.Outcome outcome = input.apply(ConflictInputActions.Action.COMMIT);
+        if (outcome == ConflictInputActions.Outcome.IGNORED) {
+            return false;
+        }
+        if (outcome == ConflictInputActions.Outcome.CANCELLED) {
+            closeMenu();
+            return true;
+        }
+        completeFinalization(conflictedKey);
+        return true;
+    }
+
+    /** Abandons the selection and closes, used by the keyboard-control cancel path. */
+    private boolean cancelAndClose() {
+        if (input.apply(ConflictInputActions.Action.CANCEL) == ConflictInputActions.Outcome.IGNORED) {
+            return false;
+        }
+        KeybindsGalore.verboseLog("List selection CANCELLED for key {}: cancel key pressed", conflictedKey.getName());
+        SelectionNarration.announceCancel();
+        closeMenu();
+        return true;
     }
 
     /** Hands selection back to the mouse once the player moves it again. */
