@@ -13,39 +13,78 @@ Status legend: `[ ]` open · `[~]` in progress · `[x]` done · `[-]` deliberate
 
 | Branch | Target | Loader | Modrinth version | GitHub tag |
 |---|---|---|---|---|
+| `master` | 26.3 | Fabric | `1.8.0` | same as `recovery/26.3-fabric` |
+| `recovery/26.2` | 26.2 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.2` |
 | `recovery/26.2-neoforge` | 26.2 | NeoForge | `1.8.0` | `keybindsgalore-1.8.0+26.2-neoforge` |
 | `recovery/26.3-fabric` | 26.3 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.3` |
-| `recovery/26.2` | 26.2 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.2` |
+| `recovery/26.3-neoforge` | 26.3 | NeoForge | `1.8.0` | `keybindsgalore-1.8.0+26.3-neoforge` |
 
-Modrinth project `l6y7RMn7`. Every entry carries the mod jar plus a sources jar, all verified by
-downloading back and comparing digests. 45 unit tests pass on every branch.
+`master` is the default branch and tracks the 26.3 Fabric build, so cloning the repository gives
+something that compiles. Its README is deliberately version-free and points at Modrinth for the
+version matrix; do not add a version or branch table to it.
 
-Verified in game on 26.3 Fabric: pie menu, list menu, K-key priority capture, priority
-resolution, and the config screen. Verified in game on 26.2 NeoForge: the same set, plus the
-ModMenu-free config screen contributed through NeoForge's extension point.
+Modrinth project `l6y7RMn7`. All four entries are published and `listed`, each carrying the mod
+jar plus a sources jar, every file verified by downloading it back and comparing digests. 45
+unit tests pass on every branch.
+
+**Every combination is human-verified in game**: pie menu, list menu, K-key priority capture,
+priority resolution, and the config screen, on 26.2 Fabric, 26.2 NeoForge, 26.3 Fabric, and 26.3
+NeoForge. The NeoForge builds need no ModMenu and contribute their config screen through
+NeoForge's own extension point.
 
 **The mod works. Everything below is improvement, not repair.**
 
 ### Outstanding, small
 
-- [~] **NeoForge 26.3 port.** NeoForge publishes 26.3 only as beta; newest is `26.3.0.26-beta`.
-      Branch `recovery/26.3-neoforge` is being prepared for testing. Must handle SDL3 key input
-      and the `renderpearl` pipeline, which 26.2 does not.
-- [ ] Modrinth project **short description** still reads *"I Learnt how to code Java for the
-      explicit purpose of updating this mod... updated to 1.20"*, and `source_url` points at
-      `KeybindsGalore_HVB007_1.20.x/tree/Alpha`. Being fixed by hand.
-- [ ] The 26.3 Modrinth version has no file flagged `primary`, because the version number was
-      corrected after creation and Modrinth cannot set that field afterwards. Downloads are
-      correct. A clean fix needs `VERSION_DELETE` and a recreate.
-- [ ] Screenshots. The gallery holds 6 images; whether they still show the current UI is
-      unverified. The preview thumbnail is the single highest-leverage image on the page.
+- [x] **NeoForge 26.3 port.** Shipped. Branch `recovery/26.3-neoforge`, published as Modrinth
+      `1.8.0` for neoforge/26.3, human-verified in game. Built on the 26.3 Fabric branch, so the
+      SDL3 and `renderpearl` work carried over and only the loader surface changed. NeoForge
+      publishes 26.3 **only as beta**, so this tracks a moving target
+Modrinth project page, all four done:
+
+- [x] `source_url` points at the repo root, `https://github.com/HVB007og/KeybindsGalore_HVB007`
+- [x] Gallery screenshots replaced with current ones
+- [x] `master` fast-forwarded to a working build with a version-free README, so the repo front
+      page is accurate
+- [x] Project summary replaced. It now reads *"Resolves Minecraft keybind conflicts: when two
+      actions share a key, choose the one you meant."*
+- [x] The 26.3 Fabric Modrinth version's primary-file flag fixed. The version was recreated with
+      `primary_file` set at creation, giving it a new id, and the changelog was carried over
+      byte-for-byte. Ids are recorded in `AGENTS.md`.
+
+**On reading a live Modrinth or GitHub page: always bypass the cache.** Every GET to
+`api.modrinth.com/v2/project/{id}` can return a cached body, and a stale one led to reporting
+a third summary line that had not been on the page for months. Append a cache-busting query
+parameter, and check a field you know changed:
+
+```powershell
+$nonce = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+Invoke-RestMethod "https://api.modrinth.com/v2/project/l6y7RMn7?cb=$nonce"
+```
+
+Do not trust the `updated` field either: Modrinth does not reliably bump it on a description
+edit, so it cannot be used to tell whether a save landed. Read the field you care about back and
+compare it.
+
+Remaining, neither urgent:
+
+- [ ] Re-check the NeoForge 26.3 beta periodically. A newer beta may change the render or input
+      API, and the version range in `neoforge.mods.toml` is `[26.3.0-beta,)`, so it will accept
+      whatever comes next without re-testing
+- [ ] Gallery screenshot *ordering*. The images are current, but the featured image drives the
+      preview thumbnail in search results and is the highest-leverage image on the page
 
 ---
 
-## P0 — Make it trustworthy
+## P0 — Make it trustworthy - closed
 
-The goal of P0 is that nothing in the mod can lie to the player. Mostly done; the
-remainder is honesty about unwired options.
+The goal was that nothing in the mod can lie to the player. That is met: every option is wired
+or retired, the runtime invariants are tested, and the one remaining edge case is documented
+rather than hidden. **P0 is closed. Work now moves to P1.**
+
+If something reopens P0, it is a bug report, not a feature request: an option that is persisted
+but unread, a refresh that silently does not happen, or a claim in the docs that the code does
+not support.
 
 ### P0.1 Dead config options — resolved
 
@@ -101,12 +140,18 @@ the codec, and `en_us.json` all agree on the same 30 options, with no orphaned
 translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset of
 `DEBUG`; give it its own meaning or document the relationship.
 
-### P0.2 Non-vanilla rebinding notification
+### P0.2 Non-vanilla rebinding notification - closed as a documented limitation
 
-- [ ] Conflict index refreshes on startup, world join, keybind-screen close, config save,
-      and priority changes. A mod that changes a binding at runtime (via its own config
-      screen) is not detected. Needs an explicit adapter notification rather than a
-      polling hack.
+- [-] **Accepted, not fixed.** The conflict index refreshes on startup, world join,
+      Controls-screen close, config save, and priority changes. If another mod rebinds a key at
+      runtime through its own config screen, that change is not picked up until one of those
+      triggers fires. A fix needs an explicit adapter notification, not polling, because polling
+      the key state is exactly the anti-pattern that was already tried and reverted elsewhere in
+      this codebase. It stays listed under **Known limitations** on the Modrinth page and in the
+      README, so it is documented rather than forgotten.
+
+      Worth revisiting only if a mod in the wild actually causes a visible problem, and then
+      through a public API rather than a private hook.
 
 ### P0.3 Release readiness
 
@@ -138,16 +183,16 @@ translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset
       every build and referred to a reload-config feature that no longer exists
 - [x] Verified the built jar: correct version, 60 classes, mixins config, default
       properties, icon, translations, embedded licence, and no stale assets
-- [x] Published `1.8.0` to Modrinth for 26.2 Fabric, 26.2 NeoForge, and 26.3 Fabric. Each entry
-      carries the mod jar **and** the sources jar, with the sources tagged `sources-jar`. Both
-      jars also attach to each GitHub release. Every file was verified by downloading it back
-      and comparing digests
-- [x] Tagged and pushed all three releases. Modrinth numbers are plain `1.8.0`; GitHub tags
+- [x] Published `1.8.0` to Modrinth for all four combinations: 26.2 Fabric, 26.2 NeoForge,
+      26.3 Fabric, and 26.3 NeoForge. Each entry carries the mod jar **and** the sources jar,
+      with the sources tagged `sources-jar`. Both jars also attach to each GitHub release.
+      Every file was verified by downloading it back and comparing digests
+- [x] Tagged and pushed all four releases. Modrinth numbers are plain `1.8.0`; GitHub tags
       encode the Minecraft version and loader
 - [x] Automated the release path in `prompts/03-release-and-modrinth.md`, including the
       Modrinth API traps: multipart shape, hash-addressed file deletes, and the fact that a
       primary file can only be set at creation
-- [ ] Replace the gallery screenshots, which are from 2023-2024 and show a pre-1.21.1 UI
+- [x] Replace the gallery screenshots, which were from 2023-2024 and showed a pre-1.21.1 UI
 
 ---
 
@@ -187,12 +232,50 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
 
 ### P1.4 Context rules
 
-- [ ] Make ownership explicit per context rather than always global. The conflict table
-      is currently global, which is wrong when the same key means different things in
-      creative versus survival
+- [ ] **Only offer the menu for bindings that can actually fire right now.** Requested by the
+      maintainer. Today every key on one physical key is offered, including bindings that are
+      inactive in the current state, so pressing middle mouse in survival pops a menu that
+      includes spectator-only actions, and F3 combinations can offer a debug key that is not
+      usable in the current gamemode. Nothing in the codebase considers gamemode at all right
+      now; `MinecraftBindingCatalog` collects every non-unbound `KeyMapping` unconditionally.
+- [ ] **Verified against the 26.3 vanilla source, and the fix is not what it looks like.**
+      `KeyMapping` has **no gamemode field at all**. It carries `name`, `defaultKey`,
+      `category`, `order`, `clickCount`, a `keyModifier`, and an `IKeyConflictContext`
+      (`UNIVERSAL` by default). So "which gamemodes is this binding for" cannot be read off
+      the binding. It has to be **inferred by convention from the action name and category**,
+      for example names containing `spectator` or the `Game Interface` category for F3 debug
+      bindings. That inference is a maintenance risk: it is a naming convention, not a contract,
+      and a vanilla rename would silently break it.
+- [ ] Decide the mechanism before implementing. Options, cheapest first:
+      1. a curated name/category exclusion list, which is guessable and would drift,
+      2. a config option letting the player hide actions from the menu, which is honest and
+         puts the burden where the knowledge is,
+      3. a live probe of whether the action did anything, which is the most accurate but cannot
+         work for the decision itself, since the menu opens *before* the action would have run.
+- [ ] Filter on the *offered list*, never on the *winner*. If a hidden action were still allowed
+      to win a contested press it would fire without the player ever seeing it, which is worse
+      than the current behaviour.
+- [ ] Whichever way this goes, it needs a **refresh trigger**. Gamemode changes at runtime, and
+      none of the five existing triggers fire on it, so this composes with the P0.2 limitation
+      rather than replacing it.
+- [ ] **Does not replace context rules.** Those are about preference ordering, such as
+      "outside a GUI prefer movement". This is about relevance, not priority. Keep them as
+      separate items.
 - [ ] Rules like "outside a GUI, prefer movement" or "in a GUI, prefer chat"
 - [ ] This is where a real state/context layer earns its keep. `InputOwnershipState`
       is the seed of it
+
+### P1.4b Hold mode
+
+- [ ] **Left or right click a wedge to put that key into hold mode.** Requested by the
+      maintainer. The key would stay held while the menu is open, so a movement or attack
+      binding does not stall behind the choice. Reuses the existing wedge picking, and the
+      existing pulse and input-ownership machinery, so it should not need a new state model.
+- [ ] Needs a decision on the interaction: left click currently commits a selection, so either
+      the hold is set by right click only, or by a modifier, or the click-to-commit behaviour
+      changes. Ask before implementing rather than guessing.
+- [ ] Must respect the existing rule that a key released while the menu is open finalises the
+      selection. Hold mode interacts directly with that, so it is not as small as it looks.
 
 ### P1.5 Accessibility
 
@@ -202,13 +285,25 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
       Options are shrinking the wedge radius as the count rises, truncating with an
       ellipsis plus tooltip, or moving to a radial list. The list menu has the mirror
       problem and can reuse a vanilla scrollable widget
-- [ ] **Keyboard-only navigation** of both selectors (arrow keys, Enter to commit,
-      Escape to cancel). The pie is currently mouse-only, which makes it unusable without
-      a mouse and is the largest accessibility gap
-- [ ] Screen-reader narration of the conflict and the selected action
-- [ ] High-contrast mode honouring Minecraft's own accessibility setting
-- [ ] Reduced-motion support, which pairs with the `ANIMATE_PIE_MENU` work
-- [ ] Minimum text size handling: labels currently use the default font size with no
+- [x] **Input navigation for both selectors.** Both selectors were mouse-only, which made them
+      unusable without a mouse. One input layer now maps *actions* (move previous, move next,
+      commit, cancel) onto the selection model, so the device is a detail rather than something
+      baked into the selection logic. `ui/model/ConflictInputActions` is Minecraft-free and
+      unit-tested, so navigation behaviour is verified without launching the game.
+      Keyboard: arrow keys or WASD to move, Enter or Space to commit, Escape to cancel.
+      Opt in with `KEYBOARD_CONTROL_MODE` in the Behaviour tab, default **off** so an existing
+      config behaves exactly as it did before. With the option on, the contested key also
+      confirms, and the menu stays up when the key is released, so the same finger can open and
+      close it. The mouse keeps working in both states. Controller is deliberately not pursued;
+      see "Explicitly not doing"
+- [ ] **Screen-reader narration** of the conflict and the selected action. Ranked high on
+      purpose: a screen-reader user is a real player this mod currently *hurts*, because a menu
+      appearing silently is a menu they can neither perceive nor diagnose. Without narration the
+      mod removes the feedback vanilla gave them
+- [ ] **High-contrast mode** honouring Minecraft's own accessibility setting
+- [ ] **Reduced-motion support**, which pairs with the `ANIMATE_PIE_MENU` work and can collapse
+      the open animation to instant
+- [ ] **Minimum text size handling**: labels currently use the default font size with no
       scaling
 
 ### P1.6 Robustness of the selection flow
@@ -229,9 +324,12 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
       only REI uses Cloth Config for storage
 - [ ] This deletes the hand-rolled `ConfigurationCodec` **and** the parallel reflection
       path in `ConfigManager`, roughly 150 lines and one whole duplicate system
-- [ ] **Breaking change.** Requires a one-time converter that reads the old file,
-      writes the new one, and leaves a note. Do this *after* the first 26.2 release, so
-      real players get a working mod before their configs move
+- [ ] **Breaking for players, not for the mod.** Cloth Config and ModMenu are unrelated and
+      stay exactly as they are; only the on-disk file format changes. The cost is a one-time
+      converter that reads the old `.properties`, writes the new file, and leaves a note, so
+      nobody's hand-made priorities silently disappear. Players who never touched the file are
+      unaffected in practice. Worth doing only if the format itself starts causing real problems,
+      since the current file works
 - [ ] Not a cleanup. A project.
 
 ### P2.2 API isolation
@@ -285,21 +383,28 @@ Decisions that need a human answer before the work can start.
 - [x] Commit `ROADMAP.md`? **Yes** — it is project documentation, not agent memory
 - [x] The three remaining unwired 1.21.x options? **Retired.**
 - [x] Commit `ROADMAP.md`? **Yes** — it is project documentation, not agent memory
-- [ ] `VERBOSE_DEBUG` currently only means "more `DEBUG` lines". Give it its own meaning,
-      or document it as an alias?
-- [ ] **Further pie options, if wanted.** Candidates that were considered and not added
-      unprompted, since each is a design decision rather than an obvious win:
-      wedge outline colour and width, a rotation offset for the starting wedge, and a
-      maximum label width that truncates with an ellipsis
-- [ ] Profiles: per-world, per-server, or global?
-- [ ] Is the `debug` category ever going to get a real English label in 26.2+? If not, the
-      legacy `FILTER_DEBUG_KEYS → [Debug]` migration should be retired
-- [x] Release tag format, settled: Modrinth uses the plain number, GitHub tags carry the
-      Minecraft version and loader, and a port that changes no mod behaviour does **not** bump
-      the number
-- [ ] Should the pie scale defaults stay at `0.8`/`0.2`? Those are the values the code
-      always used; the `0.6`/`0.25` the config file once advertised were never in effect.
-      Current behaviour was kept deliberately, but it was never a choice you made
+Closed, mostly by decision rather than by further work:
+
+- [x] `VERBOSE_DEBUG` needing its own meaning? **No.** One debug toggle is enough, and
+      `VERBOSE_DEBUG` is simply "debug, but louder". Everything worth knowing should be in
+      `DEBUG`. Keeping the second toggle is fine for users who want per-frame tracing without a
+      wall of startup output.
+- [x] Profiles being per-world, per-server, or global? **Global, and only if profiles get built
+      at all.** Revisit only as part of the profiles work itself, not as a standalone decision.
+- [x] Pie scale defaults of `0.8`/`0.2` vs the advertised `0.6`/`0.25`? **Keep the current
+      values.** They are what the code has always done and players are used to them. Changing a
+      default nobody asked to change is a regression, not a fix.
+- [x] The `debug` category question: the category has no English label in 26.2+, so the legacy
+      `FILTER_DEBUG_KEYS to [Debug]` migration produces a value that matches nothing. It is
+      harmless but pointless, and the default is already `[]`. Low priority; revisit only if
+      someone reports a problem with an old config.
+
+Still open:
+
+- [ ] **Further pie options, if wanted.** Candidates considered and not added unprompted, since
+      each is a design decision rather than an obvious win: wedge outline colour and width, a
+      rotation offset for the starting wedge, and a maximum label width that truncates with an
+      ellipsis
 - [ ] Give each loader branch its own run directory. `run/` and `build/` are shared, and
       leftover `build/moddev` plus a NeoForge-written `run/` makes a Fabric branch look
       broken when `runClient` launches the wrong loader
@@ -316,3 +421,42 @@ Decisions that need a human answer before the work can start.
 - Checkstyle, Spotless, or google-java-format. No published Fabric mod in the reference
   set uses them; `.editorconfig` is the formatting source of truth
 - `fabric-loader-junit` as a default. See P2.4
+- **Autoclicker integration.** Considered and declined by the maintainer, who also judged it
+  unnecessary. Recording it so the question is not reopened: an autoclicker is a tool for
+  bypassing server restrictions, and a conflict-resolution mod has no business shipping one or
+  integrating with one. It would also put the project in a different category of software
+  entirely, on Modrinth and with other modders, for no benefit to conflict handling. If this
+  ever changes, treat it as a product decision, not a feature request.
+
+  What *would* be legitimate and adjacent: an integration with a **macro** tool that plays
+  back a recorded input sequence, or a keybind macro mod with a public API. The distinction is
+  user-authored macros versus the mod generating clicks itself.
+
+- **Native controller support.** Closed by the maintainer: not wanted, and the research shows it
+  is not worth the cost. Recording the findings so the question is not reopened.
+
+  There is no vanilla controller support to build on. Minecraft 26.3 has no controller or gamepad
+  classes and no client source referencing an SDL controller API, so a from-scratch
+  implementation would need polling, deadzones, and button-edge detection written by hand. An
+  earlier note in this file claimed "Minecraft already routes controller input, so most of the
+  work is the shared abstraction". That was wrong, and checking it rather than assuming is the
+  only reason the estimate was corrected.
+
+  Four mods give Java Edition real controller support. Only **Controlify** has a mod-developer
+  API; Midnight Controls, Controllable, and Controller Support Mod have none, and the latter two
+  are in maintenance mode. Controlify is current, targets 26.2 and 26.3 on both loaders from a
+  single universal jar, and uses SDL3, the same input stack as 26.3.
+
+  Two of its documented behaviours would probably cover our selectors with no code at all: it
+  auto-converts unhandled modded `KeyMapping`s into controller bindings, and it emulates arrow
+  keys for GUI navigation, which our keyboard mode already consumes. Neither has been tested in
+  game, so treat it as a cheap thing to try rather than a known result.
+
+  A proper integration would be a `ScreenProcessor` mapping controller bindings straight onto
+  `ConflictInputActions.Action`, plus button-guide glyphs. That fits our existing
+  `ui/minecraft` versus `ui/model` split almost exactly, because Controlify's rule is that
+  controller handling lives in a separate class so the screen does not depend on the mod loading.
+  Against that: it adds a compile dependency that differs per Minecraft version, and Controlify
+  churns fast, replacing its entire guide and trigger API with a Contextual API in 3.5.0. Not a
+  stable contract to bind a small mod to for a feature nobody asked for.
+
