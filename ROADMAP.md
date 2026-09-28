@@ -232,12 +232,50 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
 
 ### P1.4 Context rules
 
-- [ ] Make ownership explicit per context rather than always global. The conflict table
-      is currently global, which is wrong when the same key means different things in
-      creative versus survival
+- [ ] **Only offer the menu for bindings that can actually fire right now.** Requested by the
+      maintainer. Today every key on one physical key is offered, including bindings that are
+      inactive in the current state, so pressing middle mouse in survival pops a menu that
+      includes spectator-only actions, and F3 combinations can offer a debug key that is not
+      usable in the current gamemode. Nothing in the codebase considers gamemode at all right
+      now; `MinecraftBindingCatalog` collects every non-unbound `KeyMapping` unconditionally.
+- [ ] **Verified against the 26.3 vanilla source, and the fix is not what it looks like.**
+      `KeyMapping` has **no gamemode field at all**. It carries `name`, `defaultKey`,
+      `category`, `order`, `clickCount`, a `keyModifier`, and an `IKeyConflictContext`
+      (`UNIVERSAL` by default). So "which gamemodes is this binding for" cannot be read off
+      the binding. It has to be **inferred by convention from the action name and category**,
+      for example names containing `spectator` or the `Game Interface` category for F3 debug
+      bindings. That inference is a maintenance risk: it is a naming convention, not a contract,
+      and a vanilla rename would silently break it.
+- [ ] Decide the mechanism before implementing. Options, cheapest first:
+      1. a curated name/category exclusion list, which is guessable and would drift,
+      2. a config option letting the player hide actions from the menu, which is honest and
+         puts the burden where the knowledge is,
+      3. a live probe of whether the action did anything, which is the most accurate but cannot
+         work for the decision itself, since the menu opens *before* the action would have run.
+- [ ] Filter on the *offered list*, never on the *winner*. If a hidden action were still allowed
+      to win a contested press it would fire without the player ever seeing it, which is worse
+      than the current behaviour.
+- [ ] Whichever way this goes, it needs a **refresh trigger**. Gamemode changes at runtime, and
+      none of the five existing triggers fire on it, so this composes with the P0.2 limitation
+      rather than replacing it.
+- [ ] **Does not replace context rules.** Those are about preference ordering, such as
+      "outside a GUI prefer movement". This is about relevance, not priority. Keep them as
+      separate items.
 - [ ] Rules like "outside a GUI, prefer movement" or "in a GUI, prefer chat"
 - [ ] This is where a real state/context layer earns its keep. `InputOwnershipState`
       is the seed of it
+
+### P1.4b Hold mode
+
+- [ ] **Left or right click a wedge to put that key into hold mode.** Requested by the
+      maintainer. The key would stay held while the menu is open, so a movement or attack
+      binding does not stall behind the choice. Reuses the existing wedge picking, and the
+      existing pulse and input-ownership machinery, so it should not need a new state model.
+- [ ] Needs a decision on the interaction: left click currently commits a selection, so either
+      the hold is set by right click only, or by a modifier, or the click-to-commit behaviour
+      changes. Ask before implementing rather than guessing.
+- [ ] Must respect the existing rule that a key released while the menu is open finalises the
+      selection. Hold mode interacts directly with that, so it is not as small as it looks.
 
 ### P1.5 Accessibility
 
@@ -381,3 +419,13 @@ Still open:
 - Checkstyle, Spotless, or google-java-format. No published Fabric mod in the reference
   set uses them; `.editorconfig` is the formatting source of truth
 - `fabric-loader-junit` as a default. See P2.4
+- **Autoclicker integration.** Considered and declined by the maintainer, who also judged it
+  unnecessary. Recording it so the question is not reopened: an autoclicker is a tool for
+  bypassing server restrictions, and a conflict-resolution mod has no business shipping one or
+  integrating with one. It would also put the project in a different category of software
+  entirely, on Modrinth and with other modders, for no benefit to conflict handling. If this
+  ever changes, treat it as a product decision, not a feature request.
+
+  What *would* be legitimate and adjacent: an integration with a **macro** tool that plays
+  back a recorded input sequence, or a keybind macro mod with a public API. The distinction is
+  user-authored macros versus the mod generating clicks itself.
