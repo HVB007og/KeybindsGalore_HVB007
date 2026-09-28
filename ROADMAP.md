@@ -40,16 +40,21 @@ NeoForge's own extension point.
       `1.8.0` for neoforge/26.3, human-verified in game. Built on the 26.3 Fabric branch, so the
       SDL3 and `renderpearl` work carried over and only the loader surface changed. NeoForge
       publishes 26.3 **only as beta**, so this tracks a moving target
-- [ ] Modrinth project **short description** still reads *"I Learnt how to code Java for the
-      explicit purpose of updating this mod... updated to 1.20"*, and `source_url` points at
-      `KeybindsGalore_HVB007_1.20.x/tree/Alpha`. Being fixed by hand.
-- [ ] The 26.3 Fabric Modrinth version has no file flagged `primary`, because that version number
-      was corrected after creation and Modrinth cannot set that field afterwards. Downloads are
-      correct and the page serves the mod jar. A clean fix needs `VERSION_DELETE` and a recreate.
-      The 26.3 NeoForge entry does not have this problem, because its number and file set were
-      both right on the first upload
-- [ ] Screenshots. The gallery holds 6 images; whether they still show the current UI is
-      unverified. The preview thumbnail is the single highest-leverage image on the page.
+Modrinth project page, hand-fixed by the maintainer:
+
+- [x] `source_url` now points at the repo root, `https://github.com/HVB007og/KeybindsGalore_HVB007`
+- [x] Gallery screenshots replaced with current ones
+- [x] `master` fast-forwarded to a working build with a version-free README, so the repo front page
+      is accurate
+- [ ] **Project summary** still reads *"I Learnt how to code Java for the explicit purpose of
+      updating this mod. it took me bashing my head against my laptop for a week, But in the end
+      I got it to work."* It is only ever seen in the edit form, never the published page, so it
+      is low priority. A better one-liner would be *"Resolves Minecraft keybind conflicts: when
+      two actions share a key, choose the one you meant."*
+
+- [x] The 26.3 Fabric Modrinth version's primary-file flag fixed. The version was recreated with
+      `primary_file` set at creation, giving it a new id, and the changelog was carried over
+      byte-for-byte. Ids are recorded in `AGENTS.md`.
 - [ ] Re-check the NeoForge 26.3 beta periodically. A newer beta may change the render or input
       API, and the version range in `neoforge.mods.toml` is `[26.3.0-beta,)`, so it will accept
       whatever comes next without re-testing
@@ -117,10 +122,12 @@ translation keys. `VERBOSE_DEBUG` is wired but is only a higher-verbosity subset
 
 ### P0.2 Non-vanilla rebinding notification
 
-- [ ] Conflict index refreshes on startup, world join, keybind-screen close, config save,
-      and priority changes. A mod that changes a binding at runtime (via its own config
-      screen) is not detected. Needs an explicit adapter notification rather than a
-      polling hack.
+- [ ] **Not a bug, a known limitation.** The conflict index refreshes on startup, world join,
+      Controls-screen close, config save, and priority changes. If another mod rebinds a key at
+      runtime through its own config screen, that change is not picked up until one of those
+      triggers fires. A fix needs an explicit adapter notification, not polling, because polling
+      the key state is exactly the anti-pattern that was already tried and reverted elsewhere in
+      this codebase. Listed so it is not mistaken for an oversight.
 
 ### P0.3 Release readiness
 
@@ -216,13 +223,23 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
       Options are shrinking the wedge radius as the count rises, truncating with an
       ellipsis plus tooltip, or moving to a radial list. The list menu has the mirror
       problem and can reuse a vanilla scrollable widget
-- [ ] **Keyboard-only navigation** of both selectors (arrow keys, Enter to commit,
-      Escape to cancel). The pie is currently mouse-only, which makes it unusable without
-      a mouse and is the largest accessibility gap
-- [ ] Screen-reader narration of the conflict and the selected action
-- [ ] High-contrast mode honouring Minecraft's own accessibility setting
-- [ ] Reduced-motion support, which pairs with the `ANIMATE_PIE_MENU` work
-- [ ] Minimum text size handling: labels currently use the default font size with no
+- [ ] **Input navigation for both selectors, keyboard and controller together.** Both
+      selectors are currently mouse-only, which makes them unusable without a mouse. Build one
+      input layer that maps *actions* (move previous, move next, commit, cancel) onto whatever
+      the player is using, rather than hardcoding arrow keys and bolting controllers on after.
+      Keyboard: arrow keys or WASD to move, Enter or Space to commit, Escape to cancel.
+      Controller: stick or d-pad to move, a face button to commit, B to cancel. Minecraft already
+      routes controller input, so most of the work is the shared abstraction. If controller
+      support turns out to be substantially larger once scoped, move it to P2 rather than
+      shipping a half-done version
+- [ ] **Screen-reader narration** of the conflict and the selected action. Ranked high on
+      purpose: a screen-reader user is a real player this mod currently *hurts*, because a menu
+      appearing silently is a menu they can neither perceive nor diagnose. Without narration the
+      mod removes the feedback vanilla gave them
+- [ ] **High-contrast mode** honouring Minecraft's own accessibility setting
+- [ ] **Reduced-motion support**, which pairs with the `ANIMATE_PIE_MENU` work and can collapse
+      the open animation to instant
+- [ ] **Minimum text size handling**: labels currently use the default font size with no
       scaling
 
 ### P1.6 Robustness of the selection flow
@@ -243,9 +260,12 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
       only REI uses Cloth Config for storage
 - [ ] This deletes the hand-rolled `ConfigurationCodec` **and** the parallel reflection
       path in `ConfigManager`, roughly 150 lines and one whole duplicate system
-- [ ] **Breaking change.** Requires a one-time converter that reads the old file,
-      writes the new one, and leaves a note. Do this *after* the first 26.2 release, so
-      real players get a working mod before their configs move
+- [ ] **Breaking for players, not for the mod.** Cloth Config and ModMenu are unrelated and
+      stay exactly as they are; only the on-disk file format changes. The cost is a one-time
+      converter that reads the old `.properties`, writes the new file, and leaves a note, so
+      nobody's hand-made priorities silently disappear. Players who never touched the file are
+      unaffected in practice. Worth doing only if the format itself starts causing real problems,
+      since the current file works
 - [ ] Not a cleanup. A project.
 
 ### P2.2 API isolation
@@ -299,21 +319,28 @@ Decisions that need a human answer before the work can start.
 - [x] Commit `ROADMAP.md`? **Yes** — it is project documentation, not agent memory
 - [x] The three remaining unwired 1.21.x options? **Retired.**
 - [x] Commit `ROADMAP.md`? **Yes** — it is project documentation, not agent memory
-- [ ] `VERBOSE_DEBUG` currently only means "more `DEBUG` lines". Give it its own meaning,
-      or document it as an alias?
-- [ ] **Further pie options, if wanted.** Candidates that were considered and not added
-      unprompted, since each is a design decision rather than an obvious win:
-      wedge outline colour and width, a rotation offset for the starting wedge, and a
-      maximum label width that truncates with an ellipsis
-- [ ] Profiles: per-world, per-server, or global?
-- [ ] Is the `debug` category ever going to get a real English label in 26.2+? If not, the
-      legacy `FILTER_DEBUG_KEYS → [Debug]` migration should be retired
-- [x] Release tag format, settled: Modrinth uses the plain number, GitHub tags carry the
-      Minecraft version and loader, and a port that changes no mod behaviour does **not** bump
-      the number
-- [ ] Should the pie scale defaults stay at `0.8`/`0.2`? Those are the values the code
-      always used; the `0.6`/`0.25` the config file once advertised were never in effect.
-      Current behaviour was kept deliberately, but it was never a choice you made
+Closed, mostly by decision rather than by further work:
+
+- [x] `VERBOSE_DEBUG` needing its own meaning? **No.** One debug toggle is enough, and
+      `VERBOSE_DEBUG` is simply "debug, but louder". Everything worth knowing should be in
+      `DEBUG`. Keeping the second toggle is fine for users who want per-frame tracing without a
+      wall of startup output.
+- [x] Profiles being per-world, per-server, or global? **Global, and only if profiles get built
+      at all.** Revisit only as part of the profiles work itself, not as a standalone decision.
+- [x] Pie scale defaults of `0.8`/`0.2` vs the advertised `0.6`/`0.25`? **Keep the current
+      values.** They are what the code has always done and players are used to them. Changing a
+      default nobody asked to change is a regression, not a fix.
+- [x] The `debug` category question: the category has no English label in 26.2+, so the legacy
+      `FILTER_DEBUG_KEYS to [Debug]` migration produces a value that matches nothing. It is
+      harmless but pointless, and the default is already `[]`. Low priority; revisit only if
+      someone reports a problem with an old config.
+
+Still open:
+
+- [ ] **Further pie options, if wanted.** Candidates considered and not added unprompted, since
+      each is a design decision rather than an obvious win: wedge outline colour and width, a
+      rotation offset for the starting wedge, and a maximum label width that truncates with an
+      ellipsis
 - [ ] Give each loader branch its own run directory. `run/` and `build/` are shared, and
       leftover `build/moddev` plus a NeoForge-written `run/` makes a Fabric branch look
       broken when `runClient` launches the wrong loader
