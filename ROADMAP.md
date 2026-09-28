@@ -13,10 +13,15 @@ Status legend: `[ ]` open · `[~]` in progress · `[x]` done · `[-]` deliberate
 
 | Branch | Target | Loader | Modrinth version | GitHub tag |
 |---|---|---|---|---|
+| `master` | 26.3 | Fabric | `1.8.0` | same as `recovery/26.3-fabric` |
 | `recovery/26.2` | 26.2 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.2` |
 | `recovery/26.2-neoforge` | 26.2 | NeoForge | `1.8.0` | `keybindsgalore-1.8.0+26.2-neoforge` |
 | `recovery/26.3-fabric` | 26.3 | Fabric | `1.8.0` | `keybindsgalore-1.8.0+26.3` |
 | `recovery/26.3-neoforge` | 26.3 | NeoForge | `1.8.0` | `keybindsgalore-1.8.0+26.3-neoforge` |
+
+`master` is the default branch and tracks the 26.3 Fabric build, so cloning the repository gives
+something that compiles. Its README is deliberately version-free and points at Modrinth for the
+version matrix; do not add a version or branch table to it.
 
 Modrinth project `l6y7RMn7`. All four entries are published and `listed`, each carrying the mod
 jar plus a sources jar, every file verified by downloading it back and comparing digests. 45
