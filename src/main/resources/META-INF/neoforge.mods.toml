@@ -5,7 +5,7 @@ issueTrackerURL = "https://github.com/HVB007og/KeybindsGalore_HVB007/issues"
 
 [[mods]]
 modId = "keybindsgalore"
-version = "1.8.0+26.2-neoforge"
+version = "1.9.0+26.2-neoforge"
 displayName = "Keybinds Galore"
 displayURL = "https://modrinth.com/mod/keybindsgalore"
 iconFile = "assets/keybindsgalore/icon.png"
