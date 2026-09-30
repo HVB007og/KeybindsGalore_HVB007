@@ -1,5 +1,6 @@
 package net.hvb007.keybindsgalore;
 
+import net.hvb007.keybindsgalore.core.ConflictReport;
 import net.hvb007.keybindsgalore.core.PriorityCandidate;
 import net.hvb007.keybindsgalore.core.PriorityResolver;
 import net.hvb007.keybindsgalore.input.minecraft.MinecraftBindingCatalog;
@@ -71,6 +72,51 @@ public class KeybindManager {
                 Configurations.FILTERED_CATEGORY_KEYS,
                 reason
         );
+        logConflictReport(client, reason);
+    }
+
+    /**
+     * Writes the whole conflict table to the log.
+     *
+     * <p>The full listing is gated on {@code DEBUG} because it is a diagnostic, not something to
+     * read on every launch. A one-line summary is always logged, because a mod that silently
+     * detects nothing is indistinguishable from one that is not working.
+     *
+     * <p>Pairs already settled by a priority are marked, since those keys never open a menu and a
+     * dump that listed them as live conflicts would mislead whoever is reading it.
+     */
+    private static void logConflictReport(Minecraft client, MinecraftConflictIndex.RefreshReason reason) {
+        List<ConflictReport.Row> rows = new ArrayList<>();
+        for (Map.Entry<InputConstants.Key, List<KeyMapping>> entry : conflictTable.entrySet()) {
+            List<String> bindings = new ArrayList<>();
+            for (KeyMapping binding : entry.getValue()) {
+                bindings.add(describe(binding));
+            }
+            rows.add(new ConflictReport.Row(
+                    entry.getKey().getName(),
+                    bindings,
+                    getPriorityKey(entry.getKey()) != null));
+        }
+
+        String header = ConflictReport.header(client.options.keyMappings.length, rows);
+        KeybindsGalore.LOGGER.info("Conflict report after {}: {}", reason, header);
+
+        if (!Configurations.DEBUG) {
+            return;
+        }
+        KeybindsGalore.LOGGER.info("Conflict report: filtered categories={} priority categories={} direct priorities={}",
+                Configurations.FILTERED_CATEGORY_KEYS,
+                Configurations.PRIORITY_CATEGORIES,
+                Configurations.PRIORITY_KEYBINDS.size());
+        for (String line : ConflictReport.renderAll(rows)) {
+            KeybindsGalore.LOGGER.info("  {}", line);
+        }
+    }
+
+    /** Category and action name, matching what the selector screens display. */
+    private static String describe(KeyMapping binding) {
+        return safeGetCategoryLabel(binding) + ": "
+                + Component.translatable(binding.getName()).getString();
     }
 
     /**

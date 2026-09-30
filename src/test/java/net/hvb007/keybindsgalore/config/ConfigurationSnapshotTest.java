@@ -16,7 +16,7 @@ class ConfigurationSnapshotTest {
 
         assertEquals(List.of(), defaults.filteredCategoryKeys());
         assertEquals(List.of("Movement"), defaults.priorityCategories());
-        assertEquals(7, defaults.priorityKeybinds().size());
+        assertEquals(8, defaults.priorityKeybinds().size());
         assertEquals((short) 0x40, defaults.pieMenuAlpha());
         assertThrows(UnsupportedOperationException.class,
                 () -> defaults.filteredCategoryKeys().add("Other"));
@@ -49,5 +49,20 @@ class ConfigurationSnapshotTest {
     @Test
     void keyboardControlModeIsOptIn() {
         assertFalse(ConfigurationSnapshot.defaults().keyboardControlMode());
+    }
+
+    /**
+     * Middle mouse is a permanent vanilla conflict, so it must be resolved out of the box.
+     *
+     * <p>Vanilla binds both Pick Block and Spectator's Select On Hotbar to middle mouse. If this
+     * entry is missing or misspelled, the conflict menu opens on every middle click, which is the
+     * single most irritating way for the mod to introduce itself. The keys were read out of the
+     * vanilla 26.3 language file rather than guessed, because a wrong action id silently never
+     * matches and the entry would look present while doing nothing.
+     */
+    @Test
+    void middleMouseDefaultsToPickBlockWinning() {
+        assertTrue(ConfigurationSnapshot.defaults().priorityKeybinds()
+                .contains("key.pickItem:key.mouse.middle"));
     }
 }

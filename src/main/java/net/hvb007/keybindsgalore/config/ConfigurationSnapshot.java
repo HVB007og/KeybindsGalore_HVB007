@@ -68,7 +68,14 @@ public record ConfigurationSnapshot(
                         "key.right:key.keyboard.d",
                         "key.jump:key.keyboard.space",
                         "key.sneak:key.keyboard.left.shift",
-                        "key.sprint:key.keyboard.left.control"
+                        "key.sprint:key.keyboard.left.control",
+                        // Vanilla binds both Pick Block and Spectator's Select On Hotbar to middle
+                        // mouse, so this is a permanent conflict on a fresh install with no way to
+                        // separate the two. Pick Block wins because it is used constantly in normal
+                        // play, while Select On Hotbar only matters in spectator mode. Without this
+                        // the middle mouse menu opens on every single middle click, which is the
+                        // mod's worst possible first impression.
+                        "key.pickItem:key.mouse.middle"
                 ),
                 0.06f,
                 0,
