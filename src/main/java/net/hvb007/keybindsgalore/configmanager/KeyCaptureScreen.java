@@ -7,6 +7,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -33,6 +35,21 @@ public class KeyCaptureScreen extends Screen {
         super.extractRenderState(context, mouseX, mouseY, delta);
         context.centeredText(this.font, Component.translatable("text.keybindsgalore.press_any_key"), this.width / 2, this.height / 2 - 20, 0xFFFFFFFF);
         context.centeredText(this.font, Component.translatable("text.keybindsgalore.capture_instruction"), this.width / 2, this.height / 2, 0xAAAAAA);
+    }
+
+    /**
+     * Narrates what the screen is actually for.
+     *
+     * <p>Without this the screen has no narratable widgets, so vanilla falls back to its generic
+     * "use the mouse cursor or tab to select an element" hint. That is actively misleading here,
+     * because there is nothing to select: any key or mouse button is captured immediately, and
+     * Tab in particular does not do what the fallback implies.
+     */
+    @Override
+    protected void updateNarrationState(NarrationElementOutput output) {
+        output.add(NarratedElementType.TITLE, this.getTitle());
+        output.add(NarratedElementType.USAGE,
+                Component.translatable("narration.keybindsgalore.capture"));
     }
 
     @Override

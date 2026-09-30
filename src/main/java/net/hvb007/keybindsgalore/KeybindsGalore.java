@@ -7,6 +7,11 @@ import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.NarratorStatus;
+import net.minecraft.client.Options;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
@@ -22,6 +27,7 @@ import net.hvb007.keybindsgalore.api.BindingRegistry;
 import net.hvb007.keybindsgalore.api.KeybindApi;
 import net.hvb007.keybindsgalore.configmanager.ConfigManager;
 import net.hvb007.keybindsgalore.core.InputOwnershipStateMachine;
+import net.hvb007.keybindsgalore.core.NarratorKeyboardAutoEnable;
 import net.hvb007.keybindsgalore.customdata.DataManager;
 import net.hvb007.keybindsgalore.integrations.minecraft.MinecraftBindingSource;
 import net.hvb007.keybindsgalore.input.minecraft.MinecraftConflictIndex;
@@ -210,10 +216,47 @@ public class KeybindsGalore implements ClientModInitializer {
         // Find all conflicting keybinds when the player joins a world.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             KeybindManager.refreshConflicts(MinecraftConflictIndex.RefreshReason.WORLD_JOIN);
+            enableKeyboardForNarratorIfNeeded(client);
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             resetInputOwnership();
         });
+    }
+
+    /**
+     * Turns Keyboard Control Mode on for a player using a screen reader, once, and says so.
+     *
+     * <p>Narration is only useful if the player can hear the menu change, and with the option off
+     * they cannot change it at all: the menu opens silently and nothing moves. Rather than leave
+     * that contradiction in place, turn the option on and announce it, so the change is visible
+     * and reversible rather than silent.
+     *
+     * <p>The opt-out flag is cleared once this runs, so a player who turns Keyboard Control Mode
+     * back off later is not told about it again on every world join.
+     */
+    private static void enableKeyboardForNarratorIfNeeded(Minecraft client) {
+        Options options = client.options;
+        if (options == null || options.narrator().get() != NarratorStatus.ALL) {
+            return;
+        }
+        if (!NarratorKeyboardAutoEnable.shouldEnable(true, Configurations.NARRATOR_AUTO_ENABLE,
+                Configurations.KEYBOARD_CONTROL_MODE)) {
+            return;
+        }
+
+        Configurations.KEYBOARD_CONTROL_MODE = true;
+        Configurations.NARRATOR_AUTO_ENABLE = false;
+        if (configManager != null) {
+            configManager.saveConfigFile();
+        }
+        LOGGER.info("Keyboard Control Mode enabled automatically: narrator is set to All");
+
+        LocalPlayer player = client.player;
+        if (player != null) {
+            player.sendSystemMessage(
+                    Component.translatable("message.keybindsgalore.narrator_keyboard_enabled")
+                            .withStyle(ChatFormatting.AQUA));
+        }
     }
 
     /**

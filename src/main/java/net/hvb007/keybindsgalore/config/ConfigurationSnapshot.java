@@ -11,6 +11,7 @@ public record ConfigurationSnapshot(
         boolean labelTextShadow,
         boolean useCircularMenu,
         boolean keyboardControlMode,
+        boolean narratorAutoEnable,
         boolean showConflictWarnings,
         boolean enableAttackWorkaround,
         List<String> filteredCategoryKeys,
@@ -52,6 +53,9 @@ public record ConfigurationSnapshot(
                 // keyboardControlMode defaults to false so existing configs behave exactly as
                 // they did before keyboard navigation existed. Opting in is a deliberate choice.
                 false,
+                // narratorAutoEnable defaults to true so a screen-reader user gets a menu they can
+                // actually operate. It turns itself off after firing, so it never nags twice.
+                true,
                 true,
                 true,
                 List.of(),

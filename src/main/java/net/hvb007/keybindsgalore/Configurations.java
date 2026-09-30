@@ -26,6 +26,7 @@ public class Configurations {
     // --- Behaviour ---
     public static boolean USE_CIRCULAR_MENU = true;
     public static boolean KEYBOARD_CONTROL_MODE = false;
+    public static boolean NARRATOR_AUTO_ENABLE = true;
     /**
      * Legacy compatibility flag. Minecraft 26.2 renders through {@code RingRenderer}
      * and the old Tesselator path no longer exists, so this has no runtime effect.
@@ -70,7 +71,8 @@ public class Configurations {
                 DARKENED_BACKGROUND_STRENGTH,
                 LABEL_TEXT_SHADOW,
                 USE_CIRCULAR_MENU,
-        KEYBOARD_CONTROL_MODE,
+                KEYBOARD_CONTROL_MODE,
+                NARRATOR_AUTO_ENABLE,
                 SHOW_CONFLICT_WARNINGS,
                 ENABLE_ATTACK_WORKAROUND,
                 FILTERED_CATEGORY_KEYS,
@@ -106,6 +108,7 @@ public class Configurations {
         LABEL_TEXT_SHADOW = snapshot.labelTextShadow();
         USE_CIRCULAR_MENU = snapshot.useCircularMenu();
         KEYBOARD_CONTROL_MODE = snapshot.keyboardControlMode();
+        NARRATOR_AUTO_ENABLE = snapshot.narratorAutoEnable();
         SHOW_CONFLICT_WARNINGS = snapshot.showConflictWarnings();
         ENABLE_ATTACK_WORKAROUND = snapshot.enableAttackWorkaround();
         FILTERED_CATEGORY_KEYS = new ArrayList<>(snapshot.filteredCategoryKeys());
