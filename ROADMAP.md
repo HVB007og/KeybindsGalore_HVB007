@@ -9,6 +9,31 @@ Status legend: `[ ]` open · `[~]` in progress · `[x]` done · `[-]` deliberate
 
 ## Current state
 
+The `core/ConflictReport` log dump is the fastest way to answer "what actually conflicts on this
+install". Run the client once with `DEBUG=true` and read `Conflict report after STARTUP` in
+`run/logs/latest.log`. It prints the number of registered keybinds, the conflicting physical keys,
+and the number of conflicting pairs, and with `DEBUG` on it lists every key with its actions and
+marks the ones already settled by a priority.
+
+Measured on a completely default 26.3 Fabric install with only ModMenu alongside:
+
+- **64 registered keybinds, 2 conflicting physical keys, 3 conflicting pairs.**
+- `key.mouse.middle` — Pick Block versus Spectator's Select On Hotbar. **This is genuine and
+  permanent.** Vanilla binds both to middle mouse, so the two cannot be separated by rebinding.
+  Resolved by a default priority, `key.pickItem:key.mouse.middle`, with Pick Block winning
+  because it is used constantly in normal play while Select On Hotbar only matters in spectator
+  mode. Without it, the menu opened on every middle click, which was the mod's worst first
+  impression.
+- `key.keyboard.unknown` — Toggle Cinematic Camera, Highlight Players, and ModMenu's menu key, all
+  sharing one unset key. **Not a vanilla conflict.** Two of the three are spectator actions and the
+  third belongs to ModMenu, so this row is an artefact of a development environment rather than
+  something a player would hit.
+
+The consequence worth stating plainly: **on unmodded vanilla this mod has exactly one real
+conflict to solve.** The mod's value is overwhelmingly about *modded* keybinds, so any further
+measurement should be taken with a real modpack loaded rather than vanilla. The report exists to
+make that cheap to do.
+
 **Three releases are published and human-verified in game.**
 
 | Branch | Target | Loader | Modrinth version | GitHub tag |
@@ -213,12 +238,45 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
 - [ ] Affects 8 colour options. Until it exists, the tooltips tell players to type an
       ARGB value such as `C0606060`
 
+### P1.1b Prove the value against a real modpack
+
+- [ ] **Measure this against a modpack, not vanilla.** The finding below reframes the whole mod,
+      and acting on it is P1 work rather than a footnote
+- [ ] **On unmodded 26.3 Fabric, the mod has exactly one real conflict, and now zero that
+      interrupt the player.** Measured with `core/ConflictReport`: 64 registered keybinds,
+      2 conflicting physical keys, 3 conflicting pairs. Of those two keys, middle mouse
+      (Pick Block versus Spectator's Select On Hotbar) is a genuine and permanent vanilla
+      conflict, and it is now resolved by a default priority. The other,
+      `key.keyboard.unknown`, is an artefact of a development environment, not something a
+      player hits
+- [ ] **So the mod's value is overwhelmingly about *modded* keybinds**, not vanilla ones. Any
+      further measurement, and any claim about how useful the mod is, has to come from a real
+      modpack. Vanilla numbers cannot support that claim and should not be quoted as if they do
+- [ ] Why this changes priorities, not just documentation:
+  - **P1.2 Conflict Inspector is now the load-bearing feature.** It is the only thing that
+    makes sense when the interesting conflicts are spread across dozens of keys in a pack
+    rather than being one obvious middle-click popup. Its value rises with mod count, which is
+    exactly where this mod is aimed
+  - **Re-verify P1.4 against real packs.** The "only offer bindings that can fire" item is
+    about relevance, and relevance is a modpack problem. It is worth a great deal more once
+    measured against actions a pack actually adds
+  - **P1.1 colour picker is a visible-surface item, not a conflict-count one.** Still worth
+    doing, but it is polish rather than the differentiator
+- [ ] How to do it, once: load a modpack, set `DEBUG=true`, read
+  `Conflict report after STARTUP` in `run/logs/latest.log`. The dump lists every conflicting
+  physical key with all of its actions, and marks the ones already settled by a priority so
+  they are not mistaken for live ones. Re-run after installing a second pack to see the delta
+
 ### P1.2 Conflict Inspector
 
 - [ ] A screen that lists *every* conflict across all keys at once, not just the one
       you happened to press
 - [ ] Show the resolved owner of each conflict and why it won
 - [ ] Jump from an inspector row straight into that key's resolution flow
+- [ ] **Its importance is confirmed by measurement, not assumption.** See P1.1b: vanilla has
+      one real conflict, so on unmodded Minecraft there is nothing for an all-conflicts list to
+      show. The Inspector earns its place on modded installs, where conflicts are spread across
+      many keys and are otherwise invisible until you happen to press one
 - [ ] This is the single highest-value P1 feature. It is what turns the mod from a
       reactive popup into a tool people open deliberately
 
