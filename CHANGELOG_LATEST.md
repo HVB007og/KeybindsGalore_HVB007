@@ -8,6 +8,12 @@ is recorded honestly at the bottom of this section.
 
 ### Added
 
+- **A conflict report in the log.** Every conflict scan now writes a one-line summary, so a mod
+  that detects nothing is never silently indistinguishable from a broken one. With `DEBUG` on it
+  also lists every conflicting physical key, every action on it, the active filters and
+  priorities, and marks which conflicts are already settled by a priority so they are not mistaken
+  for live ones. This is how the middle mouse default above was found, and it is the tool to reach
+  for when asking what a given modpack actually conflicts on. See `core/ConflictReport`.
 - **Optional keyboard control for both menus.** Arrow keys, `WASD` or `Tab` move the highlight,
   `Enter` or `Space` confirm, `Escape` cancels. The new `KEYBOARD_CONTROL_MODE` option lives in the
   Behaviour tab and is **off by default**, so an existing config behaves exactly as it did before.
@@ -27,6 +33,13 @@ is recorded honestly at the bottom of this section.
 
 ### Fixed
 
+- **Middle mouse no longer opens a conflict menu on every click.** Vanilla binds both `Pick Block`
+  and Spectator's `Select On Hotbar` to middle mouse, so on a fresh install that key is a
+  permanent conflict that cannot be rebound apart. `key.pickItem:key.mouse.middle` is now a
+  default priority, so Pick Block simply wins and the menu stays out of the way. Pick Block was
+  chosen over Select On Hotbar because it is used constantly in normal play while Select On Hotbar
+  only matters in spectator mode. Previously this was the mod's most irritating first impression:
+  one of only two keys that conflict on a completely default install.
 - Keyboard navigation only half respected `KEYBOARD_CONTROL_MODE`. The arrow and `WASD` bindings
   were not gated on the option, so the menus could be driven by keyboard even with the option
   turned off. It now genuinely does nothing when off.
@@ -42,6 +55,13 @@ is recorded honestly at the bottom of this section.
   `switch` on it.
 - `Enter` marked the selection as finalised but never closed the menu, leaving it stuck open.
 - Releasing a key that was not the conflicting key was reported as handled when it had not been.
+
+### Changed
+
+- `FILTERED_CATEGORY_KEYS` no longer needs the legacy `[Debug]` value. It was a 1.21.7-era default
+  that no longer matches any 26.2+ category, so it silently filtered nothing while looking
+  configured. Existing configs carrying it are harmless but dead, and `[]` is the honest value.
+  Cleared from the development config used for testing.
 
 ### Known issues in this release
 
