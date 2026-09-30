@@ -57,6 +57,25 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 25
     options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
+    // ModDevGradle marks build/classes and its subdirectories read-only, and Gradle then fails
+    // with "Failed to clean up stale outputs" because it cannot delete a read-only directory. The
+    // fix used to be a manual `attrib -R build\* /S /D` before every build, which only worked
+    // for command-line builds: anything launched from the IDE, including runClient, never ran
+    // it and failed instead. Clearing the attribute as part of the build removes that whole
+    // class of failure, since the step can no longer be forgotten. Windows-only, because the
+    // attribute does not exist elsewhere and the exec would be meaningless.
+    //
+    // The /D flag matters: without it only files are cleared and the directories stay
+    // read-only, which is exactly the state that produced the failure.
+    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        doFirst {
+            def buildDir = layout.buildDirectory.get().asFile
+            if (buildDir.isDirectory()) {
+                def process = ["attrib", "-R", "${buildDir.absolutePath}\\*", "/S", "/D"].execute()
+                process.waitFor()
+            }
+        }
+    }
 }
 
 jar {
