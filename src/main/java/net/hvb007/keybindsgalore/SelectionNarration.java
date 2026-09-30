@@ -19,11 +19,43 @@ public final class SelectionNarration {
     private SelectionNarration() {
     }
 
-    public static void announceSelection(ConflictActionPresentation presentation, KeyMapping selected) {
+    /**
+     * Adds the current highlight to a screen's narration output.
+     *
+     * <p>Nothing here calls the narrator directly. Direct calls bypass the rate limiting and
+     * duplicate suppression that vanilla applies, and {@code saySystemNow} in particular
+     * interrupts whatever is currently being spoken. Calling that on every arrow press made the
+     * game stutter while narrating, so selection movement routes through
+     * {@code narrateScreenIfNarrationEnabled()} instead and lands here.
+     *
+     * <p>The title is emitted only while nothing is highlighted. That is the moment the screen
+     * first appears, so the screen reader learns what the menu is for. Once an action is
+     * highlighted only its position and name are emitted, so moving the highlight does not repeat
+     * the title on every step.
+     */
+    public static void narrateOutput(ConflictActionPresentation presentation, KeyMapping selected,
+                                     String conflictedKeyName, NarrationElementOutput output) {
+        int total = presentation.size();
         if (selected == null) {
+            output.add(NarratedElementType.TITLE, Component.translatable(
+                    "narration.keybindsgalore.selector", conflictedKeyName, total));
+            output.add(NarratedElementType.USAGE,
+                    Component.translatable("narration.keybindsgalore.nothing_highlighted"));
             return;
         }
-        speak(labelOf(presentation, selected));
+
+        output.add(NarratedElementType.POSITION, Component.translatable(
+                "narration.keybindsgalore.position", indexOf(presentation, selected) + 1, total));
+        output.add(NarratedElementType.USAGE, Component.literal(labelOf(presentation, selected)));
+    }
+
+    private static int indexOf(ConflictActionPresentation presentation, KeyMapping selected) {
+        for (int i = 0; i < presentation.size(); i++) {
+            if (presentation.action(i) == selected) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     public static void announceCommit(KeyMapping selected) {

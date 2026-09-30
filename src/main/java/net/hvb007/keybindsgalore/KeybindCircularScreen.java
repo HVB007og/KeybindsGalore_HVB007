@@ -360,7 +360,7 @@ public class KeybindCircularScreen extends Screen {
             int sector = selection.selectedIndex();
             KeybindsGalore.verboseLog("Pie keyboard focus: sector {} -> {}",
                     sector, sector >= 0 ? this.presentation.label(sector) : "cancel zone");
-            SelectionNarration.announceSelection(presentation, selection.selected());
+            triggerImmediateNarration(false);
         }
         // IGNORED is a deliberate no-op, for example moving in a single-sector menu. Swallowing
         // the key there would stop the player from reaching vanilla, so report unhandled.
@@ -415,7 +415,7 @@ public class KeybindCircularScreen extends Screen {
 
     @Override
     protected void updateNarrationState(NarrationElementOutput output) {
-        SelectionNarration.narrateOutput(presentation, selection.selected(), output);
+        SelectionNarration.narrateOutput(presentation, selection.selected(), conflictedKey.getName(), output);
     }
 
     @Override

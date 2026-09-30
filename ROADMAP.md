@@ -296,15 +296,39 @@ This is where the mod stops being "a pie menu" and becomes a control centre.
       confirms, and the menu stays up when the key is released, so the same finger can open and
       close it. The mouse keeps working in both states. Controller is deliberately not pursued;
       see "Explicitly not doing"
-- [ ] **Screen-reader narration** of the conflict and the selected action. Ranked high on
+- [x] **Screen-reader narration** of the conflict and the selected action. Ranked high on
       purpose: a screen-reader user is a real player this mod currently *hurts*, because a menu
       appearing silently is a menu they can neither perceive nor diagnose. Without narration the
-      mod removes the feedback vanilla gave them
+      mod removes the feedback vanilla gave them. Both menus announce the conflicting key and the
+      option count on open, then the action and its position as the highlight moves. The
+      key-capture prompt announces that any key or button will be captured, replacing vanilla's
+      generic "use the mouse cursor or tab to select an element" hint, which was actively wrong
+      there because nothing is selectable
+- [x] **Automatic keyboard mode for narrator users.** Added alongside narration, because
+      narration is close to pointless if the menu cannot be operated by keyboard. If the narrator
+      is set to All and keyboard mode is off, it is turned on at the first world join and
+      announced in chat. `NARRATOR_AUTO_ENABLE` controls this and clears itself after firing so
+      it never repeats. Declined as a silent change: it is announced, and reversible in settings
 - [ ] **High-contrast mode** honouring Minecraft's own accessibility setting
 - [ ] **Reduced-motion support**, which pairs with the `ANIMATE_PIE_MENU` work and can collapse
       the open animation to instant
 - [ ] **Minimum text size handling**: labels currently use the default font size with no
       scaling
+- [ ] **Narrate the config screen.** The gap that remains from the narration work. The mod's own
+      settings screen is built by Cloth Config via `builder.build()`, which hands back a bare
+      `Screen`, so there is nowhere to put `updateNarrationState` without reaching into Cloth.
+      Two options, neither taken: a narrow mixin into Cloth's screen, or a wrapper that delegates
+      every `Screen` method. A wrapper risks breaking Cloth's tab handling and parent-screen
+      behaviour. Left undone deliberately for 1.9.0 rather than half-done
+- [ ] **Narration performance.** Moving the highlight with the keyboard feels slightly heavy while
+      a screen reader is running. The worst cause was fixed: selection movement was calling
+      `saySystemNow`, which *interrupts* whatever is being spoken, once per key press, and now
+      goes through the game's own throttled `triggerImmediateNarration`, which checks
+      `shouldRunNarration` first. Some heaviness remains and the maintainer has judged it not
+      worth further pursuit. Recorded so it is a decision rather than an oversight, and so nobody
+      re-investigates it from scratch. If it is revisited, measure before changing: the next
+      suspects are `updateNarrationState` running per frame and the narrator's own queue depth,
+      and neither is a guess to ship
 
 ### P1.6 Robustness of the selection flow
 

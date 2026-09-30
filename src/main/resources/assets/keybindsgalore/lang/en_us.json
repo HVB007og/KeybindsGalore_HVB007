@@ -32,7 +32,17 @@
   "option.keybindsgalore.use_circular_menu": "Use Pie Menu (Circular)",
   "option.keybindsgalore.use_circular_menu.tooltip": "Enables the circular pie menu for keybind selection instead of the default list.",
 
+  "narration.keybindsgalore.selector": "Choose an action for %s. %s conflicting actions.",
+  "narration.keybindsgalore.nothing_highlighted": "Nothing highlighted. Use the arrow keys, or Tab, to choose an action.",
+  "narration.keybindsgalore.position": "%s of %s",
+  "narration.keybindsgalore.capture": "Press any key or mouse button to choose it. Press Escape to cancel.",
+
   "option.keybindsgalore.keyboard_control_mode": "Keyboard Control Mode",
+  "option.keybindsgalore.narrator_auto_enable": "Enable Keyboard Mode For Narrator",
+  "option.keybindsgalore.narrator_auto_enable.tooltip": "Turn on Keyboard Control Mode the first time you play with the narrator set to All, and say so in chat. Turns itself off afterwards so it never repeats.",
+
+  "message.keybindsgalore.narrator_keyboard_enabled": "Keybinds Galore turned on Keyboard Control Mode because your narrator is set to All. Arrow keys or Tab move the highlight, Enter confirms, Escape cancels. You can turn it off again in the mod settings.",
+
   "option.keybindsgalore.keyboard_control_mode.tooltip": "Drive the conflict menu with the keyboard. Arrows or WASD move the highlight, Enter or Space confirms, Escape cancels. The contested key also confirms while this is on, and the mouse keeps working either way.",
 
   "option.keybindsgalore.show_conflict_warnings": "Show Conflict Warnings",

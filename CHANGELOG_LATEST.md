@@ -1,5 +1,65 @@
 # Changelog
 
+## 1.9.0 - UNRELEASED
+
+Not yet published. Drafted so the changes are reviewable before the Modrinth and GitHub release.
+Every branch already carries the version number, but nothing has been uploaded. Verification status
+is recorded honestly at the bottom of this section.
+
+### Added
+
+- **Optional keyboard control for both menus.** Arrow keys, `WASD` or `Tab` move the highlight,
+  `Enter` or `Space` confirm, `Escape` cancels. The new `KEYBOARD_CONTROL_MODE` option lives in the
+  Behaviour tab and is **off by default**, so an existing config behaves exactly as it did before.
+  With it on, the conflicting key also confirms, and the menu stays open when that key is
+  released, so the same finger can open and close the menu. The mouse keeps working in both
+  states; this is additive, not a separate mode that disables the mouse.
+- **Screen reader narration** in both menus. Opening a menu announces the conflicting key and how
+  many actions are in conflict, and moving the highlight announces the action and its position,
+  for example "Jump, 2 of 3". The key-capture prompt announces that any key or mouse button will
+  be captured, replacing vanilla's generic "use the mouse cursor or tab to select an element",
+  which was misleading because there is nothing to select there.
+- **Keyboard Control Mode is enabled automatically for narrator users.** If the narrator is set to
+  All and the option is off, the mod turns it on the first time you join a world and says so in
+  chat. A menu that cannot be operated by keyboard cannot usefully be narrated, so leaving that
+  contradiction in place would have helped nobody. The new `NARRATOR_AUTO_ENABLE` option controls
+  this and switches itself off after firing, so it never repeats.
+
+### Fixed
+
+- Keyboard navigation only half respected `KEYBOARD_CONTROL_MODE`. The arrow and `WASD` bindings
+  were not gated on the option, so the menus could be driven by keyboard even with the option
+  turned off. It now genuinely does nothing when off.
+- Releasing the conflicting key always finalised the selection, so a menu closed the instant it
+  opened when the key was let go. In keyboard control mode the release is now only recorded, and
+  the menu stays up with the highlight intact.
+- The pie menu flickered while the conflicting key was held. This was pre-existing and unrelated to
+  keyboard control: the key auto-repeats while held, and each repeat built a fresh screen, so the
+  menu was destroyed and rebuilt several times a second. A selector already showing that key is now
+  left alone.
+- An unrelated key pressed while a menu was open could fail, because a key-mapping helper returns
+  nothing for keys that are not navigation keys and the result was passed straight into a
+  `switch` on it.
+- `Enter` marked the selection as finalised but never closed the menu, leaving it stuck open.
+- Releasing a key that was not the conflicting key was reported as handled when it had not been.
+
+### Known issues in this release
+
+- Moving the highlight by keyboard still feels slightly heavy while a screen reader is narrating.
+  The worst of it was fixed, by routing movement through the game's own throttled narration
+  instead of interrupting the narrator on every key press, but it is not perfectly smooth.
+- The mod's own config screen is not narrated. Cloth Config builds that screen and it is not
+  covered. Fixing it needs a mixin into Cloth Config or a wrapper screen; neither is done.
+
+### Verification status
+
+- Built and 65/65 automated tests passing on all five branches.
+- **Human-verified in game on 26.3 Fabric only.** Keyboard control, the contested-key confirm, and
+  the automatic narrator enable were each confirmed by the maintainer on that build.
+- **Not human-verified on 26.2 or on either NeoForge build.** The code is identical across
+  branches, but nobody has pressed a key on those three.
+- The `Tab` binding and the narration timing have no automated coverage.
+
 ## 1.8.0+26.3-neoforge - Minecraft 26.3 (NeoForge)
 
 The NeoForge build for Minecraft 26.3. **No mod behaviour changed**; this adds a loader, not
