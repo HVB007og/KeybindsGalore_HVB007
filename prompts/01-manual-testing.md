@@ -87,9 +87,18 @@ part you are unsure about rather than guessing.
   setting "does nothing", check whether the code reads it at all before assuming a rendering
   bug. Roughly half of what I have reported in the past turned out to be a setting that was
   never implemented, or a setting that belongs to the *other* menu.
-- The pie menu is **mouse only**. There is no keyboard navigation. Do not report that as a
-  regression; it is a known gap.
+- The pie menu used to be **mouse only**. That is no longer true: there is now an opt-in
+  `KEYBOARD_CONTROL_MODE` in the Behaviour tab, plus narration. Do not report either as a
+  regression, and do not report the option as broken because it appears to do nothing when off.
+- If the menu is driven by keyboard, the mouse **must** still work. If it does not, that is a real
+  regression.
+- Narrator users: the mod turns keyboard mode on by itself at the first world join and says so in
+  chat. If that message never appears with the narrator set to All, that is a real bug.
 - The pie menu intentionally does **not** pause the game.
+- If `compileJava` fails with `Unable to delete directory '...\build\classes\java\main'`, that is a
+  stale Gradle daemon holding files, **not** a code problem. Run `.\gradlew.bat --stop` and build
+  again with `--no-daemon`. Never "fix" it by killing every `java` process, because that kills my
+  running game too and the log then looks like a crash.
 
 ## Rules
 

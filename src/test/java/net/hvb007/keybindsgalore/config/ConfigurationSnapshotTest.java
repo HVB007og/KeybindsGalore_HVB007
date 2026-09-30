@@ -36,6 +36,7 @@ class ConfigurationSnapshotTest {
         assertFalse(defaults.labelTextShadow());
         assertTrue(defaults.useCircularMenu());
         assertFalse(defaults.keyboardControlMode());
+        assertTrue(defaults.narratorAutoEnable());
         assertTrue(defaults.showConflictWarnings());
         assertTrue(defaults.enableAttackWorkaround());
         assertTrue(defaults.sectorGradation());

@@ -161,7 +161,7 @@ public class KeybindSelectorScreen extends Screen {
         if (outcome == ConflictInputActions.Outcome.SELECTION_MOVED) {
             KeybindsGalore.verboseLog("List keyboard focus moved to row {} -> {}",
                     selection.selectedIndex(), selection.selected().getName());
-            SelectionNarration.announceSelection(presentation, selection.selected());
+            triggerImmediateNarration(false);
         }
         // IGNORED is a deliberate no-op, for example moving in a single-row menu. Swallowing the
         // key there would stop the player from reaching vanilla, so report unhandled.
@@ -233,7 +233,7 @@ public class KeybindSelectorScreen extends Screen {
 
     @Override
     protected void updateNarrationState(NarrationElementOutput output) {
-        SelectionNarration.narrateOutput(presentation, selection.selected(), output);
+        SelectionNarration.narrateOutput(presentation, selection.selected(), conflictedKey.getName(), output);
     }
 
     @Override

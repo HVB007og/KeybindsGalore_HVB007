@@ -96,6 +96,12 @@ public class ConfigScreenBuilder {
                 .setSaveConsumer(v -> Configurations.KEYBOARD_CONTROL_MODE = v)
                 .build());
 
+        behavior.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.narrator_auto_enable"), Configurations.NARRATOR_AUTO_ENABLE)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.keybindsgalore.narrator_auto_enable.tooltip"))
+                .setSaveConsumer(v -> Configurations.NARRATOR_AUTO_ENABLE = v)
+                .build());
+
         behavior.addEntry(eb.startBooleanToggle(Component.translatable("option.keybindsgalore.show_conflict_warnings"), Configurations.SHOW_CONFLICT_WARNINGS)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.keybindsgalore.show_conflict_warnings.tooltip"))
