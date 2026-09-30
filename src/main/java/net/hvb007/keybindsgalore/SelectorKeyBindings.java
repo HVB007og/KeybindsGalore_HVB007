@@ -24,8 +24,11 @@ public final class SelectorKeyBindings {
         return switch (value) {
             case InputConstants.KEY_UP, InputConstants.KEY_W, InputConstants.KEY_LEFT,
                  InputConstants.KEY_A -> ConflictInputActions.Action.MOVE_PREVIOUS;
+            // Tab moves forward here too, because it does that in every other Minecraft menu and
+            // a player will try it without thinking. This screen has no focusable widgets, so
+            // vanilla tab traversal has nothing to move and would otherwise do nothing at all.
             case InputConstants.KEY_DOWN, InputConstants.KEY_S, InputConstants.KEY_RIGHT,
-                 InputConstants.KEY_D -> ConflictInputActions.Action.MOVE_NEXT;
+                 InputConstants.KEY_D, InputConstants.KEY_TAB -> ConflictInputActions.Action.MOVE_NEXT;
             case InputConstants.KEY_RETURN, InputConstants.KEY_SPACE,
                  InputConstants.KEY_NUMPADENTER -> ConflictInputActions.Action.COMMIT;
             case InputConstants.KEY_ESCAPE -> ConflictInputActions.Action.CANCEL;

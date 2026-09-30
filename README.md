@@ -36,6 +36,14 @@ Client-side only. It does nothing on a dedicated server.
 - **Per-category filters.** Exclude whole categories from conflict detection if you never want
   to be asked about them.
 - **Mouse support.** Works with conflicting mouse button bindings, not just keyboard.
+- **Keyboard control.** Optionally drive either menu without a mouse: arrow keys, `WASD` or `Tab`
+  move the highlight, `Enter` or `Space` confirm, `Escape` cancels. With the mode on, the
+  conflicting key itself also confirms, so the same finger that opened the menu can close it. The
+  mouse keeps working either way. It is **off by default** in **Behaviour**, so existing configs
+  behave exactly as they did before. If you use a screen reader with the narrator set to All, the
+  mod turns this on for you once and says so in chat.
+- **Screen reader narration.** Both menus announce the conflicting key, the number of options, and
+  which action is highlighted and where it sits in the list.
 - **In-game config.** A full settings screen through Cloth Config, so nothing requires editing
   a text file. On Fabric it appears in ModMenu; on NeoForge it appears in the mod list.
 - **Public API.** A small versioned API lets other mods register their actions so their
@@ -64,7 +72,8 @@ you can use either.
 The four tabs:
 
 - **General** — debug logging, pulse duration, attack workaround, background dimming.
-- **Behaviour** — pie or list menu, conflict warnings, category filters, priorities.
+- **Behaviour** — pie or list menu, keyboard control, conflict warnings, category filters,
+  priorities.
 - **Visual (Pie Menu)** — geometry, colours, gradient, animation, labels.
 - **Visual (List Menu)** — list colours and opacity. These affect the list menu only.
 
@@ -77,8 +86,11 @@ uses provides a hex text field rather than an RGB slider widget.
 
 ## Known limitations
 
-- The pie menu is **mouse-only**. There is no keyboard navigation yet, which is the largest
-  accessibility gap.
+- The mod's own config screen is not narrated. The selector menus and the key-capture prompt are,
+  but Cloth Config builds that screen and is not covered, so navigating options there is still
+  silent. It needs either a mixin into Cloth Config or a wrapper screen, and it is not done.
+- Moving the highlight with the keyboard can feel slightly heavy when a screen reader is
+  narrating. It is noticeably better than before, but not perfectly smooth.
 - Long action names on neighbouring wedges can overlap. Labels are clamped so they are never cut
   off by the screen edge, but they cannot reflow.
 - The pie menu does not pause the game. This is intentional, so you can see the world behind it.
