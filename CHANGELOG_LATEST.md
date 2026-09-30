@@ -1,24 +1,128 @@
 # Changelog
 
-## 1.8.0+26.2-neoforge — Minecraft 26.2 (NeoForge)
+## 1.9.0 - UNRELEASED
 
-**First NeoForge release.** This is the same mod as the Fabric `1.8.0+26.2` build, ported to
-NeoForge. Behaviour is unchanged: the pie menu, the list menu, the priority system, K-key
-priority capture, live conflict re-scanning, per-category filters, and the in-game config
-screen all work the same way.
+Not yet published. Drafted so the changes are reviewable before the Modrinth and GitHub release.
+Every branch already carries the version number, but nothing has been uploaded. Verification status
+is recorded honestly at the bottom of this section.
 
-The Fabric edition is published separately and keeps its own version number. The two are
-maintained on separate branches and are versioned independently.
+### Added
 
-### Notes
+- **Optional keyboard control for both menus.** Arrow keys, `WASD` or `Tab` move the highlight,
+  `Enter` or `Space` confirm, `Escape` cancels. The new `KEYBOARD_CONTROL_MODE` option lives in the
+  Behaviour tab and is **off by default**, so an existing config behaves exactly as it did before.
+  With it on, the conflicting key also confirms, and the menu stays open when that key is
+  released, so the same finger can open and close the menu. The mouse keeps working in both
+  states; this is additive, not a separate mode that disables the mouse.
+- **Screen reader narration** in both menus. Opening a menu announces the conflicting key and how
+  many actions are in conflict, and moving the highlight announces the action and its position,
+  for example "Jump, 2 of 3". The key-capture prompt announces that any key or mouse button will
+  be captured, replacing vanilla's generic "use the mouse cursor or tab to select an element",
+  which was misleading because there is nothing to select there.
+- **Keyboard Control Mode is enabled automatically for narrator users.** If the narrator is set to
+  All and the option is off, the mod turns it on the first time you join a world and says so in
+  chat. A menu that cannot be operated by keyboard cannot usefully be narrated, so leaving that
+  contradiction in place would have helped nobody. The new `NARRATOR_AUTO_ENABLE` option controls
+  this and switches itself off after firing, so it never repeats.
 
-- Requires NeoForge 26.2.0.88 or newer, Java 25, and Cloth Config 26.2.155.
-- ModMenu is not used on NeoForge. The config screen is contributed through NeoForge's own
-  settings extension point, so it appears in the Mods list instead.
-- One harmless deprecation warning appears at startup, from Cloth Config 26.2.155 itself. It
-  is upstream and already fixed in the 26.3 build of Cloth Config.
+### Fixed
 
-## 1.8.0+26.2 — Minecraft 26.2 (Fabric)
+- Keyboard navigation only half respected `KEYBOARD_CONTROL_MODE`. The arrow and `WASD` bindings
+  were not gated on the option, so the menus could be driven by keyboard even with the option
+  turned off. It now genuinely does nothing when off.
+- Releasing the conflicting key always finalised the selection, so a menu closed the instant it
+  opened when the key was let go. In keyboard control mode the release is now only recorded, and
+  the menu stays up with the highlight intact.
+- The pie menu flickered while the conflicting key was held. This was pre-existing and unrelated to
+  keyboard control: the key auto-repeats while held, and each repeat built a fresh screen, so the
+  menu was destroyed and rebuilt several times a second. A selector already showing that key is now
+  left alone.
+- An unrelated key pressed while a menu was open could fail, because a key-mapping helper returns
+  nothing for keys that are not navigation keys and the result was passed straight into a
+  `switch` on it.
+- `Enter` marked the selection as finalised but never closed the menu, leaving it stuck open.
+- Releasing a key that was not the conflicting key was reported as handled when it had not been.
+
+### Known issues in this release
+
+- Moving the highlight by keyboard still feels slightly heavy while a screen reader is narrating.
+  The worst of it was fixed, by routing movement through the game's own throttled narration
+  instead of interrupting the narrator on every key press, but it is not perfectly smooth.
+- The mod's own config screen is not narrated. Cloth Config builds that screen and it is not
+  covered. Fixing it needs a mixin into Cloth Config or a wrapper screen; neither is done.
+
+### Verification status
+
+- Built and 65/65 automated tests passing on all five branches.
+- **Human-verified in game on 26.3 Fabric only.** Keyboard control, the contested-key confirm, and
+  the automatic narrator enable were each confirmed by the maintainer on that build.
+- **Not human-verified on 26.2 or on either NeoForge build.** The code is identical across
+  branches, but nobody has pressed a key on those three.
+- The `Tab` binding and the narration timing have no automated coverage.
+
+## 1.8.0+26.3-neoforge - Minecraft 26.3 (NeoForge)
+
+The NeoForge build for Minecraft 26.3. **No mod behaviour changed**; this adds a loader, not
+features, so the version number stays `1.8.0`.
+
+Cheaper to port than expected, because it was based on the 26.3 Fabric branch rather than the
+26.2 NeoForge one, so the SDL3 key handling and the `renderpearl` render pipeline carried over
+unchanged. `RingRenderer` needed no edits at all. Only the loader surface changed:
+
+- the entrypoint is a NeoForge `@Mod(dist = CLIENT)` class, and `ModMenuIntegration` was removed
+  because NeoForge allows one `@Mod` class per mod id, so its config-screen registration moved
+  into the main constructor
+- key registration uses `RegisterKeyMappingsEvent`
+- tick and connection events use the NeoForge equivalents
+- the config directory uses `FMLPaths.CONFIGDIR`
+- configuration loading moved to the first client tick, because `Minecraft.options` is still
+  null during NeoForge mod construction
+- `fabric.mod.json` is replaced by `META-INF/neoforge.mods.toml`
+
+### Requirements
+
+- Minecraft 26.3
+- NeoForge 26.3.0.26-beta or newer
+- Java 25 or newer
+- Cloth Config 26.3.159 or newer
+
+NeoForge publishes 26.3 only as beta at the time of writing, so this build tracks a moving
+target.
+
+## 1.8.0+26.3 - Minecraft 26.3 (Fabric)
+
+Port of 1.8.0 to Minecraft 26.3 on Fabric. **No mod behaviour changed.** The pie menu, list
+menu, priority system, K-key priority capture, live conflict re-scanning, per-category filters,
+and the config screen all work exactly as they do on 26.2. The version number is unchanged
+because nothing in the mod itself differs.
+
+The work is entirely in adapting the mod to 26.3's client changes:
+
+- The client moved from GLFW to SDL3, so the capture key and key handling use
+  `InputConstants.Type.KEYBOARD` instead of the removed `KEYSYM`
+- Unbound keys are detected by their negative key value rather than by scanning GLFW state
+- `org.lwjgl.glfw` no longer exists, so its references were replaced with SDL3 equivalents
+- Rendering moved to the newer `RenderPipeline` API in the `com.mojang.renderpearl` package;
+  the pie menu is drawn through the GPU-batched ring renderer
+
+### Requirements
+
+- Minecraft 26.3
+- Fabric Loader 0.19.3 or newer
+- Fabric API 0.161.0+26.3 or newer
+- Java 25 or newer
+- Cloth Config 26.3.159 or newer
+- ModMenu 21.0.0 or newer (optional, only for the settings screen)
+
+The same mod is also published for 26.2 on Fabric and on NeoForge, under the same number.
+
+### Verification status
+
+Built and unit-tested, with 45 tests passing. Verified in game: pie menu, list menu, config
+screen, **and K-key priority capture**, which was the open question because 26.3 moved the client
+to SDL3. The capture path is confirmed working on both the Fabric and NeoForge 26.3 builds.
+
+## 1.8.0+26.2 - Minecraft 26.2
 
 **The config screen now works on 26.2.** The previous 26.2 build shipped with a known issue
 where the ModMenu config screen failed, because the Cloth Config release available at the

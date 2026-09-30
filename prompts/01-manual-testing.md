@@ -4,10 +4,23 @@ Paste this to an assistant, then optionally name the Minecraft version or the bu
 
 ---
 
-You are helping me test KeybindsGalore, a client-side Fabric mod for Minecraft that resolves
-keybind conflicts. I am not a programmer. You are not driving the game — **I** am. Your job
-is to give me a clear, ordered test script, then read the log I send back and tell me what it
-means.
+You are helping me test KeybindsGalore, a client-side mod for Minecraft, on Fabric or NeoForge,
+that resolves keybind conflicts. I am not a programmer. You are not driving the game — **I**
+am. Your job is to give me a clear, ordered test script, then read the log I send back and tell
+me what it means.
+
+## Before anything else, confirm which build is under test
+
+Ask me the branch or loader if it is not obvious, because the answer changes what to expect:
+
+- **Which loader.** On NeoForge there is no ModMenu; the config screen appears in the mod list
+  instead, and a missing ModMenu is not a bug.
+- **Which Minecraft version.** 26.3 moved the client from GLFW to SDL3 and changed the render
+  pipeline, so key handling and pie rendering are the two areas most likely to differ.
+- **Read the log header before interpreting anything.** `net.neoforged.fml` means the run used
+  NeoForge, `FabricLoader` means Fabric. If I say the build is broken and the log shows the
+  *other* loader, the real problem is that the wrong branch was checked out — `run/` and
+  `build/` are shared between branches. Check that before diagnosing the mod.
 
 ## Before anything else
 
@@ -74,9 +87,18 @@ part you are unsure about rather than guessing.
   setting "does nothing", check whether the code reads it at all before assuming a rendering
   bug. Roughly half of what I have reported in the past turned out to be a setting that was
   never implemented, or a setting that belongs to the *other* menu.
-- The pie menu is **mouse only**. There is no keyboard navigation. Do not report that as a
-  regression; it is a known gap.
+- The pie menu used to be **mouse only**. That is no longer true: there is now an opt-in
+  `KEYBOARD_CONTROL_MODE` in the Behaviour tab, plus narration. Do not report either as a
+  regression, and do not report the option as broken because it appears to do nothing when off.
+- If the menu is driven by keyboard, the mouse **must** still work. If it does not, that is a real
+  regression.
+- Narrator users: the mod turns keyboard mode on by itself at the first world join and says so in
+  chat. If that message never appears with the narrator set to All, that is a real bug.
 - The pie menu intentionally does **not** pause the game.
+- If `compileJava` fails with `Unable to delete directory '...\build\classes\java\main'`, that is a
+  stale Gradle daemon holding files, **not** a code problem. Run `.\gradlew.bat --stop` and build
+  again with `--no-daemon`. Never "fix" it by killing every `java` process, because that kills my
+  running game too and the log then looks like a crash.
 
 ## Rules
 
